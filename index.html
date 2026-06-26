@@ -1,17 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaDesk</title>
-    <link rel="stylesheet" href="./style.css"></link>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MiniOS</title>
+
+    <link rel = "stylesheet" href="./style.css"></link>
 </head>
 
 <body>
-    Hello
+
+    <div id="desktop">
+
+        <div class="menu" id="menu">
+            <button onclick="notes()">
+                📝 Notes
+            </button>
+        </div>
+
+    </div>
+
+    <div class="taskbar">
+
+        <button id="start">
+            Start
+        </button>
+
+        <div class="clock" id="clock">
+        </div>
+
+    </div>
 
     <script src="./script.js"></script>
+
 </body>
 
 </html>
