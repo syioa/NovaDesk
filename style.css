@@ -100,17 +100,15 @@ body {
 }
 
 #start {
-    padding: 8px 16px;
-
-    background: #4488ff;
-
+    padding: 8px;
+    margin-left: 1em;
+    background: transparent;
     border: none;
-
     color: white;
-
     border-radius: 8px;
-
     cursor: pointer;
+    background-image: url(./assets/ie.svg);
+    scale: calc(2);
 }
 
 .menu {
