@@ -1,20 +1,33 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>MiniOS</title>
-
-    <link rel = "stylesheet" href="./style.css"></link>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NovaDesk</title>
+    <script type="module" src="/src/main.js" defer></script>
 </head>
 
 <body>
-
     <div id="desktop">
 
+        <div class="desktop-icons" id="icons">
+
+            <!--<button class="app">
+                <img src="/icons/folder.svg">
+                <span>Files</span>
+            </button>
+
+            <button class="app notes">
+                <img src="/icons/notes.svg">
+                <span>Notes</span>
+            </button> -->
+
+        </div>
+
         <div class="menu" id="menu">
-            <button onclick="notes()">
+            <button class="notes">
                 📝 Notes
             </button>
         </div>
@@ -29,8 +42,6 @@
         </div>
 
     </div>
-
-    <script src="./script.js"></script>
 
 </body>
 
