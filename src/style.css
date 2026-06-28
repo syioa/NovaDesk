@@ -102,9 +102,7 @@ body {
 
   transition:
     width .2s,
-    height .2s,
-    left .2s,
-    top .2s;
+    height .2s;
 
   display: flex;
   flex-direction: column;

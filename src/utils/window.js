@@ -1,16 +1,21 @@
 export function maximize(w) {
-    let maximized =
-        false;
+
+    let max =
+        w.querySelector(
+            ".max"
+        );
 
     let prev =
         {};
 
-    w.querySelector(
-        ".max"
-    ).onclick =
+    max.onclick =
         () => {
 
-            if (!maximized) {
+            if (
+                !w.classList.contains(
+                    "maximized"
+                )
+            ) {
 
                 prev = {
 
@@ -29,10 +34,10 @@ export function maximize(w) {
                 };
 
                 w.style.left =
-                    "0px";
+                    "0";
 
                 w.style.top =
-                    "0px";
+                    "0";
 
                 w.style.width =
                     "100vw";
@@ -42,6 +47,10 @@ export function maximize(w) {
 
                 w.style.borderRadius =
                     "0";
+
+                w.classList.add(
+                    "maximized"
+                );
 
             } else {
 
@@ -64,10 +73,12 @@ export function maximize(w) {
                 w.style.borderRadius =
                     "10px";
 
+                w.classList.remove(
+                    "maximized"
+                );
+
             }
 
-            maximized =
-                !maximized;
-
         };
+
 }

@@ -7,12 +7,12 @@ import '@milkdown/crepe/theme/frame.css'
 
 import { maximize } from "./utils/window"
 
-// document
-//   .querySelector(".app.notes")
-//   .addEventListener(
-//     "click",
-//     notes
-//   );
+document
+  .querySelector(".menu>.notes")
+  .addEventListener(
+    "click",
+    notes
+  );
 
 
 let z = 1;
@@ -67,18 +67,6 @@ function win(title, html) {
 
   drag(w);
 
-  document.onmousemove = e => {
-
-    if (el.style.width === "100vw")
-      return;
-
-    el.style.left =
-      e.clientX - x + "px";
-
-    el.style.top =
-      e.clientY - y + "px";
-  };
-
   w.querySelector(
     ".close"
   )
@@ -98,46 +86,115 @@ function win(title, html) {
 
 function drag(el) {
 
-  let t =
+  const title =
     el.querySelector(
       ".title"
     );
 
-  let x, y;
+  let dragging =
+    false;
 
-  t.onmousedown =
+  let offsetX =
+    0;
+
+  let offsetY =
+    0;
+
+  let targetX =
+    0;
+
+  let targetY =
+    0;
+
+  let frame =
+    null;
+
+  function render() {
+
+    el.style.left =
+      targetX +
+      "px";
+
+    el.style.top =
+      targetY +
+      "px";
+
+    frame =
+      null;
+
+  }
+
+  title.onmousedown =
     e => {
 
-      x =
+      if (
+        el.classList.contains(
+          "maximized"
+        )
+      )
+        return;
+
+      dragging =
+        true;
+
+      offsetX =
         e.clientX -
         el.offsetLeft;
 
-      y =
+      offsetY =
         e.clientY -
         el.offsetTop;
 
-      document.onmousemove =
-        e => {
-
-          el.style.left =
-            e.clientX - x +
-            "px";
-
-          el.style.top =
-            e.clientY - y +
-            "px";
-
-        };
-
-      document.onmouseup =
-        () => {
-
-          document.onmousemove =
-            null;
-
-        };
+      document.body.style.cursor =
+        "grabbing";
 
     };
+
+  document.addEventListener(
+    "mousemove",
+
+    e => {
+
+      if (
+        !dragging
+      )
+        return;
+
+      targetX =
+        e.clientX -
+        offsetX;
+
+      targetY =
+        e.clientY -
+        offsetY;
+
+      if (
+        !frame
+      ) {
+
+        frame =
+          requestAnimationFrame(
+            render
+          );
+
+      }
+
+    }
+  );
+
+  document.addEventListener(
+    "mouseup",
+
+    () => {
+
+      dragging =
+        false;
+
+      document.body.style.cursor =
+        "";
+
+    }
+  );
 
 }
 
