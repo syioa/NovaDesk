@@ -52,6 +52,9 @@ export function maximize(w) {
                     "maximized"
                 );
 
+                max.textContent =
+                    "❐";
+
             } else {
 
                 w.style.left =
@@ -76,6 +79,9 @@ export function maximize(w) {
                 w.classList.remove(
                     "maximized"
                 );
+
+                max.textContent =
+                    "□";
 
             }
 

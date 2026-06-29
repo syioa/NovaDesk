@@ -6,6 +6,10 @@ import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 
 import { maximize } from "./utils/window"
+import { setWallpaper } from "./utils/settings"
+
+let settingsWindow =
+  null;
 
 document
   .querySelector(".menu>.notes")
@@ -13,7 +17,39 @@ document
     "click",
     notes
   );
+document
+  .querySelector(".menu>.settings")
+  .addEventListener(
+    "click",
+    settings
+  );
 
+window.addEventListener(
+  "load",
+
+  () => {
+
+    const saved =
+      localStorage.getItem(
+        "wallpaper"
+      );
+
+    if (
+      saved
+    ) {
+
+      document
+        .getElementById(
+          "desktop"
+        )
+        .style.background =
+        `url("${saved}") center / cover no-repeat`;
+
+    }
+
+  }
+
+);
 
 let z = 1;
 
@@ -42,26 +78,36 @@ function win(title, html) {
 
   w.innerHTML =
     `
-    <div class="title">
+<div class="title">
 
-    <span>${title}</span>
+<span>${title}</span>
 
-    <div class="controls">
+<div class="controls">
 
-    <button class="btn max">
-    </button>
+<button
+class="btn max">
 
-    <button class="btn close">
-    </button>
+□
 
-    </div>
+</button>
 
-    </div>
+<button
+class="btn close">
 
-    <div class="content">
-    ${html}
-    </div>
-    `;
+✕
+
+</button>
+
+</div>
+
+</div>
+
+<div class="content">
+
+${html}
+
+</div>
+`;
 
   desktop.appendChild(w);
 
@@ -71,7 +117,21 @@ function win(title, html) {
     ".close"
   )
     .onclick =
-    () => w.remove();
+    () => {
+
+      if (
+        w ===
+        settingsWindow
+      ) {
+
+        settingsWindow =
+          null;
+
+      }
+
+      w.remove();
+
+    };
 
   // let maximized = false;
   // let prev = {};
@@ -276,6 +336,71 @@ async function notes() {
   crepe.create()
 }
 
+function settings() {
+
+  if (
+    settingsWindow &&
+    document.body.contains(
+      settingsWindow
+    )
+  ) {
+
+    settingsWindow.style.zIndex =
+      ++z;
+
+    return;
+  }
+
+  settingsWindow =
+    win(
+      "Settings",
+
+      `
+<div class="settings">
+
+<h2>
+Personalization
+</h2>
+
+<div
+class="wall-preview"
+id="preview">
+</div>
+
+<label>
+
+Wallpaper URL
+
+<input
+type="text"
+id="wallUrl"
+placeholder=
+"https://...">
+
+</label>
+
+<button id="apply">
+
+Apply Wallpaper
+
+</button>
+
+</div>
+`
+    );
+
+  settingsWindow.addEventListener(
+    "remove",
+    () => {
+
+      settingsWindow =
+        null;
+
+    }
+  );
+
+}
+
 start.onclick = () => {
   menu.style.display =
     menu.style.display ===
@@ -340,3 +465,53 @@ apps.forEach(app => {
   area.append(el);
 
 });
+
+const taskbar =
+  document.querySelector(
+    ".taskbar"
+  );
+
+let visible =
+  false;
+
+document.addEventListener(
+  "mousemove",
+
+  e => {
+
+    const threshold =
+      window.innerHeight -
+      25;
+
+    const show =
+      e.clientY >=
+      threshold;
+
+    if (
+      show &&
+      !visible
+    ) {
+
+      taskbar.style.bottom =
+        "0";
+
+      visible =
+        true;
+
+    }
+
+    else if (
+      !show &&
+      visible
+    ) {
+
+      taskbar.style.bottom =
+        "-42px";
+
+      visible =
+        false;
+
+    }
+
+  }
+);
