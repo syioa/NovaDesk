@@ -5,11 +5,19 @@ import { Crepe } from '@milkdown/crepe'
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 
-import { maximize } from "./utils/window"
-import { setWallpaper } from "./utils/settings"
+import { maximize, drag } from "./utils/window"
+import { setWallpaper, setInitialWallpaper } from "./utils/settings"
 
-let settingsWindow =
-  null;
+let z = 1;
+let settingsWindow = null;
+
+const taskbarApps =
+  document.getElementById(
+    "taskbarApps"
+  );
+
+const taskMap =
+  new Map();
 
 document
   .querySelector(".menu>.notes")
@@ -21,44 +29,77 @@ document
   .querySelector(".menu>.settings")
   .addEventListener(
     "click",
-    settings
+    () => settings(z),
   );
 
-window.addEventListener(
-  "load",
 
-  () => {
-
-    const saved =
-      localStorage.getItem(
-        "wallpaper"
-      );
-
-    if (
-      saved
-    ) {
-
-      document
-        .getElementById(
-          "desktop"
-        )
-        .style.background =
-        `url("${saved}") center / cover no-repeat`;
-
-    }
-
-  }
-
-);
-
-let z = 1;
+setInitialWallpaper()
 
 const desktop =
   document.getElementById(
     "desktop"
   );
 
-function win(title, html) {
+function createIndicator(
+  id,
+  icon,
+  window
+) {
+
+  const btn =
+    document.createElement(
+      "button"
+    );
+
+  btn.className =
+    "task-indicator active";
+
+  btn.innerHTML =
+    icon
+      ? `<img src="${icon}">`
+      : "⬜";
+
+  btn.onclick =
+    e => {
+
+      e.stopPropagation();
+
+      if (
+        window.classList.contains(
+          "hidden"
+        )
+      ) {
+
+        window.classList.remove(
+          "hidden"
+        );
+
+        window.style.zIndex =
+          ++z;
+
+      }
+
+      else {
+
+        window.style.zIndex =
+          ++z;
+
+      }
+
+    };
+
+  taskbarApps.append(
+    btn
+  );
+
+  taskMap.set(
+    id,
+    btn
+  );
+
+}
+
+function win(title, html, icon = "") {
 
   let w =
     document.createElement(
@@ -76,26 +117,39 @@ function win(title, html) {
 
   w.style.zIndex = ++z;
 
-  w.innerHTML =
-    `
+  w.innerHTML = `
 <div class="title">
 
+<div class="title-left">
+
+${icon
+      ?
+      `<img
+class="title-icon"
+src="${icon}">`
+      :
+      ""
+    }
+
 <span>${title}</span>
+
+</div>
 
 <div class="controls">
 
 <button
+class="btn min">
+—
+</button>
+
+<button
 class="btn max">
-
 □
-
 </button>
 
 <button
 class="btn close">
-
 ✕
-
 </button>
 
 </div>
@@ -109,7 +163,33 @@ ${html}
 </div>
 `;
 
+
   desktop.appendChild(w);
+
+  const minimize =
+    w.querySelector(
+      ".min"
+    );
+
+  minimize.onclick =
+    e => {
+
+      e.stopPropagation();
+
+      w.classList.add(
+        "hidden"
+      );
+
+    };
+
+  const id =
+    crypto.randomUUID();
+
+  createIndicator(
+    id,
+    icon,
+    w
+  );
 
   drag(w);
 
@@ -131,209 +211,47 @@ ${html}
 
       w.remove();
 
+      taskMap
+        .get(id)
+        ?.remove();
+
+      taskMap
+        .delete(id);
+
     };
 
   // let maximized = false;
   // let prev = {};
+
   maximize(w);
 
   w.onclick =
-    () => w.style.zIndex = ++z;
+    () => {
 
-  return w;
+      w.style.zIndex =
+        ++z;
 
-}
-
-function drag(el) {
-
-  const title =
-    el.querySelector(
-      ".title"
-    );
-
-  let dragging =
-    false;
-
-  let offsetX =
-    0;
-
-  let offsetY =
-    0;
-
-  let targetX =
-    0;
-
-  let targetY =
-    0;
-
-  let frame =
-    null;
-
-  function render() {
-
-    el.style.left =
-      targetX +
-      "px";
-
-    el.style.top =
-      targetY +
-      "px";
-
-    frame =
-      null;
-
-  }
-
-  title.onmousedown =
-    e => {
-
-      if (
-        el.classList.contains(
-          "maximized"
+      document
+        .querySelectorAll(
+          ".task-indicator"
         )
-      )
-        return;
+        .forEach(
+          b =>
+            b.classList.remove(
+              "active"
+            )
+        );
 
-      dragging =
-        true;
-
-      offsetX =
-        e.clientX -
-        el.offsetLeft;
-
-      offsetY =
-        e.clientY -
-        el.offsetTop;
-
-      document.body.style.cursor =
-        "grabbing";
+      taskMap
+        .get(id)
+        ?.classList.add(
+          "active"
+        );
 
     };
 
-  document.addEventListener(
-    "mousemove",
+  return w;
 
-    e => {
-
-      if (
-        !dragging
-      )
-        return;
-
-      targetX =
-        e.clientX -
-        offsetX;
-
-      targetY =
-        e.clientY -
-        offsetY;
-
-      if (
-        !frame
-      ) {
-
-        frame =
-          requestAnimationFrame(
-            render
-          );
-
-      }
-
-    }
-  );
-
-  document.addEventListener(
-    "mouseup",
-
-    () => {
-
-      dragging =
-        false;
-
-      document.body.style.cursor =
-        "";
-
-    }
-  );
-
-}
-
-async function notes() {
-
-  let saved =
-    localStorage.getItem(
-      "notes"
-    );
-
-  let w =
-    win(
-      "Notes",
-
-      `
-            <div
-                id="editorjs"
-                class="editorjs"></div>
-            `
-    );
-  //#region 1
-  // let editor =
-  //   new EditorJS({
-
-  //     holder:
-  //       "editorjs",
-
-  //     autofocus:
-  //       true,
-
-  //     data:
-  //       saved
-  //         ?
-  //         JSON.parse(
-  //           saved
-  //         )
-  //         :
-  //         {
-  //           blocks: []
-  //         },
-
-  //     tools: {
-
-  //       header: Header,
-
-  //       list: EditorjsList,
-
-  //       paragraph:
-  //         Paragraph
-
-  //     },
-
-  //     async onChange() {
-
-  //       const data =
-  //         await editor.save();
-
-  //       localStorage.setItem(
-  //         "notes",
-  //         JSON.stringify(
-  //           data
-  //         )
-  //       );
-
-  //     }
-
-  //   });
-  //#endregion
-
-  const crepe = new Crepe({
-    root: w.querySelector("#editorjs"),
-
-    defaultValue:
-      saved ??
-      "# Welcome\n\nStart typing..."
-  });
-
-  await crepe.create();
-  crepe.create()
 }
 
 function settings() {
@@ -386,19 +304,68 @@ Apply Wallpaper
 </button>
 
 </div>
-`
+`);
+
+  const input =
+    settingsWindow.querySelector("#wallUrl");
+
+  const apply =
+    settingsWindow.querySelector("#apply");
+
+  const preview =
+    settingsWindow.querySelector("#preview");
+
+  input.addEventListener("input", () => {
+    preview.style.backgroundImage =
+      `url("${input.value}")`;
+  });
+
+  apply.onclick = () => {
+
+    const url =
+      input.value.trim();
+
+    if (!url) return;
+
+    localStorage.setItem(
+      "wallpaper",
+      url
     );
 
-  settingsWindow.addEventListener(
-    "remove",
-    () => {
+    setWallpaper(url);
 
-      settingsWindow =
-        null;
+  };
 
-    }
-  );
+}
 
+async function notes() {
+
+  let saved =
+    localStorage.getItem(
+      "notes"
+    );
+
+  let w =
+    win(
+      "Notes",
+
+      `
+            <div
+                id="editorjs"
+                "/icons/notes.svg"
+                class="editorjs"></div>
+            `
+    );
+
+  const crepe = new Crepe({
+    root: w.querySelector("#editorjs"),
+
+    defaultValue:
+      saved ??
+      "# Welcome\n\nStart typing..."
+  });
+
+  await crepe.create();
 }
 
 start.onclick = () => {
@@ -433,7 +400,8 @@ const apps = [
     open: () =>
       win(
         "Files",
-        "<h2>Empty</h2>"
+        "<h2>Empty</h2>",
+        "/icons/folder.svg"
       )
   }
 ];
@@ -515,3 +483,117 @@ document.addEventListener(
 
   }
 );
+
+//right click refresh option
+const mainctx =
+  document.getElementById(
+    "contextMenu"
+  );
+
+desktop.addEventListener(
+  "contextmenu",
+
+  e => {
+
+    e.preventDefault();
+
+    if (
+      e.target.closest(
+        ".window"
+      )
+    )
+      return;
+
+    mainctx.style.display =
+      "block";
+
+    mainctx.style.left =
+      e.clientX +
+      "px";
+
+    mainctx.style.top =
+      e.clientY +
+      "px";
+
+  }
+);
+
+const previewctx =
+  document.getElementById(
+    "contextMenu"
+  );
+
+desktop.addEventListener(
+  "contextmenu",
+
+  e => {
+
+    e.preventDefault();
+
+    if (
+      e.target.closest(
+        ".window"
+      )
+    )
+      return;
+
+    previewctx.style.display =
+      "block";
+
+    previewctx.style.left =
+      e.clientX +
+      "px";
+
+    previewctx.style.top =
+      e.clientY +
+      "px";
+
+  }
+);
+
+document.addEventListener(
+  "click",
+
+  e => {
+
+    if (
+      !previewctx.contains(
+        e.target
+      )
+    ) {
+
+      previewctx.style.display =
+        "none";
+
+    }
+
+  }
+);
+
+function refreshDesktop() {
+
+  document
+    .querySelectorAll(
+      ".window"
+    )
+    .forEach(
+      w => {
+
+        w.style.zIndex =
+          ++z;
+
+      }
+    );
+
+}
+
+function resetWallpaper() {
+
+  localStorage.removeItem(
+    "wallpaper"
+  );
+
+  desktop.style.background =
+    "";
+
+}

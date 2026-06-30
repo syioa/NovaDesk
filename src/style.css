@@ -209,6 +209,13 @@ body {
 
 }
 
+.min:hover {
+
+  background:
+    #d29922;
+
+}
+
 .content {
   height: calc(100% - 42px);
   padding: 0;
@@ -243,6 +250,83 @@ body {
 
   z-index:
     9999;
+
+}
+
+.taskbar-apps {
+
+  display: flex;
+
+  gap: 8px;
+
+  margin-left: 20px;
+
+  flex: 1;
+
+}
+
+.task-indicator {
+
+  width: 42px;
+
+  height: 42px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background:
+    transparent;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  position: relative;
+
+}
+
+.task-indicator img {
+
+  width: 24px;
+
+  height: 24px;
+
+}
+
+.task-indicator:hover {
+
+  background:
+    rgba(255, 255, 255, .12);
+
+}
+
+.task-indicator.active::after {
+
+  content: "";
+
+  position: absolute;
+
+  bottom: 2px;
+
+  width: 18px;
+
+  height: 3px;
+
+  border-radius: 99px;
+
+  background:
+    white;
+
+}
+
+.window.hidden {
+
+  display: none;
 
 }
 
@@ -510,5 +594,100 @@ textarea {
 
   font-size:
     12px;
+
+}
+
+.context-menu {
+
+  position: fixed;
+
+  width: 220px;
+
+  background:
+    rgba(255,
+      255,
+      255,
+      .92);
+
+  backdrop-filter:
+    blur(16px);
+
+  border-radius:
+    12px;
+
+  overflow:
+    hidden;
+
+  display:
+    none;
+
+  box-shadow:
+    0 12px 30px rgba(0,
+      0,
+      0,
+      .18);
+
+  z-index:
+    99999;
+
+}
+
+.context-menu button {
+
+  width: 100%;
+
+  padding:
+    14px;
+
+  border:
+    none;
+
+  background:
+    transparent;
+
+  text-align:
+    left;
+
+  cursor:
+    pointer;
+
+}
+
+.context-menu button:hover {
+
+  background:
+    rgba(0,
+      0,
+      0,
+      .06);
+
+}
+
+#snapPreview {
+
+  position: fixed;
+
+  display: none;
+
+  pointer-events: none;
+
+  z-index: 9990;
+
+  border-radius: 16px;
+
+  background:
+    rgba(90,
+      120,
+      255,
+      .16);
+
+  border:
+    2px solid rgba(90,
+      120,
+      255,
+      .5);
+
+  transition:
+    .1s;
 
 }

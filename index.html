@@ -11,18 +11,8 @@
 
 <body>
     <div id="desktop">
-
+        <div id="snapPreview"></div>
         <div class="desktop-icons" id="icons">
-
-            <!--<button class="app">
-                <img src="/icons/folder.svg">
-                <span>Files</span>
-            </button>
-
-            <button class="app notes">
-                <img src="/icons/notes.svg">
-                <span>Notes</span>
-            </button> -->
 
         </div>
 
@@ -36,11 +26,54 @@
             </button>
         </div>
 
+        <div id="contextMenu" class="context-menu">
+
+            <button onclick="
+refreshDesktop();
+contextMenu.style.display='none'
+">
+
+                ↻ Refresh
+
+            </button>
+
+            <button onclick="
+notes();
+contextMenu.style.display='none'
+">
+
+                📝 New Note
+
+            </button>
+
+            <button onclick="
+settings();
+contextMenu.style.display='none'
+">
+
+                ⚙️ Settings
+
+            </button>
+
+            <button onclick="
+resetWallpaper();
+contextMenu.style.display='none'
+">
+
+                🖼 Reset Wallpaper
+
+            </button>
+
+        </div>
+
     </div>
 
     <div class="taskbar">
 
         <button id="start"></button>
+
+        <div id="taskbarApps" class="taskbar-apps">
+        </div>
 
         <div class="clock" id="clock">
         </div>
