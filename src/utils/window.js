@@ -457,19 +457,194 @@ export function drag(el) {
 
 }
 
-document.addEventListener(
-    "click",
-    e => {
+export function resize(el) {
 
-        if (
-            !menu.contains(e.target) &&
-            e.target !== start
-        ) {
+    let mode = null;
 
-            menu.style.display =
-                "none";
+    let sx, sy;
+    let sw, sh;
+    let sl, st;
+
+    const MIN_W = 320;
+    const MIN_H = 260;
+
+    el.querySelectorAll(".resize")
+        .forEach(handle => {
+
+            handle.addEventListener(
+                "mousedown",
+
+                e => {
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    mode =
+                        [...handle.classList]
+                            .find(
+                                c =>
+                                    c !== "resize"
+                            );
+
+                    sx =
+                        e.clientX;
+
+                    sy =
+                        e.clientY;
+
+                    sw =
+                        el.offsetWidth;
+
+                    sh =
+                        el.offsetHeight;
+
+                    sl =
+                        el.offsetLeft;
+
+                    st =
+                        el.offsetTop;
+
+                }
+
+            );
+
+        });
+
+    document.addEventListener(
+        "mousemove",
+
+        e => {
+
+            if (!mode)
+                return;
+
+            const dx =
+                e.clientX - sx;
+
+            const dy =
+                e.clientY - sy;
+
+            let w = sw;
+            let h = sh;
+
+            let l = sl;
+            let t = st;
+
+            if (
+                mode === "right" ||
+                mode === "tr" ||
+                mode === "br"
+            ) {
+
+                w =
+                    Math.max(
+                        MIN_W,
+                        sw + dx
+                    );
+
+            }
+
+            if (
+                mode === "left" ||
+                mode === "tl" ||
+                mode === "bl"
+            ) {
+
+                l =
+                    sl + dx;
+
+                w =
+                    sw - dx;
+
+                if (
+                    w < MIN_W
+                ) {
+
+                    l =
+                        sl +
+                        (
+                            sw -
+                            MIN_W
+                        );
+
+                    w =
+                        MIN_W;
+
+                }
+
+            }
+
+            if (
+                mode === "bottom" ||
+                mode === "bl" ||
+                mode === "br"
+            ) {
+
+                h =
+                    Math.max(
+                        MIN_H,
+                        sh + dy
+                    );
+
+            }
+
+            if (
+                mode === "top" ||
+                mode === "tl" ||
+                mode === "tr"
+            ) {
+
+                t =
+                    st + dy;
+
+                h =
+                    sh - dy;
+
+                if (
+                    h < MIN_H
+                ) {
+
+                    t =
+                        st +
+                        (
+                            sh -
+                            MIN_H
+                        );
+
+                    h =
+                        MIN_H;
+
+                }
+
+            }
+
+            el.style.left =
+                `${l}px`;
+
+            el.style.top =
+                `${t}px`;
+
+            el.style.width =
+                `${w}px`;
+
+            el.style.height =
+                `${h}px`;
 
         }
 
-    }
-);
+    );
+
+    document.addEventListener(
+        "mouseup",
+
+        () => {
+
+            mode =
+                null;
+
+        }
+
+    );
+
+}
+

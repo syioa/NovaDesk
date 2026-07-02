@@ -5,7 +5,12 @@ import { Crepe } from '@milkdown/crepe'
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 
-import { maximize, drag } from "./utils/window"
+import {
+  maximize,
+  drag,
+  resize
+}
+  from "./utils/window"
 import { setWallpaper, setInitialWallpaper } from "./utils/settings"
 
 let z = 1;
@@ -161,6 +166,16 @@ class="btn close">
 ${html}
 
 </div>
+
+<div class="resize top"></div>
+<div class="resize bottom"></div>
+<div class="resize left"></div>
+<div class="resize right"></div>
+
+<div class="resize tl"></div>
+<div class="resize tr"></div>
+<div class="resize bl"></div>
+<div class="resize br"></div>
 `;
 
 
@@ -192,6 +207,7 @@ ${html}
   );
 
   drag(w);
+  resize(w);
 
   w.querySelector(
     ".close"
@@ -518,10 +534,27 @@ desktop.addEventListener(
   }
 );
 
-const previewctx =
-  document.getElementById(
-    "contextMenu"
-  );
+document.addEventListener(
+  "mousedown",
+
+  e => {
+
+    if (
+      mainctx.style.display ===
+      "block" &&
+
+      !mainctx.contains(
+        e.target
+      )
+    ) {
+
+      mainctx.style.display =
+        "none";
+
+    }
+
+  }
+);
 
 desktop.addEventListener(
   "contextmenu",
@@ -534,38 +567,22 @@ desktop.addEventListener(
       e.target.closest(
         ".window"
       )
-    )
-      return;
-
-    previewctx.style.display =
-      "block";
-
-    previewctx.style.left =
-      e.clientX +
-      "px";
-
-    previewctx.style.top =
-      e.clientY +
-      "px";
-
-  }
-);
-
-document.addEventListener(
-  "click",
-
-  e => {
-
-    if (
-      !previewctx.contains(
-        e.target
-      )
     ) {
 
-      previewctx.style.display =
+      mainctx.style.display =
         "none";
 
+      return;
     }
+
+    mainctx.style.left =
+      `${e.clientX}px`;
+
+    mainctx.style.top =
+      `${e.clientY}px`;
+
+    mainctx.style.display =
+      "block";
 
   }
 );
@@ -586,6 +603,62 @@ function refreshDesktop() {
     );
 
 }
+
+document
+  .getElementById(
+    "ctxRefresh"
+  )
+  .onclick =
+  () => {
+
+    refreshDesktop();
+
+    mainctx.style.display =
+      "none";
+
+  };
+
+document
+  .getElementById(
+    "ctxNotes"
+  )
+  .onclick =
+  () => {
+
+    notes();
+
+    mainctx.style.display =
+      "none";
+
+  };
+
+document
+  .getElementById(
+    "ctxSettings"
+  )
+  .onclick =
+  () => {
+
+    settings();
+
+    mainctx.style.display =
+      "none";
+
+  };
+
+document
+  .getElementById(
+    "ctxWallpaper"
+  )
+  .onclick =
+  () => {
+
+    resetWallpaper();
+
+    mainctx.style.display =
+      "none";
+
+  };
 
 function resetWallpaper() {
 
