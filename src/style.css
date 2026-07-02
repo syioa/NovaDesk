@@ -827,3 +827,31 @@ textarea {
   cursor: se-resize;
 
 }
+
+/*Minimal CSS*/
+.wm-window {
+  background: white;
+  border: 1px solid #aaa;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.wm-header {
+  height: 30px;
+  background: #222;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: grab;
+  padding: 0 8px;
+}
+
+.wm-body {
+  padding: 10px;
+  height: calc(100% - 30px);
+  overflow: auto;
+}
+
+.taskbar-btn {
+  margin: 2px;
+}

@@ -13,16 +13,23 @@ import {
   from "./utils/window"
 import { setWallpaper, setInitialWallpaper } from "./utils/settings"
 
-let z = 1;
-let settingsWindow = null;
+import { createWindow }
+  from "./ui/windowManager";
 
-const taskbarApps =
-  document.getElementById(
-    "taskbarApps"
-  );
 
-const taskMap =
-  new Map();
+import WindowManager from "./ui/windowManager";
+
+const wm = new WindowManager();
+
+wm.create({
+  title: "Notes",
+  content: "<h3>Hello Notes</h3>"
+});
+
+wm.create({
+  title: "Explorer",
+  content: "<p>Files here</p>"
+});
 
 document
   .querySelector(".menu>.notes")
@@ -45,232 +52,8 @@ const desktop =
     "desktop"
   );
 
-function createIndicator(
-  id,
-  icon,
-  window
-) {
-
-  const btn =
-    document.createElement(
-      "button"
-    );
-
-  btn.className =
-    "task-indicator active";
-
-  btn.innerHTML =
-    icon
-      ? `<img src="${icon}">`
-      : "⬜";
-
-  btn.onclick =
-    e => {
-
-      e.stopPropagation();
-
-      if (
-        window.classList.contains(
-          "hidden"
-        )
-      ) {
-
-        window.classList.remove(
-          "hidden"
-        );
-
-        window.style.zIndex =
-          ++z;
-
-      }
-
-      else {
-
-        window.style.zIndex =
-          ++z;
-
-      }
-
-    };
-
-  taskbarApps.append(
-    btn
-  );
-
-  taskMap.set(
-    id,
-    btn
-  );
-
-}
-
-function win(title, html, icon = "") {
-
-  let w =
-    document.createElement(
-      "div"
-    );
-
-  w.className =
-    "window";
-
-  w.style.left =
-    Math.random() * 400 + "px";
-
-  w.style.top =
-    Math.random() * 200 + "px";
-
-  w.style.zIndex = ++z;
-
-  w.innerHTML = `
-<div class="title">
-
-<div class="title-left">
-
-${icon
-      ?
-      `<img
-class="title-icon"
-src="${icon}">`
-      :
-      ""
-    }
-
-<span>${title}</span>
-
-</div>
-
-<div class="controls">
-
-<button
-class="btn min">
-—
-</button>
-
-<button
-class="btn max">
-□
-</button>
-
-<button
-class="btn close">
-✕
-</button>
-
-</div>
-
-</div>
-
-<div class="content">
-
-${html}
-
-</div>
-
-<div class="resize top"></div>
-<div class="resize bottom"></div>
-<div class="resize left"></div>
-<div class="resize right"></div>
-
-<div class="resize tl"></div>
-<div class="resize tr"></div>
-<div class="resize bl"></div>
-<div class="resize br"></div>
-`;
-
-
-  desktop.appendChild(w);
-
-  const minimize =
-    w.querySelector(
-      ".min"
-    );
-
-  minimize.onclick =
-    e => {
-
-      e.stopPropagation();
-
-      w.classList.add(
-        "hidden"
-      );
-
-    };
-
-  const id =
-    crypto.randomUUID();
-
-  createIndicator(
-    id,
-    icon,
-    w
-  );
-
-  drag(w);
-  resize(w);
-
-  w.querySelector(
-    ".close"
-  )
-    .onclick =
-    () => {
-
-      if (
-        w ===
-        settingsWindow
-      ) {
-
-        settingsWindow =
-          null;
-
-      }
-
-      w.remove();
-
-      taskMap
-        .get(id)
-        ?.remove();
-
-      taskMap
-        .delete(id);
-
-    };
-
-  // let maximized = false;
-  // let prev = {};
-
-  maximize(w);
-
-  w.onclick =
-    () => {
-
-      w.style.zIndex =
-        ++z;
-
-      document
-        .querySelectorAll(
-          ".task-indicator"
-        )
-        .forEach(
-          b =>
-            b.classList.remove(
-              "active"
-            )
-        );
-
-      taskMap
-        .get(id)
-        ?.classList.add(
-          "active"
-        );
-
-    };
-
-  return w;
-
-}
-
 function settings() {
+  let settingsWindow = null;
 
   if (
     settingsWindow &&
@@ -285,11 +68,9 @@ function settings() {
     return;
   }
 
-  settingsWindow =
-    win(
-      "Settings",
-
-      `
+  settingsWindow = createWindow({
+    title: "Settings",
+    content: `
 <div class="settings">
 
 <h2>
@@ -320,7 +101,11 @@ Apply Wallpaper
 </button>
 
 </div>
-`);
+    `,
+    onClose() {
+      settingsWindow = null;
+    }
+  });
 
   const input =
     settingsWindow.querySelector("#wallUrl");
@@ -361,17 +146,11 @@ async function notes() {
       "notes"
     );
 
-  let w =
-    win(
-      "Notes",
-
-      `
-            <div
-                id="editorjs"
-                "/icons/notes.svg"
-                class="editorjs"></div>
-            `
-    );
+  const w = createWindow({
+    title: "Notes",
+    icon: "/icons/notes.svg",
+    content: `<div id="editorjs" class="editorjs"></div>`
+  })
 
   const crepe = new Crepe({
     root: w.querySelector("#editorjs"),
@@ -414,11 +193,11 @@ const apps = [
     name: "Files",
     icon: "/icons/folder.svg",
     open: () =>
-      win(
-        "Files",
-        "<h2>Empty</h2>",
-        "/icons/folder.svg"
-      )
+      createWindow({
+        title: "Files",
+        html: "<h2>Empty</h2>",
+        icon: "/icons/folder.svg"
+      })
   }
 ];
 
