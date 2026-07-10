@@ -1,0 +1,203 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: system-ui, sans-serif;
+    background: #111;
+}
+
+.desktop {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
+    background: linear-gradient(135deg, #4c6ef5, #364fc7);
+}
+
+.window {
+    z-index: 20;
+}
+
+.window {
+    position: absolute;
+
+    display: flex;
+    flex-direction: column;
+
+    border-radius: 12px;
+
+    overflow: visible;
+
+    background: white;
+
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, .25);
+}
+
+.window__content {
+    flex: 1;
+
+    padding: 1em;
+
+    overflow: auto;
+}
+
+.window--normal {
+    display: flex;
+}
+
+.window--minimized {
+    display: none;
+}
+
+.window--maximized .window__resize {
+    display: none;
+}
+
+.window--closed {
+    display: none;
+}
+
+.window__titlebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 32px;
+    padding: 0 8px;
+}
+
+.window__controls {
+    display: flex;
+    gap: 4px;
+}
+
+.window__button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.window__button:hover {
+    background: rgba(255, 255, 255, .1);
+}
+
+.window__button--close:hover {
+    background: #d33;
+    color: white;
+}
+
+.window__resize {
+    inset: 0;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.window__resize-handle {
+    position: absolute;
+    position: absolute;
+    pointer-events: auto;
+    z-index: 100;
+}
+
+/* Edges */
+
+.window__resize-handle--n {
+    top: -4px;
+    left: 8px;
+    right: 8px;
+    height: 8px;
+    cursor: n-resize;
+}
+
+.window__resize-handle--s {
+    bottom: -4px;
+    left: 8px;
+    right: 8px;
+    height: 8px;
+    cursor: s-resize;
+}
+
+.window__resize-handle--e {
+    top: 8px;
+    right: -4px;
+    bottom: 8px;
+    width: 8px;
+    cursor: e-resize;
+}
+
+.window__resize-handle--w {
+    top: 8px;
+    left: -4px;
+    bottom: 8px;
+    width: 8px;
+    cursor: w-resize;
+}
+
+/* Corners */
+
+.window__resize-handle--nw {
+    top: -4px;
+    left: -4px;
+    width: 12px;
+    height: 12px;
+    cursor: nw-resize;
+}
+
+.window__resize-handle--ne {
+    top: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    cursor: ne-resize;
+}
+
+.window__resize-handle--sw {
+    bottom: -4px;
+    left: -4px;
+    width: 12px;
+    height: 12px;
+    cursor: sw-resize;
+}
+
+.window__resize-handle--se {
+    bottom: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    cursor: se-resize;
+}
+
+.window__titlebar {
+    cursor: grab;
+}
+
+.window--dragging .window__titlebar {
+    cursor: grabbing;
+}
+
+.window--resizing,
+.window--resizing * {
+    cursor: inherit !important;
+}
+
+.window__resize-handle {
+    background: red;
+    opacity: 0.3;
+}
