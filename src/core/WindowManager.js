@@ -28,6 +28,46 @@ export default class WindowManager {
         return window;
     }
 
+    updateSnapPreview(window, pointerX, pointerY) {
+        const workArea = this.getWorkArea();
+
+        const threshold = 24;
+
+        if (pointerX <= workArea.left + threshold) {
+            this.#desktop.showSnapPreview({
+                x: workArea.left,
+                y: workArea.top,
+                width: workArea.width / 2,
+                height: workArea.height
+            });
+
+            return;
+        }
+
+        if (pointerX >= workArea.right - threshold) {
+            this.#desktop.showSnapPreview({
+                x: workArea.left + workArea.width / 2,
+                y: workArea.top,
+                width: workArea.width / 2,
+                height: workArea.height
+            });
+
+            return;
+        }
+
+        if (pointerY <= workArea.top + threshold) {
+            this.#desktop.showSnapPreview(workArea);
+
+            return;
+        }
+
+        this.#desktop.hideSnapPreview();
+    }
+
+    hideSnapPreview() {
+        this.#desktop.hideSnapPreview();
+    }
+
     focus(window) {
         if (this.#focusedWindow === window) {
             return;

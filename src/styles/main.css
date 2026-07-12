@@ -28,6 +28,26 @@ body {
     background: linear-gradient(135deg, #4c6ef5, #364fc7);
 }
 
+.desktop__snap-preview {
+    position: absolute;
+    inset: 0;
+
+    opacity: 0;
+    pointer-events: none;
+
+    border-radius: 10px;
+
+    background: rgb(80 140 255 / 18%);
+    border: 2px solid rgb(80 140 255 / 55%);
+
+    transition:
+        opacity 120ms ease,
+        left 120ms ease,
+        top 120ms ease,
+        width 120ms ease,
+        height 120ms ease;
+}
+
 .window {
     z-index: 20;
 }

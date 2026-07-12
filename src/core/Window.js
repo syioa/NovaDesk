@@ -2,9 +2,12 @@ import { listItem } from "@milkdown/crepe/feature/list-item";
 import WindowState from "./WindowState.js";
 
 export default class Window {
+    static #DRAG_RESTORE_THRESHOLD = 15;
+
     #element;
     #content;
     #container;
+    manager;
 
     #state = WindowState.NORMAL;
 
@@ -23,13 +26,21 @@ export default class Window {
     #titleBar;
     #titleElement;
     #controls;
+
     #resizeLayer;
+    #restoreGrabOffsetY = 0;
 
     #minimizeButton;
     #maximizeButton;
     #closeButton;
 
+    #pendingRestoreDrag = false;
+
+    #restoreDragStartX = 0;
+    #restoreDragStartY = 0;
+
     #restoreBounds = null;
+    #restoreGrabRatio = 0;
 
     #dragWidth = 0;
     #dragHeight = 0;
@@ -96,6 +107,10 @@ export default class Window {
         this.#titleBar = document.createElement("div");
         this.#titleBar.className = "window__titlebar";
         this.#titleBar.addEventListener("pointerdown", this.onDragStart);
+        this.#titleBar.addEventListener(
+            "dblclick",
+            this.#handleTitleBarDoubleClick.bind(this)
+        );
 
         // Title
         this.#titleElement = document.createElement("div");
@@ -174,6 +189,18 @@ export default class Window {
         this.#bindEvents();
         this.#syncStateClasses();
         this.#updateControls();
+    }
+
+    #handleTitleBarDoubleClick(event) {
+        if (event.button !== 0) {
+            return;
+        }
+
+        if (this.#state === WindowState.MAXIMIZED) {
+            this.restore();
+        } else if (this.#state === WindowState.NORMAL) {
+            this.maximize();
+        }
     }
 
     #bindEvents() {
@@ -330,10 +357,6 @@ export default class Window {
     onResizeStart(event) {
         if (event.button !== 0) return;
 
-        if (this.state === WindowState.MAXIMIZED) {
-            return;
-        }
-
         this.#element.classList.add("window--resizing");
         event.stopPropagation();
 
@@ -469,31 +492,49 @@ export default class Window {
     }
 
     onDragStart(event) {
-        console.log("move");
-        if (event.button !== 0) return;
+        console.log("Move")
 
-        // Don't start dragging when clicking the window controls
+        if (event.button !== 0) {
+            return;
+        }
+
+        // Don't start dragging when clicking the window controls.
         if (event.target.closest(".window__controls")) {
             return;
         }
 
         this.manager.focus(this);
 
-        this.drag.active = true;
+        if (this.#state === WindowState.MAXIMIZED) {
+            this.#pendingRestoreDrag = true;
+            const workArea = this.manager.getWorkArea();
+
+            this.#restoreGrabRatio =
+                (event.clientX - workArea.left) /
+                (workArea.right - workArea.left);
+
+            this.#restoreGrabOffsetY =
+                event.clientY - this.#titleBar.getBoundingClientRect().top;
+
+            this.#restoreDragStartX = event.clientX;
+            this.#restoreDragStartY = event.clientY;
+        } else {
+            this.drag.active = true;
+
+            this.drag.startX = this.#x;
+            this.drag.startY = this.#y;
+
+            this.drag.startPointerX = event.clientX;
+            this.drag.startPointerY = event.clientY;
+
+            // Cache layout values once for this drag session.
+            this.#dragWidth = this.#element.offsetWidth;
+            this.#dragHeight = this.#element.offsetHeight;
+            this.#dragTitleHeight = this.#titleBar.offsetHeight;
+            this.#dragWorkArea = this.manager.getWorkArea();
+        }
 
         this.drag.pointerId = event.pointerId;
-
-        this.drag.startPointerX = event.clientX;
-        this.drag.startPointerY = event.clientY;
-
-        this.drag.startX = this.#x;
-        this.drag.startY = this.#y;
-
-        // Cache layout values once for this drag session.
-        this.#dragWidth = this.#element.offsetWidth;
-        this.#dragHeight = this.#element.offsetHeight;
-        this.#dragTitleHeight = this.#titleBar.offsetHeight;
-        this.#dragWorkArea = this.manager.getWorkArea();
 
         this.#titleBar.setPointerCapture(event.pointerId);
 
@@ -502,10 +543,24 @@ export default class Window {
         this.#titleBar.addEventListener("pointercancel", this.onDragEnd);
 
         event.preventDefault();
-
     }
 
     onDragMove(event) {
+        if (this.#pendingRestoreDrag) {
+            console.log("Restore drag triggered");
+            const dx = event.clientX - this.#restoreDragStartX;
+            const dy = event.clientY - this.#restoreDragStartY;
+
+            if (
+                Math.abs(dx) < Window.#DRAG_RESTORE_THRESHOLD &&
+                Math.abs(dy) < Window.#DRAG_RESTORE_THRESHOLD
+            ) {
+                return;
+            }
+
+            this.#beginRestoreDrag(event);
+        }
+
         if (!this.drag.active) return;
         if (event.pointerId !== this.drag.pointerId) return;
 
@@ -525,12 +580,19 @@ export default class Window {
 
         // Update the window's position on screen.
         this.#scheduleRender();
+
+        this.manager.updateSnapPreview(
+            this,
+            event.clientX,
+            event.clientY
+        );
     }
 
     onDragEnd(event) {
         console.log("drag end");
         if (event.pointerId !== this.drag.pointerId) return;
 
+        this.#pendingRestoreDrag = false;
         this.drag.active = false;
 
         this.#titleBar.releasePointerCapture(event.pointerId);
@@ -544,6 +606,36 @@ export default class Window {
         this.#dragHeight = 0;
         this.#dragTitleHeight = 0;
         this.#dragWorkArea = null;
+
+        this.manager.hideSnapPreview();
+    }
+
+    #beginRestoreDrag(event) {
+        this.#pendingRestoreDrag = false;
+
+        // Keep the pointer at roughly the same horizontal position
+        // on the restored window.
+
+        this.restore();
+
+        const newX = event.clientX - this.#width * this.#restoreGrabRatio;
+        const newY = event.clientY - this.#restoreGrabOffsetY;
+
+        this.#setPosition(newX, newY);
+
+        this.drag.active = true;
+
+        this.drag.startPointerX = event.clientX;
+        this.drag.startPointerY = event.clientY;
+
+        this.drag.startX = this.#x;
+        this.drag.startY = this.#y;
+
+        // Cache layout values for the drag.
+        this.#dragWidth = this.#element.offsetWidth;
+        this.#dragHeight = this.#element.offsetHeight;
+        this.#dragTitleHeight = this.#titleBar.offsetHeight;
+        this.#dragWorkArea = this.manager.getWorkArea();
     }
 
     _setFocused(focused) {
