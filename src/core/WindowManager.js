@@ -7,6 +7,7 @@ export default class WindowManager {
     #windows = [];
     #desktop;
 
+    #activeSnapRect = null;
     #focusedWindow = null;
     #zCounter = 100;
 
@@ -28,43 +29,58 @@ export default class WindowManager {
         return window;
     }
 
+    #createSnapRect(x, y, width, height) {
+        return {
+            x,
+            y,
+            width,
+            height
+        };
+    }
+
     updateSnapPreview(window, pointerX, pointerY) {
         const workArea = this.getWorkArea();
-
         const threshold = 24;
 
+        let rect = null;
+
         if (pointerX <= workArea.left + threshold) {
-            this.#desktop.showSnapPreview({
+            rect = {
                 x: workArea.left,
                 y: workArea.top,
                 width: workArea.width / 2,
                 height: workArea.height
-            });
-
-            return;
-        }
-
-        if (pointerX >= workArea.right - threshold) {
-            this.#desktop.showSnapPreview({
+            };
+        } else if (pointerX >= workArea.right - threshold) {
+            rect = {
                 x: workArea.left + workArea.width / 2,
                 y: workArea.top,
                 width: workArea.width / 2,
                 height: workArea.height
-            });
-
-            return;
+            };
+        } else if (pointerY <= workArea.top + threshold) {
+            rect = {
+                x: workArea.left,
+                y: workArea.top,
+                width: workArea.width,
+                height: workArea.height
+            };
         }
 
-        if (pointerY <= workArea.top + threshold) {
-            this.#desktop.showSnapPreview(workArea);
+        this.#activeSnapRect = rect;
 
-            return;
+        if (rect) {
+            this.#desktop.showSnapPreview(rect);
+        } else {
+            this.#desktop.hideSnapPreview();
         }
-
-        this.#desktop.hideSnapPreview();
     }
 
     hideSnapPreview() {
+        this.#desktop.hideSnapPreview();
+    }
+    clearSnapPreview() {
+        this.#activeSnapRect = null;
         this.#desktop.hideSnapPreview();
     }
 
@@ -94,6 +110,7 @@ export default class WindowManager {
         window._setZIndex(++this.#zCounter);
 
         this.#emitFocus(window);
+        this.#eventBus.emit("window:focused", window);
     }
 
     clearFocus(window) {
@@ -106,6 +123,16 @@ export default class WindowManager {
         this.#focusedWindow = null;
 
         this.#emitBlur(window);
+    }
+
+    close(window) {
+        this.#windows = this.#windows.filter(
+            w => w !== window
+        );
+
+        this.#eventBus.emit("window:closed", window);
+
+        window.destroy();
     }
 
     #emitFocus(window) {
@@ -134,6 +161,10 @@ export default class WindowManager {
 
     get focusedWindow() {
         return this.#focusedWindow;
+    }
+
+    getActiveSnapRect() {
+        return this.#activeSnapRect;
     }
 
     getWorkArea() {

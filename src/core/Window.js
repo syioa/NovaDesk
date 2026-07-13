@@ -2,7 +2,7 @@ import { listItem } from "@milkdown/crepe/feature/list-item";
 import WindowState from "./WindowState.js";
 
 export default class Window {
-    static #DRAG_RESTORE_THRESHOLD = 15;
+    static #DRAG_RESTORE_THRESHOLD = 12;
 
     #element;
     #content;
@@ -13,6 +13,9 @@ export default class Window {
 
     #focused = false;
     #renderScheduled = false;
+    #pendingRestoreDrag = false;
+    #isSnapped = false;
+    #visible = true;
 
     #minWidth = 200;
     #minHeight = 120;
@@ -22,30 +25,26 @@ export default class Window {
     #height;
     #x;
     #y;
-
     #titleBar;
     #titleElement;
     #controls;
-
     #resizeLayer;
-    #restoreGrabOffsetY = 0;
-
     #minimizeButton;
     #maximizeButton;
     #closeButton;
 
-    #pendingRestoreDrag = false;
+    #restoreBounds = null;
+    #dragWorkArea = null;
+    #snapType = null;
 
+    #restoreGrabOffsetY = 0;
+    #restoreGrabOffsetX = 0;
     #restoreDragStartX = 0;
     #restoreDragStartY = 0;
-
-    #restoreBounds = null;
     #restoreGrabRatio = 0;
-
     #dragWidth = 0;
     #dragHeight = 0;
     #dragTitleHeight = 0;
-    #dragWorkArea = null;
 
     constructor(manager, options = {}) {
         this.onDragStart = this.onDragStart.bind(this);
@@ -210,7 +209,7 @@ export default class Window {
         });
 
         this.#closeButton.addEventListener("click", () => {
-            this.close();
+            this.manager.close(this);
         });
 
         this.#minimizeButton.addEventListener("click", () => {
@@ -218,16 +217,19 @@ export default class Window {
         });
 
         this.#maximizeButton.addEventListener("click", () => {
-            if (this.state === WindowState.MAXIMIZED) {
+            if (
+                this.state === WindowState.MAXIMIZED ||
+                this.#isSnapped
+            ) {
                 this.restore();
             } else {
                 this.maximize();
             }
         });
-
         this.element.addEventListener("mousedown", () => {
             this.requestFocus();
         });
+
     }
 
     #updateControls() {
@@ -294,10 +296,6 @@ export default class Window {
     }
 
     #setState(nextState) {
-        console.log({
-            previous: this.#state,
-            next: nextState
-        });
         if (this.#state === nextState) {
             return;
         }
@@ -547,7 +545,7 @@ export default class Window {
 
     onDragMove(event) {
         if (this.#pendingRestoreDrag) {
-            console.log("Restore drag triggered");
+
             const dx = event.clientX - this.#restoreDragStartX;
             const dy = event.clientY - this.#restoreDragStartY;
 
@@ -559,6 +557,7 @@ export default class Window {
             }
 
             this.#beginRestoreDrag(event);
+            // Continue this same pointer movement
         }
 
         if (!this.drag.active) return;
@@ -590,18 +589,76 @@ export default class Window {
 
     onDragEnd(event) {
         console.log("drag end");
+
         if (event.pointerId !== this.drag.pointerId) return;
 
         this.#pendingRestoreDrag = false;
         this.drag.active = false;
 
-        this.#titleBar.releasePointerCapture(event.pointerId);
+        const rect = this.manager.getActiveSnapRect();
+        this.manager.clearSnapPreview();
+        let workArea;
 
-        this.#titleBar.removeEventListener("pointermove", this.onDragMove);
-        this.#titleBar.removeEventListener("pointerup", this.onDragEnd);
-        this.#titleBar.removeEventListener("pointercancel", this.onDragEnd);
+        if (rect) {
+            workArea = this.manager.getWorkArea();
 
-        // Clear drag cache.
+            const isFullScreenSnap =
+                Math.abs(rect.width - workArea.width) < 2 &&
+                Math.abs(rect.height - workArea.height) < 2;
+
+            if (isFullScreenSnap) {
+                // Save restore position before maximizing
+                this.#restoreBounds = {
+                    x: this.#x,
+                    y: this.#y,
+                    width: this.#width,
+                    height: this.#height
+                };
+
+                this.#x = rect.x;
+                this.#y = rect.y;
+                this.#width = rect.width;
+                this.#height = rect.height;
+
+                this.#isSnapped = false;
+
+                this.#setState(WindowState.MAXIMIZED);
+                this.#scheduleRender();
+
+            } else {
+                // Normal side snap
+                this.#isSnapped = true;
+
+                this.#x = rect.x;
+                this.#y = rect.y;
+                this.#width = rect.width;
+                this.#height = rect.height;
+
+                this.#scheduleRender();
+            }
+        }
+
+        if (this.#titleBar.hasPointerCapture(event.pointerId)) {
+            this.#titleBar.releasePointerCapture(event.pointerId);
+        }
+
+        this.#titleBar.removeEventListener(
+            "pointermove",
+            this.onDragMove
+        );
+
+
+        this.#titleBar.removeEventListener(
+            "pointerup",
+            this.onDragEnd
+        );
+
+        this.#titleBar.removeEventListener(
+            "pointercancel",
+            this.onDragEnd
+        );
+
+        // Clear drag cache
         this.#dragWidth = 0;
         this.#dragHeight = 0;
         this.#dragTitleHeight = 0;
@@ -613,13 +670,13 @@ export default class Window {
     #beginRestoreDrag(event) {
         this.#pendingRestoreDrag = false;
 
-        // Keep the pointer at roughly the same horizontal position
-        // on the restored window.
+        const restoreOffsetX = this.#restoreGrabOffsetX;
+        const restoreOffsetY = this.#restoreGrabOffsetY;
 
         this.restore();
 
-        const newX = event.clientX - this.#width * this.#restoreGrabRatio;
-        const newY = event.clientY - this.#restoreGrabOffsetY;
+        const newX = event.clientX - restoreOffsetX;
+        const newY = event.clientY - restoreOffsetY;
 
         this.#setPosition(newX, newY);
 
@@ -628,10 +685,9 @@ export default class Window {
         this.drag.startPointerX = event.clientX;
         this.drag.startPointerY = event.clientY;
 
-        this.drag.startX = this.#x;
-        this.drag.startY = this.#y;
+        this.drag.startX = newX;
+        this.drag.startY = newY;
 
-        // Cache layout values for the drag.
         this.#dragWidth = this.#element.offsetWidth;
         this.#dragHeight = this.#element.offsetHeight;
         this.#dragTitleHeight = this.#titleBar.offsetHeight;
@@ -681,24 +737,32 @@ export default class Window {
     }
 
     restore() {
-        if (!this.#restoreBounds) {
+        this.#visible = true;
+        this.element.style.display = "";
+
+        if (!this.#restoreBounds && !this.#isSnapped) {
             return;
         }
 
-        this.#x = this.#restoreBounds.x;
-        this.#y = this.#restoreBounds.y;
-        this.#width = this.#restoreBounds.width;
-        this.#height = this.#restoreBounds.height;
+        if (this.#restoreBounds) {
+            this.#x = this.#restoreBounds.x;
+            this.#y = this.#restoreBounds.y;
+            this.#width = this.#restoreBounds.width;
+            this.#height = this.#restoreBounds.height;
+        }
 
         this.#applyStyles();
 
         this.#restoreBounds = null;
+        this.#isSnapped = false;
+        this.#snapType = null;
 
         this.#setState(WindowState.NORMAL);
     }
 
     minimize() {
-        this.#setState(WindowState.MINIMIZED);
+        this.#visible = false;
+        this.element.style.display = "none";
     }
 
     close() {
@@ -715,6 +779,22 @@ export default class Window {
 
     get state() {
         return this.#state;
+    }
+
+    getTitle() {
+        return this.#title;
+    }
+
+    focus() {
+        this.manager.focus(this);
+    }
+
+    destroy() {
+        this.#element.remove();
+    }
+
+    isVisible() {
+        return this.#visible;
     }
 
     requestFocus() {

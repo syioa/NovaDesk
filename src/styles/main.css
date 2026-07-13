@@ -221,3 +221,49 @@ body {
     background: red;
     opacity: 0.3;
 }
+
+.taskbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 52px;
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 12px;
+
+    background: rgba(30, 30, 30, 0.9);
+    backdrop-filter: blur(12px);
+}
+
+.taskbar-left,
+.taskbar-center,
+.taskbar-right {
+    display: flex;
+    align-items: center;
+}
+
+.taskbar-center {
+    flex: 1;
+    justify-content: center;
+}
+
+.desktop-layer-taskbar {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.desktop-layer-taskbar>* {
+    pointer-events: auto;
+}
+
+.taskbar-button.active {
+    background: rgba(255, 255, 255, 0.2);
+}

@@ -1,14 +1,27 @@
+import { Taskbar } from "../ui/Taskbar.js";
+
 export default class Desktop {
     #element;
     #snapPreview;
+    #taskbar;
+    #eventBus;
 
     #layers = {};
 
-    constructor() {
+    constructor(eventBus) {
+        this.#eventBus = eventBus;
         this.#element = document.createElement("main");
         this.#element.className = "desktop";
 
         this.#createLayers();
+
+        this.#taskbar = new Taskbar(this.#eventBus);
+        this.#taskbar.bindEvents();
+
+        this.getLayer("taskbar").append(
+            this.#taskbar.getElement()
+        );
+
         this.#createSnapPreview();
     }
 
@@ -40,7 +53,8 @@ export default class Desktop {
             "snap-preview",
             "windows",
             "overlay",
-            "contextmenu"
+            "contextmenu",
+            "taskbar"
         ];
 
         for (const name of names) {
@@ -55,6 +69,10 @@ export default class Desktop {
 
     get element() {
         return this.#element;
+    }
+
+    get taskbar() {
+        return this.#taskbar;
     }
 
     getLayer(name) {
