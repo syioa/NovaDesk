@@ -54,7 +54,10 @@ export default class Application {
             this.#eventBus
         );
 
-        this.#appManager = new AppManager(this.#windowManager);
+        this.#appManager = new AppManager(
+            this.#eventBus,
+            this.#windowManager
+        );
         this.#appManager.register(WelcomeApp);
         this.#appManager.launch("welcome");
 

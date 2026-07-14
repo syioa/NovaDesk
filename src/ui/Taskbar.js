@@ -4,6 +4,7 @@ export class Taskbar {
     #center;
     #right;
     #eventBus;
+    #startButton;
 
     #buttons = new Map();
 
@@ -70,10 +71,14 @@ export class Taskbar {
     }
 
     #createStartButton() {
-        const button = document.createElement("button");
-        button.textContent = "Start";
+        this.#startButton = document.createElement("button");
+        this.#startButton.textContent = "Start";
 
-        this.#left.append(button);
+        this.#startButton.addEventListener("click", () => {
+            this.#eventBus.emit("start:toggle");
+        });
+
+        this.#left.append(this.#startButton);
     }
 
     #createClock() {

@@ -1,9 +1,15 @@
 export default class AppManager {
     #windowManager;
     #apps = new Map();
+    #eventBus;
 
-    constructor(windowManager) {
+    constructor(eventBus, windowManager) {
+        this.#eventBus = eventBus;
         this.#windowManager = windowManager;
+
+        this.#eventBus.on("app:launch", (appClass) => {
+            this.launch(appClass);
+        });
     }
 
     /**

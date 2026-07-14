@@ -1,10 +1,12 @@
 import { Taskbar } from "../ui/Taskbar.js";
+import StartMenu from "../ui/StartMenu.js";
 
 export default class Desktop {
     #element;
     #snapPreview;
     #taskbar;
     #eventBus;
+    #startMenu;
 
     #layers = {};
 
@@ -12,6 +14,9 @@ export default class Desktop {
         this.#eventBus = eventBus;
         this.#element = document.createElement("main");
         this.#element.className = "desktop";
+        this.#startMenu = new StartMenu(
+            this.#eventBus,
+        );
 
         this.#createLayers();
 
@@ -64,6 +69,8 @@ export default class Desktop {
 
             this.#layers[name] = layer;
             this.#element.append(layer);
+
+            this.#element.appendChild(this.#startMenu.getElement());
         }
     }
 
