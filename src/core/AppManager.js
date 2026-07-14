@@ -1,14 +1,15 @@
 export default class AppManager {
     #windowManager;
-    #apps = new Map();
     #eventBus;
+    #registry;
 
-    constructor(eventBus, windowManager) {
+    constructor(eventBus, windowManager, registry) {
         this.#eventBus = eventBus;
         this.#windowManager = windowManager;
+        this.#registry = registry;
 
-        this.#eventBus.on("app:launch", (appClass) => {
-            this.launch(appClass);
+        this.#eventBus.on("app:launch", (id) => {
+            this.launch(id);
         });
     }
 
@@ -16,26 +17,13 @@ export default class AppManager {
      * Register an application class.
      * @param {typeof import("../apps/App.js").default} AppClass
      */
-    register(AppClass) {
-        const { id } = AppClass.manifest;
-
-        if (!id) {
-            throw new Error("Application manifest must contain an id.");
-        }
-
-        if (this.#apps.has(id)) {
-            throw new Error(`Application "${id}" is already registered.`);
-        }
-
-        this.#apps.set(id, AppClass);
-    }
 
     /**
      * Launch an application by id.
-     * @param {string} id
+     *@param {string} id
      */
     launch(id) {
-        const AppClass = this.#apps.get(id);
+        const AppClass = this.#registry.get(id);
 
         if (!AppClass) {
             throw new Error(`Unknown application "${id}".`);

@@ -3,11 +3,13 @@ import WindowManager from "./WindowManager.js";
 import EventBus from "./EventBus.js";
 import AppManager from "./AppManager.js";
 import WelcomeApp from "../apps/Welcome/WelcomeApp.js";
+import ApplicationRegistry from "./ApplicationRegistry.js";
 
 export default class Application {
     static instance = null;
 
     #initialized = false;
+    #registry;
 
     #desktop = null;
     #windowManager = null;
@@ -36,6 +38,7 @@ export default class Application {
 
     async boot() {
         this.#eventBus = new EventBus();
+        this.#registry = new ApplicationRegistry();
 
         this.#eventBus.on("window:created", (window) => {
             console.log("Window created:", window);
@@ -56,9 +59,10 @@ export default class Application {
 
         this.#appManager = new AppManager(
             this.#eventBus,
-            this.#windowManager
+            this.#windowManager,
+            this.#registry
         );
-        this.#appManager.register(WelcomeApp);
+
         this.#appManager.launch("welcome");
 
         console.log("NovaDesk started.");
