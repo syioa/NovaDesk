@@ -3,11 +3,13 @@ import WelcomeApp from "../apps/Welcome/WelcomeApp.js";
 export default class StartMenu {
     #element;
     #eventBus;
+    #registry;
 
     #isOpen = false;
 
-    constructor(eventBus) {
+    constructor(eventBus, registry) {
         this.#eventBus = eventBus;
+        this.#registry = registry;
 
         this.#element = document.createElement("div");
         this.#element.className = "start-menu";
@@ -23,21 +25,20 @@ export default class StartMenu {
                 return;
             }
 
+            console.log("clicked:", event.target);
+            console.log("menu:", this.#element);
+            console.log("contains:", this.#element.contains(event.target));
+
             if (this.#element.contains(event.target)) {
+                console.log("inside start menu");
                 return;
             }
+
+            console.log("outside start menu");
 
             this.close();
         });
     }
-
-    #apps = [
-        {
-            title: "Welcome",
-            icon: "👋",
-            id: "welcome"
-        }
-    ];
 
     #render() {
         this.#element.innerHTML = `
@@ -45,19 +46,26 @@ export default class StartMenu {
                 NovaDesk
             </div>
 
-            <div class="start-menu__apps">
             </div>
+            <div class="start-menu__apps">
         `;
 
         const appsContainer = this.#element.querySelector(".start-menu__apps");
 
-        for (const app of this.#apps) {
+        for (const AppClass of this.#registry.getApps()) {
+            const manifest = AppClass.manifest;
+
             const button = document.createElement("button");
 
-            button.textContent = `${app.icon} ${app.title}`;
+            button.textContent = manifest.name;
 
             button.addEventListener("click", () => {
-                this.#eventBus.emit("app:launch", app.id);
+                console.log("START MENU BUTTON CLICK");
+                this.#eventBus.emit(
+                    "app:launch",
+                    manifest.id
+                );
+
                 this.close();
             });
 

@@ -9,6 +9,7 @@ export default class AppManager {
         this.#registry = registry;
 
         this.#eventBus.on("app:launch", (id) => {
+            console.log("AppManager received launch:", id);
             this.launch(id);
         });
     }

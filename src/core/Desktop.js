@@ -1,5 +1,6 @@
 import { Taskbar } from "../ui/Taskbar.js";
 import StartMenu from "../ui/StartMenu.js";
+import DesktopIcons from "../ui/DesktopIcons.js";
 
 export default class Desktop {
     #element;
@@ -7,15 +8,21 @@ export default class Desktop {
     #taskbar;
     #eventBus;
     #startMenu;
+    #registry;
+
+    #desktopIcons;
 
     #layers = {};
 
-    constructor(eventBus) {
+    constructor(eventBus, registry) {
         this.#eventBus = eventBus;
+        this.#registry = registry;
+
         this.#element = document.createElement("main");
         this.#element.className = "desktop";
         this.#startMenu = new StartMenu(
             this.#eventBus,
+            this.#registry
         );
 
         this.#createLayers();
@@ -26,6 +33,20 @@ export default class Desktop {
         this.getLayer("taskbar").append(
             this.#taskbar.getElement()
         );
+
+        this.#desktopIcons = new DesktopIcons(
+            this.#eventBus,
+            this.#registry
+        );
+        this.getLayer("icons").append(
+            this.#desktopIcons.element
+        );
+
+        this.#element.addEventListener("pointerdown", (event) => {
+            if (event.target === this.#element) {
+                this.#desktopIcons.clearSelection();
+            }
+        });
 
         this.#createSnapPreview();
     }
@@ -69,9 +90,11 @@ export default class Desktop {
 
             this.#layers[name] = layer;
             this.#element.append(layer);
-
-            this.#element.appendChild(this.#startMenu.getElement());
         }
+
+        this.getLayer("taskbar").append(
+            this.#startMenu.getElement()
+        );
     }
 
     get element() {

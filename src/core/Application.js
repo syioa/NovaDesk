@@ -48,7 +48,10 @@ export default class Application {
 
         this.#initialized = true;
 
-        this.#desktop = new Desktop(this.#eventBus);
+        this.#desktop = new Desktop(
+            this.#eventBus,
+            this.#registry
+        );
 
         document.body.append(this.#desktop.element);
 
