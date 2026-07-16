@@ -331,6 +331,10 @@ body {
     margin-left: 20px;
 }
 
+.context-menu-item.active {
+    background: rgba(0, 0, 0, 0.1);
+}
+
 .desktop-icons {
     position: absolute;
     inset: 0;

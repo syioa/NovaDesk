@@ -1,6 +1,6 @@
 export default class ContextMenu {
     #element;
-    #submenu;
+    #submenus = [];
     #submenuTimeout;
 
     constructor(parentElement) {
@@ -50,6 +50,14 @@ export default class ContextMenu {
         entry.className = "context-menu-item";
 
         const label = document.createElement("span");
+        entry.addEventListener("pointerenter", () => {
+            entry.classList.add("active");
+        });
+
+        entry.addEventListener("pointerleave", () => {
+            entry.classList.remove("active");
+        });
+
         label.textContent = item.label;
 
         entry.append(label);
@@ -70,7 +78,7 @@ export default class ContextMenu {
 
             entry.addEventListener("pointerleave", () => {
                 this.#submenuTimeout = setTimeout(() => {
-                    this.#closeSubmenu();
+                    this.#closeSubmenus();
                 }, 300);
             });
         }
@@ -80,7 +88,7 @@ export default class ContextMenu {
                 event.stopPropagation();
 
                 item.action();
-                this.hide();
+                this.#closeAll();
             });
         }
 
@@ -117,45 +125,77 @@ export default class ContextMenu {
     }
 
     #openSubmenu(item, parentElement) {
-        if (this.#submenu) {
-            this.#submenu.remove();
-        }
+        this.#closeSubmenus();
 
-        this.#submenu = document.createElement("div");
+        const submenu = document.createElement("div");
 
-        this.#submenu.addEventListener("pointerenter", () => {
+        submenu.addEventListener("pointerenter", () => {
             clearTimeout(this.#submenuTimeout);
         });
-        this.#submenu.addEventListener("pointerleave", () => {
+
+        submenu.addEventListener("pointerleave", () => {
             this.#submenuTimeout = setTimeout(() => {
-                this.#closeSubmenu();
-            }, 300);
+                this.#closeSubmenus();
+            }, 500);
         });
 
-        this.#submenu.className = "context-menu";
+        submenu.className = "context-menu";
 
         for (const child of item.items) {
-            const childItem = this.#createMenuItem(child);
-
-            this.#submenu.append(childItem);
+            submenu.append(
+                this.#createMenuItem(child)
+            );
         }
 
-        document.body.append(this.#submenu);
+        document.body.append(submenu);
+
+        submenu.style.display = "block";
 
         const rect = parentElement.getBoundingClientRect();
 
-        this.#submenu.style.display = "block";
-        this.#submenu.style.left = `${rect.right}px`;
-        this.#submenu.style.top = `${rect.top}px`;
+        this.#positionSubmenu(
+            submenu,
+            rect
+        );
+
+        this.#submenus.push(submenu);
     }
 
-    #closeSubmenu() {
-        if (!this.#submenu) {
-            return;
+    #positionSubmenu(element, parentRect) {
+        const rect = element.getBoundingClientRect();
+
+        let x = parentRect.right;
+        let y = parentRect.top;
+
+        // Open to the left if there is not enough space
+        if (x + rect.width > window.innerWidth) {
+            x = parentRect.left - rect.width;
         }
 
-        this.#submenu.remove();
-        this.#submenu = null;
+        // Prevent going below the screen
+        if (y + rect.height > window.innerHeight) {
+            y = window.innerHeight - rect.height;
+        }
+
+        // Prevent negative positions
+        x = Math.max(0, x);
+        y = Math.max(0, y);
+
+        element.style.left = `${x}px`;
+        element.style.top = `${y}px`;
+    }
+
+    #closeSubmenus() {
+        for (const submenu of this.#submenus) {
+            submenu.remove();
+        }
+
+        this.#submenus = [];
+    }
+
+    #closeAll() {
+        this.hide();
+        this.#closeSubmenus();
     }
 
     hide() {
