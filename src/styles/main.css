@@ -321,6 +321,16 @@ body {
     background: #d0d0d0;
 }
 
+.context-menu-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 16px;
+}
+
+.context-menu-arrow {
+    margin-left: 20px;
+}
+
 .desktop-icons {
     position: absolute;
     inset: 0;

@@ -124,11 +124,16 @@ export default class Desktop {
         return [
             {
                 label: "View",
-                action: () => console.log("View")
-            },
-            {
-                label: "Sort By",
-                action: () => console.log("Sort By")
+                items: [
+                    {
+                        label: "Large Icons",
+                        action: () => console.log("Large Icons")
+                    },
+                    {
+                        label: "Small Icons",
+                        action: () => console.log("Small Icons")
+                    }
+                ]
             },
 
             { type: "separator" },
@@ -136,20 +141,6 @@ export default class Desktop {
             {
                 label: "Refresh",
                 action: () => this.#refresh()
-            },
-
-            { type: "separator" },
-
-            {
-                label: "New Folder",
-                action: () => console.log("New Folder")
-            },
-
-            { type: "separator" },
-
-            {
-                label: "Settings",
-                action: () => this.#openSettings()
             }
         ];
     }
