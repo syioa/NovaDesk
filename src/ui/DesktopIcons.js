@@ -87,6 +87,15 @@ export default class DesktopIcons {
     }
 
     clearSelection() {
+        if (!this.#selectedIcon) {
+            return;
+        }
+
+        this.#selectedIcon.classList.remove("selected");
+        this.#selectedIcon = null;
+    }
+
+    clearSelection() {
         this.#clearSelection();
     }
 }

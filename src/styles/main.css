@@ -299,6 +299,22 @@ body {
     padding: 8px;
 }
 
+.context-menu {
+    position: fixed;
+    display: none;
+
+    min-width: 160px;
+    padding: 4px 0;
+
+    background: white;
+    border: 1px solid #ccc;
+}
+
+.context-menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
 .desktop-icons {
     position: absolute;
     inset: 0;

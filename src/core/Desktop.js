@@ -1,6 +1,7 @@
 import { Taskbar } from "../ui/Taskbar.js";
 import StartMenu from "../ui/StartMenu.js";
 import DesktopIcons from "../ui/DesktopIcons.js";
+import ContextMenu from "../ui/ContextMenu.js";
 
 export default class Desktop {
     #element;
@@ -9,6 +10,7 @@ export default class Desktop {
     #eventBus;
     #startMenu;
     #registry;
+    #contextMenu;
 
     #desktopIcons;
 
@@ -27,6 +29,10 @@ export default class Desktop {
 
         this.#createLayers();
 
+        this.#contextMenu = new ContextMenu(
+            this.getLayer("contextmenu")
+        );
+
         this.#taskbar = new Taskbar(this.#eventBus);
         this.#taskbar.bindEvents();
 
@@ -42,10 +48,11 @@ export default class Desktop {
             this.#desktopIcons.element
         );
 
+        this.#element.addEventListener("contextmenu", (event) => {
+            this.#onContextMenu(event);
+        });
         this.#element.addEventListener("pointerdown", (event) => {
-            if (event.target === this.#element) {
-                this.#desktopIcons.clearSelection();
-            }
+            this.#onPointerDown(event);
         });
 
         this.#createSnapPreview();
@@ -95,6 +102,54 @@ export default class Desktop {
         this.getLayer("taskbar").append(
             this.#startMenu.getElement()
         );
+    }
+
+    #onContextMenu(event) {
+        event.preventDefault();
+
+        // Only show menu on empty desktop
+        if (event.target !== this.#element) {
+            return;
+        }
+
+        this.#contextMenu.show(
+            event.clientX,
+            event.clientY,
+            [
+                {
+                    label: "Refresh",
+                    action: () => console.log("Refresh clicked")
+                },
+                {
+                    label: "Settings",
+                    action: () => console.log("Settings clicked")
+                }
+            ],
+            this.getWorkArea()
+        );
+    }
+
+    #onPointerDown(event) {
+        this.#contextMenu.hide();
+
+        if (event.target !== this.#element) {
+            return;
+        }
+
+        this.#desktopIcons.clearSelection();
+    }
+
+    getWorkArea() {
+        const rect = this.#taskbar
+            .getElement()
+            .getBoundingClientRect();
+
+        return {
+            left: 0,
+            top: 0,
+            right: window.innerWidth,
+            bottom: window.innerHeight - rect.height
+        };
     }
 
     get element() {
