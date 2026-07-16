@@ -38,7 +38,6 @@ export default class DesktopIcons {
     }
 
     #createIcon(AppClass) {
-        console.log("CREATING ICON:", AppClass.id);
         const icon = document.createElement("div");
         icon.className = "desktop-icon";
 

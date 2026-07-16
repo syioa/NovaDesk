@@ -25,10 +25,6 @@ export default class StartMenu {
                 return;
             }
 
-            console.log("clicked:", event.target);
-            console.log("menu:", this.#element);
-            console.log("contains:", this.#element.contains(event.target));
-
             if (this.#element.contains(event.target)) {
                 console.log("inside start menu");
                 return;
@@ -60,7 +56,6 @@ export default class StartMenu {
             button.textContent = manifest.name;
 
             button.addEventListener("click", () => {
-                console.log("START MENU BUTTON CLICK");
                 this.#eventBus.emit(
                     "app:launch",
                     manifest.id

@@ -39,16 +39,6 @@ export default class ContextMenu {
         this.#element.style.display = "block";
 
         const rect = this.#element.getBoundingClientRect();
-        console.log("x:", x);
-        console.log("y:", y);
-
-        console.log("bounds.left:", bounds.left);
-        console.log("bounds.top:", bounds.top);
-        console.log("bounds.right:", bounds.right);
-        console.log("bounds.bottom:", bounds.bottom);
-
-        console.log("rect.width:", rect.width);
-        console.log("rect.height:", rect.height);
 
         let finalX = x;
         let finalY = y;

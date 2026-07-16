@@ -315,6 +315,12 @@ body {
     cursor: pointer;
 }
 
+.context-menu-separator {
+    height: 1px;
+    margin: 4px 0;
+    background: #d0d0d0;
+}
+
 .desktop-icons {
     position: absolute;
     inset: 0;

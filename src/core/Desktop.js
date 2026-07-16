@@ -115,18 +115,43 @@ export default class Desktop {
         this.#contextMenu.show(
             event.clientX,
             event.clientY,
-            [
-                {
-                    label: "Refresh",
-                    action: () => console.log("Refresh clicked")
-                },
-                {
-                    label: "Settings",
-                    action: () => console.log("Settings clicked")
-                }
-            ],
+            this.#createDesktopContextMenuItems(),
             this.getWorkArea()
         );
+    }
+
+    #createDesktopContextMenuItems() {
+        return [
+            {
+                label: "View",
+                action: () => console.log("View")
+            },
+            {
+                label: "Sort By",
+                action: () => console.log("Sort By")
+            },
+
+            { type: "separator" },
+
+            {
+                label: "Refresh",
+                action: () => this.#refresh()
+            },
+
+            { type: "separator" },
+
+            {
+                label: "New Folder",
+                action: () => console.log("New Folder")
+            },
+
+            { type: "separator" },
+
+            {
+                label: "Settings",
+                action: () => this.#openSettings()
+            }
+        ];
     }
 
     #onPointerDown(event) {
@@ -137,6 +162,14 @@ export default class Desktop {
         }
 
         this.#desktopIcons.clearSelection();
+    }
+
+    #refresh() {
+        console.log("Refresh clicked");
+    }
+
+    #openSettings() {
+        console.log("Settings clicked");
     }
 
     getWorkArea() {
