@@ -4,12 +4,14 @@ import EventBus from "./EventBus.js";
 import AppManager from "./AppManager.js";
 import WelcomeApp from "../apps/Welcome/WelcomeApp.js";
 import ApplicationRegistry from "./ApplicationRegistry.js";
+import UIManager from "./UIManager.js";
 
 export default class Application {
     static instance = null;
 
     #initialized = false;
     #registry;
+    #uiManager = null;
 
     #desktop = null;
     #windowManager = null;
@@ -39,6 +41,7 @@ export default class Application {
     async boot() {
         this.#eventBus = new EventBus();
         this.#registry = new ApplicationRegistry();
+        this.#uiManager = new UIManager();
 
         this.#eventBus.on("window:created", (window) => {
             console.log("Window created:", window);
@@ -50,7 +53,8 @@ export default class Application {
 
         this.#desktop = new Desktop(
             this.#eventBus,
-            this.#registry
+            this.#registry,
+            this.#uiManager
         );
 
         document.body.append(this.#desktop.element);

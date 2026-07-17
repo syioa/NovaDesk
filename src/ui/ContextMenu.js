@@ -2,8 +2,11 @@ export default class ContextMenu {
     #element;
     #submenus = [];
     #submenuTimeout;
+    #uiManager;
 
-    constructor(parentElement) {
+    constructor(parentElement, uiManager) {
+        this.#uiManager = uiManager;
+
         this.#element = document.createElement("div");
         this.#element.className = "context-menu";
 
@@ -11,13 +14,6 @@ export default class ContextMenu {
             this.#element
         );
 
-        document.addEventListener("keydown", (event) => {
-            if (event.key !== "Escape") {
-                return;
-            }
-
-            this.#closeAll();
-        });
         window.addEventListener("blur", () => {
             this.#closeAll();
         });
@@ -28,7 +24,7 @@ export default class ContextMenu {
             }
         });
 
-        this.hide();
+        this.#element.style.display = "none";
     }
 
     show(x, y, items, bounds) {
@@ -41,6 +37,8 @@ export default class ContextMenu {
         this.#element.style.display = "block";
 
         this.#position(x, y, bounds);
+
+        this.#uiManager.register(this);
     }
 
     #renderItems(items) {
@@ -213,14 +211,16 @@ export default class ContextMenu {
     #closeAll() {
         clearTimeout(this.#submenuTimeout);
 
-        this.hide();
+        this.close();
         this.#closeSubmenus();
     }
 
-    hide() {
+    close() {
         if (this.#element.style.display === "none") {
             return;
         }
+
+        this.#uiManager.unregister(this);
 
         this.#element.style.display = "none";
     }

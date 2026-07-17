@@ -4,12 +4,14 @@ export default class StartMenu {
     #element;
     #eventBus;
     #registry;
+    #uiManager;
 
     #isOpen = false;
 
-    constructor(eventBus, registry) {
+    constructor(eventBus, registry, uiManager) {
         this.#eventBus = eventBus;
         this.#registry = registry;
+        this.#uiManager = uiManager;
 
         this.#element = document.createElement("div");
         this.#element.className = "start-menu";
@@ -26,11 +28,8 @@ export default class StartMenu {
             }
 
             if (this.#element.contains(event.target)) {
-                console.log("inside start menu");
                 return;
             }
-
-            console.log("outside start menu");
 
             this.close();
         });
@@ -71,11 +70,13 @@ export default class StartMenu {
     open() {
         this.#isOpen = true;
         this.#element.style.display = "block";
+        this.#uiManager.register(this);
     }
 
     close() {
         this.#isOpen = false;
         this.#element.style.display = "none";
+        this.#uiManager.unregister(this);
     }
 
     toggle() {

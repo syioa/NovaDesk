@@ -13,24 +13,28 @@ export default class Desktop {
     #contextMenu;
 
     #desktopIcons;
+    #uiManager;
 
     #layers = {};
 
-    constructor(eventBus, registry) {
+    constructor(eventBus, registry, uiManager) {
         this.#eventBus = eventBus;
         this.#registry = registry;
+        this.#uiManager = uiManager;
 
         this.#element = document.createElement("main");
         this.#element.className = "desktop";
         this.#startMenu = new StartMenu(
             this.#eventBus,
-            this.#registry
+            this.#registry,
+            this.#uiManager
         );
 
         this.#createLayers();
 
         this.#contextMenu = new ContextMenu(
-            this.getLayer("contextmenu")
+            this.#layers.contextmenu,
+            this.#uiManager
         );
 
         this.#taskbar = new Taskbar(this.#eventBus);
@@ -146,7 +150,7 @@ export default class Desktop {
     }
 
     #onPointerDown(event) {
-        this.#contextMenu.hide();
+        this.#contextMenu.close();
 
         if (event.target !== this.#element) {
             return;
