@@ -76,6 +76,9 @@ export default class ContextMenu {
         entry.append(label);
 
         if (item.items) {
+            entry.addEventListener("pointerdown", (event) => {
+                event.stopPropagation();
+            });
             const arrow = document.createElement("span");
 
             arrow.textContent = "▶";
@@ -160,7 +163,7 @@ export default class ContextMenu {
             );
         }
 
-        document.body.append(submenu);
+        this.#element.parentElement.append(submenu);
 
         submenu.style.display = "block";
 
