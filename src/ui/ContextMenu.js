@@ -11,14 +11,29 @@ export default class ContextMenu {
             this.#element
         );
 
-        this.#element.addEventListener("pointerdown", (event) => {
-            event.stopPropagation();
+        document.addEventListener("keydown", (event) => {
+            if (event.key !== "Escape") {
+                return;
+            }
+
+            this.#closeAll();
+        });
+        window.addEventListener("blur", () => {
+            this.#closeAll();
+        });
+
+        document.addEventListener("pointerdown", (event) => {
+            if (!this.#element.contains(event.target)) {
+                this.#closeAll();
+            }
         });
 
         this.hide();
     }
 
     show(x, y, items, bounds) {
+        this.#closeSubmenus();
+
         this.#element.innerHTML = "";
 
         this.#renderItems(items);
@@ -186,6 +201,8 @@ export default class ContextMenu {
     }
 
     #closeSubmenus() {
+        clearTimeout(this.#submenuTimeout);
+
         for (const submenu of this.#submenus) {
             submenu.remove();
         }
@@ -194,12 +211,32 @@ export default class ContextMenu {
     }
 
     #closeAll() {
+        clearTimeout(this.#submenuTimeout);
+
         this.hide();
         this.#closeSubmenus();
     }
 
     hide() {
+        if (this.#element.style.display === "none") {
+            return;
+        }
+
         this.#element.style.display = "none";
+    }
+
+    #containsTarget(target) {
+        if (this.#element.contains(target)) {
+            return true;
+        }
+
+        for (const submenu of this.#submenus) {
+            if (submenu.contains(target)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     getElement() {
