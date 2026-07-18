@@ -3,7 +3,9 @@ export default class DesktopIcons {
     #registry;
     #element;
     #desktopIcons;
+
     #selectedIcons = new Set();
+    #iconPositions = new Map();
 
     #dragging = false;
 
@@ -95,6 +97,23 @@ export default class DesktopIcons {
             );
         });
 
+
+        const index = this.#iconPositions.size;
+
+        const column = index % 6;
+        const row = Math.floor(index / 6);
+
+        const x = 32 + column * 96;
+        const y = 32 + row * 96;
+
+        this.#iconPositions.set(icon, {
+            x,
+            y
+        });
+
+        icon.style.left = `${x}px`;
+        icon.style.top = `${y}px`;
+
         return icon;
     }
 
@@ -167,16 +186,101 @@ export default class DesktopIcons {
         const dx = event.clientX - this.#dragStartX;
         const dy = event.clientY - this.#dragStartY;
 
-        this.#dragIcon.style.left =
-            `${this.#iconStartX + dx}px`;
+        let x = this.#iconStartX + dx;
+        let y = this.#iconStartY + dy;
 
-        this.#dragIcon.style.top =
-            `${this.#iconStartY + dy}px`;
+
+        if (!this.#checkCollision(
+            this.#dragIcon,
+            x,
+            y
+        )) {
+            this.#dragIcon.style.left = `${x}px`;
+            this.#dragIcon.style.top = `${y}px`;
+
+            this.#iconPositions.set(
+                this.#dragIcon,
+                {
+                    x,
+                    y
+                }
+            );
+        }
     }
 
     #endDrag() {
-        this.#dragging = false;
+        if (!this.#dragging) {
+            return;
+        }
 
+        const position = this.#iconPositions.get(
+            this.#dragIcon
+        );
+
+        const grid = 16;
+
+        const x =
+            Math.round(position.x / grid) * grid;
+
+        const y =
+            Math.round(position.y / grid) * grid;
+
+
+        this.#dragIcon.style.left = `${x}px`;
+        this.#dragIcon.style.top = `${y}px`;
+
+        this.#iconPositions.set(
+            this.#dragIcon,
+            {
+                x,
+                y
+            }
+        );
+
+
+        this.#dragging = false;
         this.#dragIcon = null;
+    }
+
+    #checkCollision(draggedIcon, x, y) {
+        const size = draggedIcon.getBoundingClientRect();
+
+        const draggedRect = {
+            left: x,
+            top: y,
+            right: x + size.width,
+            bottom: y + size.height
+        };
+
+
+        for (const icon of this.#iconPositions.keys()) {
+
+            if (icon === draggedIcon) {
+                continue;
+            }
+
+            const position = this.#iconPositions.get(icon);
+
+            const iconRect = {
+                left: position.x,
+                top: position.y,
+                right: position.x + size.width,
+                bottom: position.y + size.height
+            };
+
+
+            const collision =
+                draggedRect.left < iconRect.right &&
+                draggedRect.right > iconRect.left &&
+                draggedRect.top < iconRect.bottom &&
+                draggedRect.bottom > iconRect.top;
+
+
+            if (collision) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
