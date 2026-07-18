@@ -211,6 +211,13 @@ export default class Desktop {
             width,
             height
         );
+
+        this.#desktopIcons.selectInRect({
+            x: left,
+            y: top,
+            width,
+            height
+        });
     }
 
     #onPointerDown(event) {

@@ -3,7 +3,7 @@ export default class DesktopIcons {
     #registry;
     #element;
     #desktopIcons;
-    #selectedIcon;
+    #selectedIcons = new Set();
 
     constructor(eventBus, registry) {
         this.#eventBus = eventBus;
@@ -16,7 +16,7 @@ export default class DesktopIcons {
 
         this.#element.addEventListener("click", (event) => {
             if (event.target === this.#element) {
-                this.#clearSelection();
+                this.clearSelection();
             }
         });
     }
@@ -68,33 +68,38 @@ export default class DesktopIcons {
     }
 
     #selectIcon(icon) {
-        if (this.#selectedIcon) {
-            this.#selectedIcon.classList.remove("selected");
-        }
-
-        this.#selectedIcon = icon;
-        this.#selectedIcon.classList.add("selected");
+        this.#selectedIcons.add(icon);
+        icon.classList.add("selected");
 
         console.log("selected:", icon);
     }
 
-    #clearSelection() {
-        if (!this.#selectedIcon) return;
-
-        this.#selectedIcon.classList.remove("selected");
-        this.#selectedIcon = null;
-    }
-
     clearSelection() {
-        if (!this.#selectedIcon) {
-            return;
+        for (const icon of this.#selectedIcons) {
+            icon.classList.remove("selected");
         }
 
-        this.#selectedIcon.classList.remove("selected");
-        this.#selectedIcon = null;
+        this.#selectedIcons.clear();
     }
+    selectInRect(rect) {
+        this.clearSelection();
 
-    clearSelection() {
-        this.#clearSelection();
+        const icons = this.#element.querySelectorAll(
+            ".desktop-icon"
+        );
+
+        for (const icon of icons) {
+            const iconRect = icon.getBoundingClientRect();
+
+            const intersects =
+                rect.x < iconRect.right &&
+                rect.x + rect.width > iconRect.left &&
+                rect.y < iconRect.bottom &&
+                rect.y + rect.height > iconRect.top;
+
+            if (intersects) {
+                this.#selectIcon(icon);
+            }
+        }
     }
 }
