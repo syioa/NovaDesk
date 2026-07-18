@@ -12,6 +12,7 @@ export default class Desktop {
     #startMenu;
     #registry;
     #contextMenu;
+    #selectionRect;
 
     #desktopIcons;
     #uiManager;
@@ -180,6 +181,14 @@ export default class Desktop {
         this.#selecting = false;
 
         this.#selectionBox.hide();
+
+        if (this.#selectionRect) {
+            this.#desktopIcons.selectInRect(
+                this.#selectionRect
+            );
+        }
+
+        this.#selectionRect = null;
     }
 
     #onPointerMove(event) {
@@ -212,12 +221,12 @@ export default class Desktop {
             height
         );
 
-        this.#desktopIcons.selectInRect({
+        this.#selectionRect = {
             x: left,
             y: top,
             width,
             height
-        });
+        };
     }
 
     #onPointerDown(event) {
