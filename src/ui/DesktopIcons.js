@@ -3,6 +3,7 @@ export default class DesktopIcons {
     #registry;
     #element;
     #desktopIcons;
+    #lastValidPosition;
 
     #selectedIcons = new Set();
     #iconPositions = new Map();
@@ -16,6 +17,8 @@ export default class DesktopIcons {
 
     #iconStartX = 0;
     #iconStartY = 0;
+
+    #dragZIndex = 10;
 
     constructor(eventBus, registry) {
         this.#eventBus = eventBus;
@@ -165,13 +168,25 @@ export default class DesktopIcons {
 
         this.#dragIcon = icon;
 
+        this.#dragZIndex++;
+
+        this.#dragIcon.style.zIndex =
+            this.#dragZIndex;
+
+        this.#dragIcon.style.transition = "none";
+
         this.#dragStartX = event.clientX;
         this.#dragStartY = event.clientY;
 
-        const rect = icon.getBoundingClientRect();
+        const position = this.#iconPositions.get(icon);
 
-        this.#iconStartX = rect.left;
-        this.#iconStartY = rect.top;
+        this.#lastValidPosition = {
+            x: position.x,
+            y: position.y
+        };
+
+        this.#iconStartX = position.x;
+        this.#iconStartY = position.y;
 
         icon.setPointerCapture(
             event.pointerId
@@ -190,22 +205,16 @@ export default class DesktopIcons {
         let y = this.#iconStartY + dy;
 
 
-        if (!this.#checkCollision(
-            this.#dragIcon,
-            x,
-            y
-        )) {
-            this.#dragIcon.style.left = `${x}px`;
-            this.#dragIcon.style.top = `${y}px`;
+        this.#dragIcon.style.left = `${x}px`;
+        this.#dragIcon.style.top = `${y}px`;
 
-            this.#iconPositions.set(
-                this.#dragIcon,
-                {
-                    x,
-                    y
-                }
-            );
-        }
+        this.#iconPositions.set(
+            this.#dragIcon,
+            {
+                x,
+                y
+            }
+        );
     }
 
     #endDrag() {
@@ -217,29 +226,62 @@ export default class DesktopIcons {
             this.#dragIcon
         );
 
-        const grid = 16;
 
-        const x =
-            Math.round(position.x / grid) * grid;
+        if (
+            this.#checkCollision(
+                this.#dragIcon,
+                position.x,
+                position.y
+            )
+        ) {
+            const old = this.#lastValidPosition;
 
-        const y =
-            Math.round(position.y / grid) * grid;
+            this.#dragIcon.style.transition =
+                "left 0.15s ease, top 0.15s ease";
 
+            this.#dragIcon.style.left =
+                `${old.x}px`;
 
-        this.#dragIcon.style.left = `${x}px`;
-        this.#dragIcon.style.top = `${y}px`;
+            this.#dragIcon.style.top =
+                `${old.y}px`;
 
-        this.#iconPositions.set(
-            this.#dragIcon,
-            {
-                x,
-                y
-            }
-        );
+            this.#iconPositions.set(
+                this.#dragIcon,
+                old
+            );
+
+        } else {
+
+            const x = this.#snapToGrid(
+                position.x
+            );
+
+            const y = this.#snapToGrid(
+                position.y
+            );
+
+            this.#dragIcon.style.transition =
+                "left 0.15s ease, top 0.15s ease";
+
+            this.#dragIcon.style.left =
+                `${x}px`;
+
+            this.#dragIcon.style.top =
+                `${y}px`;
+
+            this.#iconPositions.set(
+                this.#dragIcon,
+                {
+                    x,
+                    y
+                }
+            );
+        }
 
 
         this.#dragging = false;
         this.#dragIcon = null;
+        this.#lastValidPosition = null;
     }
 
     #checkCollision(draggedIcon, x, y) {
@@ -282,5 +324,11 @@ export default class DesktopIcons {
         }
 
         return false;
+    }
+
+    #snapToGrid(value) {
+        const grid = 16;
+
+        return Math.round(value / grid) * grid;
     }
 }
