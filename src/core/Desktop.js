@@ -2,6 +2,7 @@ import { Taskbar } from "../ui/Taskbar.js";
 import StartMenu from "../ui/StartMenu.js";
 import DesktopIcons from "../ui/DesktopIcons.js";
 import ContextMenu from "../ui/ContextMenu.js";
+import SelectionBox from "./SelectionBox.js";
 
 export default class Desktop {
     #element;
@@ -14,8 +15,15 @@ export default class Desktop {
 
     #desktopIcons;
     #uiManager;
+    #overlayLayer;
 
     #layers = {};
+
+    #selectionBox;
+    #selecting = false;
+
+    #selectionStartX = 0;
+    #selectionStartY = 0;
 
     constructor(eventBus, registry, uiManager) {
         this.#eventBus = eventBus;
@@ -31,6 +39,8 @@ export default class Desktop {
         );
 
         this.#createLayers();
+
+        this.#overlayLayer = this.getLayer("overlay");
 
         this.#contextMenu = new ContextMenu(
             this.#layers.contextmenu,
@@ -60,6 +70,19 @@ export default class Desktop {
         });
 
         this.#createSnapPreview();
+        this.#selectionBox = new SelectionBox();
+
+        this.#overlayLayer.append(
+            this.#selectionBox.element
+        );
+
+        document.addEventListener("pointermove", (event) => {
+            this.#onPointerMove(event);
+        });
+
+        document.addEventListener("pointerup", (event) => {
+            this.#onPointerUp(event);
+        });
     }
 
     #createSnapPreview() {
@@ -149,14 +172,73 @@ export default class Desktop {
         ];
     }
 
+    #onPointerUp() {
+        if (!this.#selecting) {
+            return;
+        }
+
+        this.#selecting = false;
+
+        this.#selectionBox.hide();
+    }
+
+    #onPointerMove(event) {
+        if (!this.#selecting) {
+            return;
+        }
+
+        const left = Math.min(
+            this.#selectionStartX,
+            event.clientX
+        );
+
+        const top = Math.min(
+            this.#selectionStartY,
+            event.clientY
+        );
+
+        const width = Math.abs(
+            event.clientX - this.#selectionStartX
+        );
+
+        const height = Math.abs(
+            event.clientY - this.#selectionStartY
+        );
+
+        this.#selectionBox.setRect(
+            left,
+            top,
+            width,
+            height
+        );
+    }
+
     #onPointerDown(event) {
         this.#contextMenu.close();
+
+        if (event.button !== 0) {
+            return;
+        }
 
         if (event.target !== this.#element) {
             return;
         }
 
         this.#desktopIcons.clearSelection();
+
+        this.#selecting = true;
+
+        this.#selectionStartX = event.clientX;
+        this.#selectionStartY = event.clientY;
+
+        this.#selectionBox.show();
+
+        this.#selectionBox.setRect(
+            event.clientX,
+            event.clientY,
+            0,
+            0
+        );
     }
 
     #refresh() {

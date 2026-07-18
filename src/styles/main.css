@@ -335,6 +335,18 @@ body {
     background: rgba(0, 0, 0, 0.1);
 }
 
+.selection-box {
+    position: absolute;
+
+    border: 1px solid rgba(0, 120, 215, .9);
+
+    background: rgba(0, 0, 0, 0.18);
+
+    pointer-events: none;
+
+    display: none;
+}
+
 .desktop-icons {
     position: absolute;
     inset: 0;
