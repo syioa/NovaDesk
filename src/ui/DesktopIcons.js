@@ -5,6 +5,16 @@ export default class DesktopIcons {
     #desktopIcons;
     #selectedIcons = new Set();
 
+    #dragging = false;
+
+    #dragIcon = null;
+
+    #dragStartX = 0;
+    #dragStartY = 0;
+
+    #iconStartX = 0;
+    #iconStartY = 0;
+
     constructor(eventBus, registry) {
         this.#eventBus = eventBus;
         this.#registry = registry;
@@ -19,6 +29,20 @@ export default class DesktopIcons {
                 this.clearSelection();
             }
         });
+
+        document.addEventListener(
+            "pointermove",
+            (event) => {
+                this.#moveDrag(event);
+            }
+        );
+
+        document.addEventListener(
+            "pointerup",
+            () => {
+                this.#endDrag();
+            }
+        );
     }
 
     get element() {
@@ -56,6 +80,13 @@ export default class DesktopIcons {
         icon.addEventListener("click", () => {
             this.#selectIcon(icon);
         });
+
+        icon.addEventListener(
+            "pointerdown",
+            (event) => {
+                this.#startDrag(icon, event);
+            }
+        );
 
         icon.addEventListener("dblclick", () => {
             this.#eventBus.emit(
@@ -101,5 +132,51 @@ export default class DesktopIcons {
                 this.#selectIcon(icon);
             }
         }
+    }
+
+    #startDrag(icon, event) {
+        event.preventDefault();
+
+        if (!this.#selectedIcons.has(icon)) {
+            this.clearSelection();
+            this.#selectIcon(icon);
+        }
+
+        this.#dragging = true;
+
+        this.#dragIcon = icon;
+
+        this.#dragStartX = event.clientX;
+        this.#dragStartY = event.clientY;
+
+        const rect = icon.getBoundingClientRect();
+
+        this.#iconStartX = rect.left;
+        this.#iconStartY = rect.top;
+
+        icon.setPointerCapture(
+            event.pointerId
+        );
+    }
+
+    #moveDrag(event) {
+        if (!this.#dragging) {
+            return;
+        }
+
+        const dx = event.clientX - this.#dragStartX;
+        const dy = event.clientY - this.#dragStartY;
+
+        this.#dragIcon.style.left =
+            `${this.#iconStartX + dx}px`;
+
+        this.#dragIcon.style.top =
+            `${this.#iconStartY + dy}px`;
+    }
+
+    #endDrag() {
+        this.#dragging = false;
+
+        this.#dragIcon = null;
     }
 }
