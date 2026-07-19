@@ -8,6 +8,7 @@ export default class DesktopIcons {
     #selectedIcons = new Set();
     #iconPositions = new Map();
     #dragStartPositions = new Map();
+    #previousZIndexes = new Map();
 
     #dragging = false;
     #wasDragging = false;
@@ -192,10 +193,17 @@ export default class DesktopIcons {
 
         this.#dragZIndex++;
 
+        this.#previousZIndexes.clear();
+
         for (const icon of this.#dragIcons) {
+            this.#previousZIndexes.set(
+                icon,
+                icon.style.zIndex
+            );
+
             icon.style.zIndex = this.#dragZIndex;
+            icon.style.transition = "none";
         }
-        this.#dragIcon.style.transition = "none";
 
         this.#dragStartX = event.clientX;
         this.#dragStartY = event.clientY;
@@ -300,6 +308,12 @@ export default class DesktopIcons {
             );
         }
 
+        for (const icon of this.#dragIcons) {
+            icon.style.zIndex =
+                this.#previousZIndexes.get(icon) || "";
+        }
+
+        this.#previousZIndexes.clear();
 
         this.#dragging = false;
         this.#dragIcon = null;
