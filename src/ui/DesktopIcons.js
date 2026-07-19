@@ -7,10 +7,13 @@ export default class DesktopIcons {
 
     #selectedIcons = new Set();
     #iconPositions = new Map();
+    #dragStartPositions = new Map();
 
     #dragging = false;
+    #wasDragging = false;
 
     #dragIcon = null;
+    #dragIcons = [];
 
     #dragStartX = 0;
     #dragStartY = 0;
@@ -83,6 +86,11 @@ export default class DesktopIcons {
         icon.append(image, label);
 
         icon.addEventListener("click", () => {
+            if (this.#wasDragging) {
+                this.#wasDragging = false;
+                return;
+            }
+
             this.#selectIcon(icon);
         });
 
@@ -165,14 +173,28 @@ export default class DesktopIcons {
         }
 
         this.#dragging = true;
-
+        this.#wasDragging = true;
         this.#dragIcon = icon;
+
+        this.#dragIcons = this.#selectedIcons.has(icon)
+            ? [...this.#selectedIcons]
+            : [icon];
+
+        this.#dragStartPositions.clear();
+        for (const icon of this.#dragIcons) {
+            const position = this.#iconPositions.get(icon);
+
+            this.#dragStartPositions.set(icon, {
+                x: position.x,
+                y: position.y
+            });
+        }
 
         this.#dragZIndex++;
 
-        this.#dragIcon.style.zIndex =
-            this.#dragZIndex;
-
+        for (const icon of this.#dragIcons) {
+            icon.style.zIndex = this.#dragZIndex;
+        }
         this.#dragIcon.style.transition = "none";
 
         this.#dragStartX = event.clientX;
@@ -201,20 +223,20 @@ export default class DesktopIcons {
         const dx = event.clientX - this.#dragStartX;
         const dy = event.clientY - this.#dragStartY;
 
-        let x = this.#iconStartX + dx;
-        let y = this.#iconStartY + dy;
+        for (const icon of this.#dragIcons) {
+            const start = this.#dragStartPositions.get(icon);
 
+            const x = start.x + dx;
+            const y = start.y + dy;
 
-        this.#dragIcon.style.left = `${x}px`;
-        this.#dragIcon.style.top = `${y}px`;
+            icon.style.left = `${x}px`;
+            icon.style.top = `${y}px`;
 
-        this.#iconPositions.set(
-            this.#dragIcon,
-            {
+            this.#iconPositions.set(icon, {
                 x,
                 y
-            }
-        );
+            });
+        }
     }
 
     #endDrag() {
@@ -281,7 +303,9 @@ export default class DesktopIcons {
 
         this.#dragging = false;
         this.#dragIcon = null;
+        this.#dragIcons = [];
         this.#lastValidPosition = null;
+        this.#dragStartPositions.clear();
     }
 
     #checkCollision(draggedIcon, x, y) {
