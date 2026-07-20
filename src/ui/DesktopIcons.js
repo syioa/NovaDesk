@@ -2,13 +2,15 @@ export default class DesktopIcons {
     #eventBus;
     #registry;
     #element;
-    #desktopIcons;
     #lastValidPosition;
 
     #selectedIcons = new Set();
     #iconPositions = new Map();
     #dragStartPositions = new Map();
     #previousZIndexes = new Map();
+
+    #gridSize = 96;
+    #gridGap = 16;
 
     #dragging = false;
     #wasDragging = false;
@@ -118,10 +120,16 @@ export default class DesktopIcons {
         const x = 32 + column * 96;
         const y = 32 + row * 96;
 
-        this.#iconPositions.set(icon, {
-            x,
-            y
-        });
+        const grid =
+            this.#pixelToGrid(
+                x,
+                y
+            );
+
+        this.#iconPositions.set(
+            icon,
+            grid
+        );
 
         icon.style.left = `${x}px`;
         icon.style.top = `${y}px`;
@@ -183,11 +191,12 @@ export default class DesktopIcons {
 
         this.#dragStartPositions.clear();
         for (const icon of this.#dragIcons) {
-            const position = this.#iconPositions.get(icon);
+            const position =
+                this.#iconPositions.get(icon);
 
             this.#dragStartPositions.set(icon, {
-                x: position.x,
-                y: position.y
+                column: position.column,
+                row: position.row
             });
         }
 
@@ -208,7 +217,8 @@ export default class DesktopIcons {
         this.#dragStartX = event.clientX;
         this.#dragStartY = event.clientY;
 
-        const position = this.#iconPositions.get(icon);
+        const position =
+            this.#getIconPixelPosition(icon);
 
         this.#lastValidPosition = {
             x: position.x,
@@ -231,19 +241,48 @@ export default class DesktopIcons {
         const dx = event.clientX - this.#dragStartX;
         const dy = event.clientY - this.#dragStartY;
 
+        const gridDelta =
+            this.#pixelToGrid(
+                dx,
+                dy
+            );
+
         for (const icon of this.#dragIcons) {
-            const start = this.#dragStartPositions.get(icon);
 
-            const x = start.x + dx;
-            const y = start.y + dy;
+            const start =
+                this.#dragStartPositions.get(icon);
 
-            icon.style.left = `${x}px`;
-            icon.style.top = `${y}px`;
 
-            this.#iconPositions.set(icon, {
-                x,
-                y
-            });
+            const column =
+                start.column +
+                gridDelta.column;
+
+            const row =
+                start.row +
+                gridDelta.row;
+
+
+            const pixel =
+                this.#gridToPixel(
+                    column,
+                    row
+                );
+
+
+            icon.style.left =
+                `${pixel.x}px`;
+
+            icon.style.top =
+                `${pixel.y}px`;
+
+
+            this.#iconPositions.set(
+                icon,
+                {
+                    column,
+                    row
+                }
+            );
         }
     }
 
@@ -259,7 +298,8 @@ export default class DesktopIcons {
         const positions = new Map();
 
         for (const icon of this.#dragIcons) {
-            const position = this.#iconPositions.get(icon);
+            const position =
+                this.#getIconPixelPosition(icon);
 
             positions.set(icon, {
                 x: position.x,
@@ -301,7 +341,8 @@ export default class DesktopIcons {
             );
         } else {
             for (const icon of this.#dragIcons) {
-                const position = this.#iconPositions.get(icon);
+                const position =
+                    this.#getIconPixelPosition(icon);
 
                 const x = this.#snapToGrid(position.x);
                 const y = this.#snapToGrid(position.y);
@@ -315,12 +356,15 @@ export default class DesktopIcons {
                 icon.style.top =
                     `${y}px`;
 
-                this.#iconPositions.set(
-                    icon,
-                    {
+                const grid =
+                    this.#pixelToGrid(
                         x,
                         y
-                    }
+                    );
+
+                this.#iconPositions.set(
+                    icon,
+                    grid
                 );
             }
         }
@@ -359,7 +403,8 @@ export default class DesktopIcons {
                 continue;
             }
 
-            const position = this.#iconPositions.get(icon);
+            const position =
+                this.#getIconPixelPosition(icon);
 
 
             const iconRect = {
@@ -392,7 +437,8 @@ export default class DesktopIcons {
         let bottom = -Infinity;
 
         for (const icon of this.#dragIcons) {
-            const position = this.#iconPositions.get(icon);
+            const position =
+                this.#getIconPixelPosition(icon);
             const rect = icon.getBoundingClientRect();
 
             left = Math.min(left, position.x);
@@ -424,7 +470,8 @@ export default class DesktopIcons {
         let totalY = 0;
 
         for (const icon of this.#dragIcons) {
-            const position = this.#iconPositions.get(icon);
+            const position =
+                this.#getIconPixelPosition(icon);
             const rect = icon.getBoundingClientRect();
 
             totalX += position.x + rect.width / 2;
@@ -462,20 +509,48 @@ export default class DesktopIcons {
     }
 
     #moveGroupByOffset(offsetX, offsetY) {
+        const gridDelta =
+            this.#pixelToGrid(
+                offsetX,
+                offsetY
+            );
+
         for (const icon of this.#dragIcons) {
+
             const start =
                 this.#iconPositions.get(icon);
 
-            const x = start.x + offsetX;
-            const y = start.y + offsetY;
 
-            icon.style.left = `${x}px`;
-            icon.style.top = `${y}px`;
+            const column =
+                start.column +
+                gridDelta.column;
 
-            this.#iconPositions.set(icon, {
-                x,
-                y
-            });
+            const row =
+                start.row +
+                gridDelta.row;
+
+
+            const pixel =
+                this.#gridToPixel(
+                    column,
+                    row
+                );
+
+
+            icon.style.left =
+                `${pixel.x}px`;
+
+            icon.style.top =
+                `${pixel.y}px`;
+
+
+            this.#iconPositions.set(
+                icon,
+                {
+                    column,
+                    row
+                }
+            );
         }
     }
 
@@ -573,53 +648,6 @@ export default class DesktopIcons {
     }
 
     #splitGroupAroundTarget(targetIcon, direction) {
-        console.log(
-            "split direction:",
-            direction
-        );
-
-        console.log(
-            "target:",
-            targetIcon,
-            "drag icons:",
-            this.#dragIcons
-        );
-
-        for (const icon of this.#dragIcons) {
-            console.log(
-                "side:",
-                this.#getIconSideRelativeToTarget(
-                    icon,
-                    targetIcon
-                )
-            );
-        }
-
-        const leftIcons = [];
-        const rightIcons = [];
-        const topIcons = [];
-        const bottomIcons = [];
-
-        for (const icon of this.#dragIcons) {
-            switch (direction) {
-                case "left":
-                    leftIcons.push(icon);
-                    break;
-
-                case "right":
-                    rightIcons.push(icon);
-                    break;
-
-                case "top":
-                    topIcons.push(icon);
-                    break;
-
-                case "bottom":
-                    bottomIcons.push(icon);
-                    break;
-            }
-        }
-
         const targetPosition =
             this.#iconPositions.get(targetIcon);
 
@@ -628,147 +656,204 @@ export default class DesktopIcons {
 
         const gap = 16;
 
-        leftIcons.sort((a, b) => {
-            return (
-                this.#dragStartPositions.get(a).x -
-                this.#dragStartPositions.get(b).x
+        const allIcons = [
+            ...this.#element.children
+        ];
+
+        const stationaryIcons =
+            allIcons.filter(
+                icon => !this.#dragIcons.includes(icon)
             );
+
+
+        const affectedIcons = [];
+
+        for (const icon of stationaryIcons) {
+            const position =
+                this.#iconPositions.get(icon);
+
+            if (!position) {
+                continue;
+            }
+
+            if (
+                direction === "left" ||
+                direction === "right"
+            ) {
+                if (
+                    Math.abs(
+                        position.y -
+                        targetPosition.y
+                    ) < 5
+                ) {
+                    affectedIcons.push(icon);
+                }
+            }
+
+            else {
+                if (
+                    Math.abs(
+                        position.x -
+                        targetPosition.x
+                    ) < 5
+                ) {
+                    affectedIcons.push(icon);
+                }
+            }
+        }
+
+
+        const horizontal =
+            direction === "left" ||
+            direction === "right";
+
+
+        affectedIcons.sort((a, b) => {
+            const aPos =
+                this.#iconPositions.get(a);
+
+            const bPos =
+                this.#iconPositions.get(b);
+
+            return horizontal
+                ? aPos.x - bPos.x
+                : aPos.y - bPos.y;
         });
 
 
-        // LEFT SIDE
+        const dragged =
+            [...this.#dragIcons];
 
-        let leftX =
-            targetPosition.x - gap;
 
-        console.log(
-            "left count:",
-            leftIcons.length
+        dragged.sort((a, b) => {
+            const aStart =
+                this.#dragStartPositions.get(a);
+
+            const bStart =
+                this.#dragStartPositions.get(b);
+
+            return horizontal
+                ? aStart.x - bStart.x
+                : aStart.y - bStart.y;
+        });
+
+
+        let insertIndex = 0;
+
+        const groupCenter =
+            this.#getGroupCenter();
+
+
+        for (let i = 0; i < affectedIcons.length; i++) {
+
+            const icon =
+                affectedIcons[i];
+
+            const pos =
+                this.#iconPositions.get(icon);
+
+
+            if (horizontal) {
+
+                const iconCenter =
+                    pos.x +
+                    icon.getBoundingClientRect().width / 2;
+
+
+                if (groupCenter.x > iconCenter) {
+                    insertIndex = i + 1;
+                }
+
+            } else {
+
+                const iconCenter =
+                    pos.y +
+                    icon.getBoundingClientRect().height / 2;
+
+
+                if (groupCenter.y > iconCenter) {
+                    insertIndex = i + 1;
+                }
+            }
+        }
+
+
+        affectedIcons.splice(
+            insertIndex,
+            0,
+            ...dragged
         );
 
-        for (const icon of [...leftIcons].reverse()) {
+
+        let cursor;
+
+
+        if (horizontal) {
+
+            cursor =
+                affectedIcons[0]
+                    ? this.#iconPositions.get(
+                        affectedIcons[0]
+                    ).x
+                    : targetPosition.x;
+
+        } else {
+
+            cursor =
+                affectedIcons[0]
+                    ? this.#iconPositions.get(
+                        affectedIcons[0]
+                    ).y
+                    : targetPosition.y;
+        }
+
+
+        for (const icon of affectedIcons) {
 
             const rect =
                 icon.getBoundingClientRect();
 
-            leftX -= rect.width;
+
+            let x;
+            let y;
+
+
+            if (horizontal) {
+
+                x = cursor;
+                y = targetPosition.y;
+
+                cursor +=
+                    rect.width + gap;
+
+            } else {
+
+                x = targetPosition.x;
+                y = cursor;
+
+                cursor +=
+                    rect.height + gap;
+            }
+
 
             icon.style.transition =
                 "left 0.15s ease, top 0.15s ease";
 
-            icon.style.left =
-                `${leftX}px`;
-
-            icon.style.top =
-                `${targetPosition.y}px`;
-
-            this.#iconPositions.set(icon, {
-                x: leftX,
-                y: targetPosition.y
-            });
-
-            leftX -= gap;
-        }
-
-        // RIGHT SIDE
-
-        let rightX =
-            targetPosition.x +
-            targetRect.width +
-            gap;
-
-        rightIcons.sort((a, b) => {
-            return (
-                this.#dragStartPositions.get(a).x -
-                this.#dragStartPositions.get(b).x
-            );
-        });
-
-        for (const icon of rightIcons) {
-            icon.style.left =
-                `${rightX}px`;
-
-            icon.style.top =
-                `${targetPosition.y}px`;
-
-            this.#iconPositions.set(icon, {
-                x: rightX,
-                y: targetPosition.y
-            });
-
-            rightX +=
-                icon.getBoundingClientRect().width +
-                gap;
-        }
-
-
-        // TOP SIDE
-
-        topIcons.sort((a, b) => {
-            return (
-                this.#dragStartPositions.get(a).y -
-                this.#dragStartPositions.get(b).y
-            );
-        });
-
-        let topY =
-            targetPosition.y - gap;
-
-        for (const icon of [...topIcons].reverse()) {
-
-            const position =
-                this.#iconPositions.get(icon);
-
-            const rect =
-                icon.getBoundingClientRect();
-
-            icon.style.transition =
-                "left 0.15s ease, top 0.15s ease";
-
-            const y =
-                targetPosition.y - rect.height - gap;
 
             icon.style.left =
-                `${position.x}px`;
+                `${x}px`;
 
             icon.style.top =
                 `${y}px`;
 
-            this.#iconPositions.set(icon, {
-                x: position.x,
-                y
-            });
-        }
 
-
-        // BOTTOM SIDE
-
-        for (const icon of bottomIcons) {
-
-            const position =
-                this.#iconPositions.get(icon);
-
-            const rect =
-                icon.getBoundingClientRect();
-
-            const y =
-                targetPosition.y +
-                targetRect.height +
-                gap;
-
-            icon.style.transition =
-                "left 0.15s ease, top 0.15s ease";
-
-            icon.style.left =
-                `${position.x}px`;
-
-            icon.style.top =
-                `${y}px`;
-
-            this.#iconPositions.set(icon, {
-                x: position.x,
-                y
-            });
+            this.#iconPositions.set(
+                icon,
+                {
+                    x,
+                    y
+                }
+            );
         }
     }
 
@@ -776,5 +861,47 @@ export default class DesktopIcons {
         const grid = 16;
 
         return Math.round(value / grid) * grid;
+    }
+    #gridToPixel(column, row) {
+        return {
+            x: column * this.#gridSize,
+            y: row * this.#gridSize
+        };
+    }
+    #pixelToGrid(x, y) {
+        return {
+            column: Math.round(
+                x / this.#gridSize
+            ),
+            row: Math.round(
+                y / this.#gridSize
+            )
+        };
+    }
+    #snapPositionToGrid(x, y) {
+        const grid =
+            this.#pixelToGrid(x, y);
+
+        return this.#gridToPixel(
+            grid.column,
+            grid.row
+        );
+    }
+
+    #getIconPixelPosition(icon) {
+        const grid =
+            this.#iconPositions.get(icon);
+
+        if (!grid) {
+            return {
+                x: 0,
+                y: 0
+            };
+        }
+
+        return this.#gridToPixel(
+            grid.column,
+            grid.row
+        );
     }
 }

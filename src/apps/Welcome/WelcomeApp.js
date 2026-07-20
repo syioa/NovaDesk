@@ -5,8 +5,7 @@ export default class WelcomeApp extends App {
         return {
             id: "welcome",
             name: "Welcome",
-            width: 600,
-            height: 400
+            icon: "W",
         };
     }
 
