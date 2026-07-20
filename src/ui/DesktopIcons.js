@@ -8,6 +8,7 @@ export default class DesktopIcons {
     #iconPositions = new Map();
     #dragStartPositions = new Map();
     #previousZIndexes = new Map();
+    #dragVisualPositions = new Map();
 
     #gridSize = 96;
     #gridGap = 16;
@@ -17,6 +18,9 @@ export default class DesktopIcons {
 
     #dragIcon = null;
     #dragIcons = [];
+
+    #dragOffsetX = 0;
+    #dragOffsetY = 0;
 
     #dragStartX = 0;
     #dragStartY = 0;
@@ -198,6 +202,17 @@ export default class DesktopIcons {
                 column: position.column,
                 row: position.row
             });
+
+            const pixel =
+                this.#getIconPixelPosition(icon);
+
+            this.#dragVisualPositions.set(
+                icon,
+                {
+                    x: pixel.x,
+                    y: pixel.y
+                }
+            );
         }
 
         this.#dragZIndex++;
@@ -216,6 +231,15 @@ export default class DesktopIcons {
 
         this.#dragStartX = event.clientX;
         this.#dragStartY = event.clientY;
+
+        const pixel =
+            this.#getIconPixelPosition(icon);
+
+        this.#dragOffsetX =
+            event.clientX - pixel.x;
+
+        this.#dragOffsetY =
+            event.clientY - pixel.y;
 
         const position =
             this.#getIconPixelPosition(icon);
@@ -238,14 +262,14 @@ export default class DesktopIcons {
             return;
         }
 
-        const dx = event.clientX - this.#dragStartX;
-        const dy = event.clientY - this.#dragStartY;
+        const dx =
+            event.clientX -
+            this.#dragStartX;
 
-        const gridDelta =
-            this.#pixelToGrid(
-                dx,
-                dy
-            );
+        const dy =
+            event.clientY -
+            this.#dragStartY;
+
 
         for (const icon of this.#dragIcons) {
 
@@ -253,36 +277,25 @@ export default class DesktopIcons {
                 this.#dragStartPositions.get(icon);
 
 
-            const column =
-                start.column +
-                gridDelta.column;
-
-            const row =
-                start.row +
-                gridDelta.row;
-
-
             const pixel =
                 this.#gridToPixel(
-                    column,
-                    row
+                    start.column,
+                    start.row
                 );
 
 
+            const x =
+                pixel.x + dx;
+
+            const y =
+                pixel.y + dy;
+
+
             icon.style.left =
-                `${pixel.x}px`;
+                `${x}px`;
 
             icon.style.top =
-                `${pixel.y}px`;
-
-
-            this.#iconPositions.set(
-                icon,
-                {
-                    column,
-                    row
-                }
-            );
+                `${y}px`;
         }
     }
 
@@ -298,12 +311,19 @@ export default class DesktopIcons {
         const positions = new Map();
 
         for (const icon of this.#dragIcons) {
-            const position =
-                this.#getIconPixelPosition(icon);
+            const x =
+                parseInt(
+                    icon.style.left
+                );
+
+            const y =
+                parseInt(
+                    icon.style.top
+                );
 
             positions.set(icon, {
-                x: position.x,
-                y: position.y
+                x,
+                y
             });
         }
 
@@ -341,25 +361,37 @@ export default class DesktopIcons {
             );
         } else {
             for (const icon of this.#dragIcons) {
-                const position =
-                    this.#getIconPixelPosition(icon);
 
-                const x = this.#snapToGrid(position.x);
-                const y = this.#snapToGrid(position.y);
+                const x =
+                    parseInt(
+                        icon.style.left
+                    );
+
+                const y =
+                    parseInt(
+                        icon.style.top
+                    );
+
+
+                const snapped =
+                    this.#snapPositionToGrid(
+                        x,
+                        y
+                    );
 
                 icon.style.transition =
                     "left 0.15s ease, top 0.15s ease";
 
                 icon.style.left =
-                    `${x}px`;
+                    `${snapped.x}px`;
 
                 icon.style.top =
-                    `${y}px`;
+                    `${snapped.y}px`;
 
                 const grid =
                     this.#pixelToGrid(
-                        x,
-                        y
+                        snapped.x,
+                        snapped.y
                     );
 
                 this.#iconPositions.set(
@@ -381,6 +413,7 @@ export default class DesktopIcons {
         this.#dragIcons = [];
         this.#lastValidPosition = null;
         this.#dragStartPositions.clear();
+        this.#dragVisualPositions.clear();
     }
 
     #checkCollision(draggedIcon, x, y) {
