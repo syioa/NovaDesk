@@ -9,6 +9,7 @@ export default class DesktopIcons {
     #dragStartPositions = new Map();
     #previousZIndexes = new Map();
     #dragVisualPositions = new Map();
+    #dragStartPositionsPixel = new Map();
 
     #gridSize = 96;
     #gridGap = 16;
@@ -121,13 +122,15 @@ export default class DesktopIcons {
         const column = index % 6;
         const row = Math.floor(index / 6);
 
-        const x = 32 + column * 96;
-        const y = 32 + row * 96;
+        const grid = {
+            column,
+            row
+        };
 
-        const grid =
-            this.#pixelToGrid(
-                x,
-                y
+        const pixel =
+            this.#gridToPixel(
+                column,
+                row
             );
 
         this.#iconPositions.set(
@@ -135,8 +138,11 @@ export default class DesktopIcons {
             grid
         );
 
-        icon.style.left = `${x}px`;
-        icon.style.top = `${y}px`;
+        icon.style.left =
+            `${pixel.x}px`;
+
+        icon.style.top =
+            `${pixel.y}px`;
 
         return icon;
     }
@@ -198,13 +204,22 @@ export default class DesktopIcons {
             const position =
                 this.#iconPositions.get(icon);
 
+            const pixel =
+                this.#getIconPixelPosition(icon);
+
+
+            this.#dragStartPositionsPixel.set(
+                icon,
+                {
+                    x: pixel.x,
+                    y: pixel.y
+                }
+            );
+
             this.#dragStartPositions.set(icon, {
                 column: position.column,
                 row: position.row
             });
-
-            const pixel =
-                this.#getIconPixelPosition(icon);
 
             this.#dragVisualPositions.set(
                 icon,
@@ -270,26 +285,35 @@ export default class DesktopIcons {
             event.clientY -
             this.#dragStartY;
 
+        const draggedStart =
+            this.#dragStartPositionsPixel.get(
+                this.#dragIcon
+            );
 
         for (const icon of this.#dragIcons) {
 
             const start =
-                this.#dragStartPositions.get(icon);
-
-
-            const pixel =
-                this.#gridToPixel(
-                    start.column,
-                    start.row
+                this.#dragStartPositionsPixel.get(
+                    icon
                 );
 
+            const offsetX =
+                start.x -
+                draggedStart.x;
+
+            const offsetY =
+                start.y -
+                draggedStart.y;
 
             const x =
-                pixel.x + dx;
+                this.#iconStartX +
+                dx +
+                offsetX;
 
             const y =
-                pixel.y + dy;
-
+                this.#iconStartY +
+                dy +
+                offsetY;
 
             icon.style.left =
                 `${x}px`;
@@ -330,13 +354,16 @@ export default class DesktopIcons {
         let collidedIcon = null;
 
         for (const icon of this.#dragIcons) {
-            const position = positions.get(icon);
 
-            const result = this.#checkCollision(
-                icon,
-                position.x,
-                position.y
-            );
+            const position =
+                positions.get(icon);
+
+            const result =
+                this.#checkCollision(
+                    icon,
+                    position.x,
+                    position.y
+                );
 
             if (result) {
                 collidedIcon = result;
@@ -414,20 +441,19 @@ export default class DesktopIcons {
         this.#lastValidPosition = null;
         this.#dragStartPositions.clear();
         this.#dragVisualPositions.clear();
+        this.#dragStartPositionsPixel.clear();
     }
 
     #checkCollision(draggedIcon, x, y) {
-        const size = draggedIcon.getBoundingClientRect();
 
-        const draggedRect = {
-            left: x,
-            top: y,
-            right: x + size.width,
-            bottom: y + size.height
-        };
+        const grid =
+            this.#pixelToGrid(
+                x,
+                y
+            );
 
 
-        for (const icon of this.#iconPositions.keys()) {
+        for (const [icon, position] of this.#iconPositions) {
 
             if (
                 icon === draggedIcon ||
@@ -436,29 +462,17 @@ export default class DesktopIcons {
                 continue;
             }
 
-            const position =
-                this.#getIconPixelPosition(icon);
+
+            const sameCell =
+                grid.column === position.column &&
+                grid.row === position.row;
 
 
-            const iconRect = {
-                left: position.x,
-                top: position.y,
-                right: position.x + size.width,
-                bottom: position.y + size.height
-            };
-
-
-            const collision =
-                draggedRect.left < iconRect.right &&
-                draggedRect.right > iconRect.left &&
-                draggedRect.top < iconRect.bottom &&
-                draggedRect.bottom > iconRect.top;
-
-
-            if (collision) {
+            if (sameCell) {
                 return icon;
             }
         }
+
 
         return null;
     }
@@ -518,27 +532,48 @@ export default class DesktopIcons {
     }
 
     #getApproachDirection(targetIcon) {
-        const groupCenter = this.#getGroupCenter();
+        const groupCenter =
+            this.#getGroupCenter();
 
         const targetPosition =
             this.#iconPositions.get(targetIcon);
+
+        const targetPixel =
+            this.#gridToPixel(
+                targetPosition.column,
+                targetPosition.row
+            );
 
         const targetRect =
             targetIcon.getBoundingClientRect();
 
         const targetCenter = {
-            x: targetPosition.x + targetRect.width / 2,
-            y: targetPosition.y + targetRect.height / 2
+            x:
+                targetPixel.x +
+                targetRect.width / 2,
+
+            y:
+                targetPixel.y +
+                targetRect.height / 2
         };
 
-        const dx = groupCenter.x - targetCenter.x;
-        const dy = groupCenter.y - targetCenter.y;
+        const dx =
+            groupCenter.x -
+            targetCenter.x;
+
+        const dy =
+            groupCenter.y -
+            targetCenter.y;
 
         if (Math.abs(dx) > Math.abs(dy)) {
-            return dx < 0 ? "left" : "right";
+            return dx < 0
+                ? "left"
+                : "right";
         }
 
-        return dy < 0 ? "top" : "bottom";
+        return dy < 0
+            ? "top"
+            : "bottom";
     }
 
     #moveGroupByOffset(offsetX, offsetY) {
@@ -681,83 +716,30 @@ export default class DesktopIcons {
     }
 
     #splitGroupAroundTarget(targetIcon, direction) {
-        const targetPosition =
+        const targetGrid =
             this.#iconPositions.get(targetIcon);
 
-        const targetRect =
-            targetIcon.getBoundingClientRect();
-
-        const gap = 16;
-
-        const allIcons = [
-            ...this.#element.children
-        ];
-
-        const stationaryIcons =
-            allIcons.filter(
-                icon => !this.#dragIcons.includes(icon)
-            );
-
-
-        const affectedIcons = [];
-
-        for (const icon of stationaryIcons) {
-            const position =
-                this.#iconPositions.get(icon);
-
-            if (!position) {
-                continue;
-            }
-
-            if (
-                direction === "left" ||
-                direction === "right"
-            ) {
-                if (
-                    Math.abs(
-                        position.y -
-                        targetPosition.y
-                    ) < 5
-                ) {
-                    affectedIcons.push(icon);
-                }
-            }
-
-            else {
-                if (
-                    Math.abs(
-                        position.x -
-                        targetPosition.x
-                    ) < 5
-                ) {
-                    affectedIcons.push(icon);
-                }
-            }
+        if (!targetGrid) {
+            return;
         }
-
 
         const horizontal =
             direction === "left" ||
             direction === "right";
 
-
-        affectedIcons.sort((a, b) => {
-            const aPos =
-                this.#iconPositions.get(a);
-
-            const bPos =
-                this.#iconPositions.get(b);
-
-            return horizontal
-                ? aPos.x - bPos.x
-                : aPos.y - bPos.y;
-        });
-
-
         const dragged =
             [...this.#dragIcons];
 
+        const stationaryIcons =
+            [...this.#element.children].filter(
+                icon => !this.#dragIcons.includes(icon)
+            );
 
+        /*
+         * Sort the dragged icons according to their
+         * original grid order so multi-selection order
+         * is preserved.
+         */
         dragged.sort((a, b) => {
             const aStart =
                 this.#dragStartPositions.get(a);
@@ -766,126 +748,463 @@ export default class DesktopIcons {
                 this.#dragStartPositions.get(b);
 
             return horizontal
-                ? aStart.x - bStart.x
-                : aStart.y - bStart.y;
+                ? aStart.column - bStart.column
+                : aStart.row - bStart.row;
         });
 
+        /*
+         * Determine the grid cells the dragged group
+         * should occupy relative to the target.
+         */
+        const targetColumn =
+            targetGrid.column;
 
-        let insertIndex = 0;
+        const targetRow =
+            targetGrid.row;
 
-        const groupCenter =
-            this.#getGroupCenter();
+        const newPositions = new Map();
 
+        let minColumn = Infinity;
+        let maxColumn = -Infinity;
+        let minRow = Infinity;
+        let maxRow = -Infinity;
 
-        for (let i = 0; i < affectedIcons.length; i++) {
+        for (const icon of dragged) {
 
-            const icon =
-                affectedIcons[i];
+            const position =
+                this.#dragStartPositions.get(icon);
 
-            const pos =
-                this.#iconPositions.get(icon);
+            minColumn =
+                Math.min(
+                    minColumn,
+                    position.column
+                );
 
+            maxColumn =
+                Math.max(
+                    maxColumn,
+                    position.column
+                );
 
-            if (horizontal) {
+            minRow =
+                Math.min(
+                    minRow,
+                    position.row
+                );
 
-                const iconCenter =
-                    pos.x +
-                    icon.getBoundingClientRect().width / 2;
-
-
-                if (groupCenter.x > iconCenter) {
-                    insertIndex = i + 1;
-                }
-
-            } else {
-
-                const iconCenter =
-                    pos.y +
-                    icon.getBoundingClientRect().height / 2;
-
-
-                if (groupCenter.y > iconCenter) {
-                    insertIndex = i + 1;
-                }
-            }
+            maxRow =
+                Math.max(
+                    maxRow,
+                    position.row
+                );
         }
 
+        /*
+         * Calculate the group's size in grid cells.
+         */
+        const groupWidth =
+            maxColumn - minColumn;
 
-        affectedIcons.splice(
-            insertIndex,
-            0,
-            ...dragged
-        );
+        const groupHeight =
+            maxRow - minRow;
 
 
-        let cursor;
-
-
+        /*
+         * Place the dragged group around the target.
+         *
+         * The target is inserted into the middle of
+         * the dragged group's sequence.
+         */
         if (horizontal) {
 
-            cursor =
-                affectedIcons[0]
-                    ? this.#iconPositions.get(
-                        affectedIcons[0]
-                    ).x
-                    : targetPosition.x;
+            const orderedDragged =
+                [...dragged].sort((a, b) => {
+
+                    const aStart =
+                        this.#dragStartPositions.get(a);
+
+                    const bStart =
+                        this.#dragStartPositions.get(b);
+
+                    return (
+                        aStart.column -
+                        bStart.column
+                    );
+                });
+
+            /*
+             * When approaching from the right,
+             * reverse the group order.
+             */
+            if (direction === "right") {
+                orderedDragged.reverse();
+            }
+
+            /*
+             * For two icons:
+             *
+             * left approach:
+             *   A C B
+             *
+             * right approach:
+             *   B C A
+             */
+            const middleIndex =
+                Math.floor(
+                    orderedDragged.length / 2
+                );
+
+            for (
+                let i = 0;
+                i < orderedDragged.length;
+                i++
+            ) {
+
+                const icon =
+                    orderedDragged[i];
+
+                let column;
+
+                if (i < middleIndex) {
+
+                    column =
+                        targetColumn -
+                        (
+                            middleIndex -
+                            i
+                        );
+
+                } else {
+
+                    column =
+                        targetColumn +
+                        (
+                            i -
+                            middleIndex
+                        ) +
+                        1;
+                }
+
+                newPositions.set(
+                    icon,
+                    {
+                        column,
+                        row: targetRow
+                    }
+                );
+            }
 
         } else {
 
-            cursor =
-                affectedIcons[0]
-                    ? this.#iconPositions.get(
-                        affectedIcons[0]
-                    ).y
-                    : targetPosition.y;
+            /*
+             * Get every stationary icon in the target's
+             * column.
+             */
+            const columnIcons =
+                stationaryIcons
+                    .filter(icon => {
+
+                        const position =
+                            this.#iconPositions.get(icon);
+
+                        return (
+                            position &&
+                            position.column ===
+                            targetColumn
+                        );
+                    })
+                    .sort((a, b) => {
+
+                        const aPosition =
+                            this.#iconPositions.get(a);
+
+                        const bPosition =
+                            this.#iconPositions.get(b);
+
+                        return (
+                            aPosition.row -
+                            bPosition.row
+                        );
+                    });
+
+            /*
+             * Remove dragged icons from the sequence.
+             * They will be inserted at the target position.
+             */
+            const sequence =
+                columnIcons.filter(
+                    icon =>
+                        !this.#dragIcons.includes(icon)
+                );
+
+            /*
+             * Find the target's position in the sequence.
+             */
+            let targetIndex =
+                sequence.indexOf(targetIcon);
+
+            if (targetIndex === -1) {
+                targetIndex = 0;
+            }
+
+            /*
+             * If the group approaches from the bottom,
+             * insert after the target instead.
+             */
+            if (direction === "bottom") {
+                targetIndex += 1;
+            }
+
+            /*
+             * Insert the dragged icons into the sequence.
+             */
+            sequence.splice(
+                targetIndex,
+                0,
+                ...dragged
+            );
+
+            /*
+             * Rebuild the entire affected column.
+             *
+             * Every icon receives exactly one unique
+             * grid cell.
+             */
+            for (
+                let i = 0;
+                i < sequence.length;
+                i++
+            ) {
+
+                const icon =
+                    sequence[i];
+
+                const oldPosition =
+                    this.#iconPositions.get(icon);
+
+                if (!oldPosition) {
+                    continue;
+                }
+
+                const grid = {
+                    column:
+                        targetColumn,
+
+                    row:
+                        oldPosition.row
+                };
+
+                /*
+                 * Use the first available row from the
+                 * target's original position.
+                 */
+                const baseRow =
+                    this.#iconPositions.get(
+                        targetIcon
+                    ).row;
+
+                grid.row =
+                    baseRow +
+                    (
+                        i -
+                        targetIndex
+                    );
+
+                newPositions.set(
+                    icon,
+                    grid
+                );
+            }
+        }
+
+        /*
+         * Find stationary icons occupying cells that
+         * the dragged group wants to use.
+         */
+        const occupiedCells =
+            new Set();
+
+        for (const icon of stationaryIcons) {
+
+            const position =
+                this.#iconPositions.get(icon);
+
+            if (!position) {
+                continue;
+            }
+
+            occupiedCells.add(
+                `${position.column},${position.row}`
+            );
+        }
+
+        /*
+ * Shift stationary icons as a chain.
+ *
+ * If one icon is pushed into another icon's cell,
+ * the second icon is pushed as well.
+ */
+        const occupiedByStationary =
+            new Map();
+
+        for (const icon of stationaryIcons) {
+
+            const position =
+                this.#iconPositions.get(icon);
+
+            if (!position) {
+                continue;
+            }
+
+            occupiedByStationary.set(
+                `${position.column},${position.row}`,
+                icon
+            );
+        }
+
+        /*
+         * Process collisions repeatedly until every
+         * icon has a unique grid cell.
+         */
+        let changed = true;
+
+        while (changed) {
+
+            changed = false;
+
+            for (
+                const [icon, position]
+                of newPositions
+            ) {
+
+                if (
+                    !stationaryIcons.includes(icon)
+                ) {
+                    continue;
+                }
+
+                const key =
+                    `${position.column},${position.row}`;
+
+                const draggedOccupies =
+                    [...this.#dragIcons]
+                        .some(
+                            draggedIcon => {
+
+                                const draggedPosition =
+                                    newPositions.get(
+                                        draggedIcon
+                                    );
+
+                                return (
+                                    draggedPosition &&
+                                    draggedPosition.column ===
+                                    position.column &&
+                                    draggedPosition.row ===
+                                    position.row
+                                );
+                            }
+                        );
+
+                if (!draggedOccupies) {
+                    continue;
+                }
+
+                let nextColumn =
+                    position.column;
+
+                let nextRow =
+                    position.row;
+
+                do {
+
+                    if (horizontal) {
+
+                        nextColumn +=
+                            direction === "left"
+                                ? -1
+                                : 1;
+
+                    } else {
+
+                        nextRow +=
+                            direction === "top"
+                                ? -1
+                                : 1;
+                    }
+
+                    const nextKey =
+                        `${nextColumn},${nextRow}`;
+
+                    const occupiedByDragged =
+                        [...newPositions.values()]
+                            .some(
+                                otherPosition =>
+                                    otherPosition.column ===
+                                    nextColumn &&
+                                    otherPosition.row ===
+                                    nextRow
+                            );
+
+                    const occupiedByOtherStationary =
+                        [...newPositions.entries()]
+                            .some(
+                                ([otherIcon, otherPosition]) =>
+                                    otherIcon !== icon &&
+                                    otherPosition.column ===
+                                    nextColumn &&
+                                    otherPosition.row ===
+                                    nextRow
+                            );
+
+                    if (
+                        !occupiedByDragged &&
+                        !occupiedByOtherStationary
+                    ) {
+                        break;
+                    }
+
+                } while (true);
+
+                newPositions.set(
+                    icon,
+                    {
+                        column:
+                            nextColumn,
+
+                        row:
+                            nextRow
+                    }
+                );
+
+                changed = true;
+            }
         }
 
 
-        for (const icon of affectedIcons) {
+        /*
+         * Apply all new grid positions.
+         */
+        for (const [icon, grid] of newPositions) {
 
-            const rect =
-                icon.getBoundingClientRect();
-
-
-            let x;
-            let y;
-
-
-            if (horizontal) {
-
-                x = cursor;
-                y = targetPosition.y;
-
-                cursor +=
-                    rect.width + gap;
-
-            } else {
-
-                x = targetPosition.x;
-                y = cursor;
-
-                cursor +=
-                    rect.height + gap;
-            }
-
+            const pixel =
+                this.#gridToPixel(
+                    grid.column,
+                    grid.row
+                );
 
             icon.style.transition =
                 "left 0.15s ease, top 0.15s ease";
 
-
             icon.style.left =
-                `${x}px`;
+                `${pixel.x}px`;
 
             icon.style.top =
-                `${y}px`;
-
+                `${pixel.y}px`;
 
             this.#iconPositions.set(
                 icon,
-                {
-                    x,
-                    y
-                }
+                grid
             );
         }
     }
@@ -935,6 +1254,13 @@ export default class DesktopIcons {
         return this.#gridToPixel(
             grid.column,
             grid.row
+        );
+    }
+
+    #isSameGridCell(a, b) {
+        return (
+            a.column === b.column &&
+            a.row === b.row
         );
     }
 }
