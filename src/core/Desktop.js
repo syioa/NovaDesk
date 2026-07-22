@@ -162,13 +162,6 @@ export default class Desktop {
                         action: () => console.log("Small Icons")
                     }
                 ]
-            },
-
-            { type: "separator" },
-
-            {
-                label: "Refresh",
-                action: () => this.#refresh()
             }
         ];
     }
@@ -255,10 +248,6 @@ export default class Desktop {
             0,
             0
         );
-    }
-
-    #refresh() {
-        console.log("Refresh clicked");
     }
 
     #openSettings() {

@@ -290,6 +290,12 @@ export default class DesktopIcons {
                 this.#dragIcon
             );
 
+        /*
+         * Calculate the proposed position of every
+         * dragged icon.
+         */
+        const proposedPositions = new Map();
+
         for (const icon of this.#dragIcons) {
 
             const start =
@@ -314,6 +320,127 @@ export default class DesktopIcons {
                 this.#iconStartY +
                 dy +
                 offsetY;
+
+            proposedPositions.set(
+                icon,
+                {
+                    x,
+                    y
+                }
+            );
+        }
+
+        /*
+         * Find the desktop boundaries.
+         */
+        const desktopRect =
+            this.#element.getBoundingClientRect();
+
+        const desktopWidth =
+            desktopRect.width;
+
+        const desktopHeight =
+            Math.min(
+                desktopRect.height,
+                window.innerHeight -
+                desktopRect.top
+            );
+
+        /*
+         * Find the bounding box of the entire
+         * dragged group.
+         */
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        for (
+            const [icon, position]
+            of proposedPositions
+        ) {
+
+            const width =
+                icon.offsetWidth;
+
+            const height =
+                icon.offsetHeight;
+
+            minX =
+                Math.min(
+                    minX,
+                    position.x
+                );
+
+            minY =
+                Math.min(
+                    minY,
+                    position.y
+                );
+
+            maxX =
+                Math.max(
+                    maxX,
+                    position.x +
+                    width
+                );
+
+            maxY =
+                Math.max(
+                    maxY,
+                    position.y +
+                    height
+                );
+        }
+
+        /*
+         * Calculate how far the entire group needs
+         * to move to remain inside the desktop.
+         */
+        let correctionX = 0;
+        let correctionY = 0;
+
+        if (minX < 0) {
+            correctionX =
+                -minX;
+        }
+
+        if (maxX > desktopWidth) {
+            correctionX =
+                desktopWidth -
+                maxX;
+        }
+
+        const viewportTop =
+            -desktopRect.top;
+
+        if (minY < viewportTop) {
+            correctionY =
+                viewportTop -
+                minY;
+        }
+
+        if (maxY > desktopHeight) {
+            correctionY =
+                desktopHeight -
+                maxY;
+        }
+
+        /*
+         * Apply the corrected positions.
+         */
+        for (
+            const [icon, position]
+            of proposedPositions
+        ) {
+
+            const x =
+                position.x +
+                correctionX;
+
+            const y =
+                position.y +
+                correctionY;
 
             icon.style.left =
                 `${x}px`;
@@ -1003,12 +1130,74 @@ export default class DesktopIcons {
                         targetIcon
                     ).row;
 
-                grid.row =
-                    baseRow +
-                    (
-                        i -
-                        targetIndex
+                const firstRow =
+                    baseRow -
+                    targetIndex;
+
+                /*
+                 * Keep the sequence inside the top boundary.
+                 */
+                const desktopHeight =
+                    this.#element.clientHeight;
+
+                const maxRow =
+                    Math.floor(
+                        (
+                            desktopHeight -
+                            this.#gridGap
+                        ) /
+                        (
+                            this.#gridSize +
+                            this.#gridGap
+                        )
                     );
+
+                /*
+                 * Calculate the first row needed to keep
+                 * the entire sequence inside the desktop.
+                 */
+                const sequenceHeight =
+                    sequence.length - 1;
+
+                let startRow =
+                    firstRow;
+
+                /*
+                 * Prevent the sequence from going above
+                 * the top boundary.
+                 */
+                if (startRow < 0) {
+                    startRow = 0;
+                }
+
+                /*
+                 * Prevent the sequence from going below
+                 * the bottom boundary.
+                 */
+                if (
+                    startRow +
+                    sequenceHeight >
+                    maxRow
+                ) {
+                    startRow =
+                        maxRow -
+                        sequenceHeight;
+                }
+
+                /*
+                 * The sequence may be larger than the
+                 * available grid area. Never allow a
+                 * negative starting row.
+                 */
+                startRow =
+                    Math.max(
+                        0,
+                        startRow
+                    );
+
+                grid.row =
+                    startRow +
+                    i;
 
                 newPositions.set(
                     icon,
@@ -1021,22 +1210,7 @@ export default class DesktopIcons {
          * Find stationary icons occupying cells that
          * the dragged group wants to use.
          */
-        const occupiedCells =
-            new Set();
 
-        for (const icon of stationaryIcons) {
-
-            const position =
-                this.#iconPositions.get(icon);
-
-            if (!position) {
-                continue;
-            }
-
-            occupiedCells.add(
-                `${position.column},${position.row}`
-            );
-        }
 
         /*
  * Shift stationary icons as a chain.
@@ -1044,142 +1218,7 @@ export default class DesktopIcons {
  * If one icon is pushed into another icon's cell,
  * the second icon is pushed as well.
  */
-        const occupiedByStationary =
-            new Map();
 
-        for (const icon of stationaryIcons) {
-
-            const position =
-                this.#iconPositions.get(icon);
-
-            if (!position) {
-                continue;
-            }
-
-            occupiedByStationary.set(
-                `${position.column},${position.row}`,
-                icon
-            );
-        }
-
-        /*
-         * Process collisions repeatedly until every
-         * icon has a unique grid cell.
-         */
-        let changed = true;
-
-        while (changed) {
-
-            changed = false;
-
-            for (
-                const [icon, position]
-                of newPositions
-            ) {
-
-                if (
-                    !stationaryIcons.includes(icon)
-                ) {
-                    continue;
-                }
-
-                const key =
-                    `${position.column},${position.row}`;
-
-                const draggedOccupies =
-                    [...this.#dragIcons]
-                        .some(
-                            draggedIcon => {
-
-                                const draggedPosition =
-                                    newPositions.get(
-                                        draggedIcon
-                                    );
-
-                                return (
-                                    draggedPosition &&
-                                    draggedPosition.column ===
-                                    position.column &&
-                                    draggedPosition.row ===
-                                    position.row
-                                );
-                            }
-                        );
-
-                if (!draggedOccupies) {
-                    continue;
-                }
-
-                let nextColumn =
-                    position.column;
-
-                let nextRow =
-                    position.row;
-
-                do {
-
-                    if (horizontal) {
-
-                        nextColumn +=
-                            direction === "left"
-                                ? -1
-                                : 1;
-
-                    } else {
-
-                        nextRow +=
-                            direction === "top"
-                                ? -1
-                                : 1;
-                    }
-
-                    const nextKey =
-                        `${nextColumn},${nextRow}`;
-
-                    const occupiedByDragged =
-                        [...newPositions.values()]
-                            .some(
-                                otherPosition =>
-                                    otherPosition.column ===
-                                    nextColumn &&
-                                    otherPosition.row ===
-                                    nextRow
-                            );
-
-                    const occupiedByOtherStationary =
-                        [...newPositions.entries()]
-                            .some(
-                                ([otherIcon, otherPosition]) =>
-                                    otherIcon !== icon &&
-                                    otherPosition.column ===
-                                    nextColumn &&
-                                    otherPosition.row ===
-                                    nextRow
-                            );
-
-                    if (
-                        !occupiedByDragged &&
-                        !occupiedByOtherStationary
-                    ) {
-                        break;
-                    }
-
-                } while (true);
-
-                newPositions.set(
-                    icon,
-                    {
-                        column:
-                            nextColumn,
-
-                        row:
-                            nextRow
-                    }
-                );
-
-                changed = true;
-            }
-        }
 
 
         /*
@@ -1194,7 +1233,7 @@ export default class DesktopIcons {
                 );
 
             icon.style.transition =
-                "left 0.15s ease, top 0.15s ease";
+                "left 0.1s ease, top 0.1s ease";
 
             icon.style.left =
                 `${pixel.x}px`;
