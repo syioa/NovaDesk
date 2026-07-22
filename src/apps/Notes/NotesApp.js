@@ -104,6 +104,14 @@ export default class NotesApp extends App {
             return;
         }
 
+        const confirmed = confirm(
+            "Are you sure you want to delete this note?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
         this.#notes = this.#notes.filter(
             (note) => note.id !== this.#selectedNoteId
         );
