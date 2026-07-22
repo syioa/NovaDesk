@@ -202,6 +202,7 @@ export default class NotesApp extends App {
             item.type = "button";
             item.className = "notes__item";
             item.textContent = note.title;
+            item.title = note.title;
 
             if (note.id === this.#selectedNoteId) {
                 item.classList.add("notes__item--selected");
