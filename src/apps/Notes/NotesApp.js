@@ -171,10 +171,11 @@ export default class NotesApp extends App {
         const note = {
             id: crypto.randomUUID(),
             title: "Untitled Note",
-            content: ""
+            content: "",
+            updatedAt: Date.now()
         };
 
-        this.#notes.push(note);
+        this.#notes.unshift(note);
 
         this.#selectedNoteId = note.id;
 
@@ -191,7 +192,11 @@ export default class NotesApp extends App {
 
         list.innerHTML = "";
 
-        for (const note of this.#notes) {
+        const sortedNotes = [...this.#notes].sort(
+            (a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0)
+        );
+
+        for (const note of sortedNotes) {
             const item = document.createElement("button");
 
             item.type = "button";
@@ -256,8 +261,9 @@ export default class NotesApp extends App {
 
         note.title = titleInput.value || "Untitled Note";
         note.content = contentInput.value;
+        note.updatedAt = Date.now();
 
-        this.#saveNotes(window);
+        this.#saveNotes();
 
         this.#renderNotes(window);
     }
