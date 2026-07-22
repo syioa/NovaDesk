@@ -34,17 +34,26 @@ export default class NotesApp extends App {
                 </aside>
 
                 <main class="notes__editor">
-                    <input
-                        class="notes__title"
-                        type="text"
-                        placeholder="Note title"
-                    />
+    <div class="notes__editor-header">
+        <input
+            class="notes__title"
+            type="text"
+            placeholder="Note title"
+        />
 
-                    <textarea
-                        class="notes__content"
-                        placeholder="Start writing..."
-                    ></textarea>
-                </main>
+        <button
+            class="notes__delete-button"
+            type="button"
+        >
+            Delete
+        </button>
+    </div>
+
+    <textarea
+        class="notes__content"
+        placeholder="Start writing..."
+    ></textarea>
+</main>
             </div>
         `;
 
@@ -90,6 +99,32 @@ export default class NotesApp extends App {
         );
     }
 
+    #deleteSelectedNote(window) {
+        if (!this.#selectedNoteId) {
+            return;
+        }
+
+        this.#notes = this.#notes.filter(
+            (note) => note.id !== this.#selectedNoteId
+        );
+
+        this.#saveNotes();
+
+        if (this.#notes.length === 0) {
+            this.#selectedNoteId = null;
+
+            this.#renderNotes(window);
+            this.#renderEditor(window);
+
+            return;
+        }
+
+        this.#selectedNoteId = this.#notes[0].id;
+
+        this.#renderNotes(window);
+        this.#renderEditor(window);
+    }
+
     #bindEvents(window) {
         const newButton = window.content.querySelector(
             ".notes__new-button"
@@ -103,6 +138,10 @@ export default class NotesApp extends App {
             ".notes__content"
         );
 
+        const deleteButton = window.content.querySelector(
+            ".notes__delete-button"
+        );
+
         newButton.addEventListener("click", () => {
             this.#createNote(window);
         });
@@ -113,6 +152,10 @@ export default class NotesApp extends App {
 
         contentInput.addEventListener("input", () => {
             this.#updateSelectedNote(window);
+        });
+
+        deleteButton.addEventListener("click", () => {
+            this.#deleteSelectedNote(window);
         });
     }
 
