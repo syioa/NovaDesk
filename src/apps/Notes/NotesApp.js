@@ -244,15 +244,34 @@ export default class NotesApp extends App {
     }
 
     #handleKeyDown = (event) => {
+        if (!this.#window.isFocused) {
+            return;
+        }
+
         if (
             event.ctrlKey &&
             event.altKey &&
-            event.key.toLowerCase() === 'n' &&
-            this.#window.isFocused
+            event.key.toLowerCase() === 'n'
         ) {
             event.preventDefault();
 
             this.#createNote(this.#window);
+            return;
+        }
+
+        if (
+            event.ctrlKey &&
+            event.altKey &&
+            event.key.toLowerCase() === 's'
+        ) {
+            event.preventDefault();
+
+            const searchInput = this.#window.content.querySelector(
+                '.notes__search'
+            );
+
+            searchInput?.focus();
+            return;
         }
     };
 
