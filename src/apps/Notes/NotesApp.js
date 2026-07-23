@@ -21,6 +21,7 @@ export default class NotesApp extends App {
     #editor = null;
     #loadingNote = false;
     #sidebarCollapsed = false;
+    #editorNoteId = null;
 
     async mount(window) {
         super.mount(window);
@@ -89,8 +90,6 @@ export default class NotesApp extends App {
 
 </div>
     `;
-
-        window.content.addEventListener('keydown', this.#handleKeyDown);
 
         this.#bindEvents(window);
 
@@ -273,6 +272,28 @@ export default class NotesApp extends App {
             searchInput?.focus();
             return;
         }
+
+        if (
+            event.ctrlKey &&
+            event.altKey &&
+            event.key === "ArrowUp"
+        ) {
+            event.preventDefault();
+
+            this.#navigateNote(this.#window, -1);
+            return;
+        }
+
+        if (
+            event.ctrlKey &&
+            event.altKey &&
+            event.key === "ArrowDown"
+        ) {
+            event.preventDefault();
+
+            this.#navigateNote(this.#window, 1);
+            return;
+        }
     };
 
     #createNote(window) {
@@ -352,44 +373,11 @@ export default class NotesApp extends App {
                 );
             }
 
-            item.addEventListener("click", () => {
-                this.#selectedNoteId = note.id;
-
-                this.#renderNotes(window);
-                this.#renderEditor(window);
+            item.addEventListener("click", async () => {
+                this.#selectNote(window, note.id);
             });
 
             list.append(item);
-        }
-    }
-
-    #renderEditor(window) {
-        const titleInput = window.content.querySelector(
-            ".notes__title"
-        );
-
-        const note = this.#notes.find(
-            (note) => note.id === this.#selectedNoteId
-        );
-
-        if (!note) {
-            titleInput.value = "";
-
-            return;
-        }
-
-        titleInput.value = note.title;
-
-        if (this.#editor) {
-            this.#loadingNote = true;
-
-            this.#loadingNote = true;
-
-            this.#loadMarkdown(note.content);
-
-            this.#loadingNote = false;
-
-            this.#loadingNote = false;
         }
     }
 
@@ -412,6 +400,54 @@ export default class NotesApp extends App {
         this.#saveNotes();
 
         this.#renderNotes(window);
+    }
+
+    #navigateNote(window, direction) {
+        const visibleNotes = [...this.#notes]
+            .sort(
+                (a, b) =>
+                    (b.updatedAt ?? 0) -
+                    (a.updatedAt ?? 0)
+            )
+            .filter((note) => {
+                const query = this.#searchQuery
+                    .trim()
+                    .toLowerCase();
+
+                if (!query) {
+                    return true;
+                }
+
+                return (
+                    note.title.toLowerCase().includes(query) ||
+                    note.content.toLowerCase().includes(query)
+                );
+            });
+
+        if (visibleNotes.length === 0) {
+            return;
+        }
+
+        const currentIndex = visibleNotes.findIndex(
+            (note) => note.id === this.#selectedNoteId
+        );
+
+        if (currentIndex === -1) {
+            this.#selectNote(
+                window,
+                visibleNotes[0].id
+            );
+            return;
+        }
+
+        const newIndex =
+            (currentIndex + direction + visibleNotes.length) %
+            visibleNotes.length;
+
+        this.#selectNote(
+            window,
+            visibleNotes[newIndex].id
+        );
     }
 
     #toggleSidebar(window) {
@@ -459,10 +495,6 @@ export default class NotesApp extends App {
     }
 
     #updateSelectedNoteFromEditor(markdown) {
-        if (this.#loadingNote) {
-            return;
-        }
-
         const note = this.#notes.find(
             (note) => note.id === this.#selectedNoteId
         );
@@ -471,10 +503,66 @@ export default class NotesApp extends App {
             return;
         }
 
+        if (note.content === markdown) {
+            return;
+        }
+
         note.content = markdown;
         note.updatedAt = Date.now();
 
         this.#saveNotes();
+    }
+
+    async #selectNote(window, noteId) {
+        this.#selectedNoteId = noteId;
+
+        this.#renderNotes(window);
+
+        this.#scrollSelectedNoteIntoView(window);
+
+        await this.#renderEditor(window);
+    }
+
+    #scrollSelectedNoteIntoView(window) {
+        const list = window.content.querySelector(
+            ".notes__list"
+        );
+
+        const selectedItem = list.querySelector(
+            ".notes__item--selected"
+        );
+
+        if (!selectedItem) {
+            return;
+        }
+
+        selectedItem.scrollIntoView({
+            behavior: "auto",
+            block: "nearest"
+        });
+    }
+
+    #renderEditor(window) {
+        const titleInput = window.content.querySelector(
+            ".notes__title"
+        );
+
+        const note = this.#notes.find(
+            (note) => note.id === this.#selectedNoteId
+        );
+
+        if (!note) {
+            titleInput.value = "";
+            return;
+        }
+
+        titleInput.value = note.title;
+
+        if (this.#editor) {
+            this.#editorNoteId = note.id;
+
+            this.#loadMarkdown(note.content);
+        }
     }
 
     async #createEditor(window) {
@@ -504,6 +592,13 @@ export default class NotesApp extends App {
             .config((ctx) => {
                 ctx.get(listenerCtx).markdownUpdated(
                     (ctx, markdown) => {
+                        if (
+                            this.#editorNoteId !==
+                            this.#selectedNoteId
+                        ) {
+                            return;
+                        }
+
                         this.#updateSelectedNoteFromEditor(
                             markdown
                         );
@@ -511,8 +606,6 @@ export default class NotesApp extends App {
                 );
             });
 
-        console.log("Crepe:", Crepe);
-        console.table(Crepe.Feature);
         await this.#editor.create();
     }
 

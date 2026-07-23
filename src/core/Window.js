@@ -490,7 +490,6 @@ export default class Window {
     }
 
     onDragStart(event) {
-        console.log("Move")
 
         if (event.button !== 0) {
             return;
@@ -588,8 +587,6 @@ export default class Window {
     }
 
     onDragEnd(event) {
-        console.log("drag end");
-
         if (event.pointerId !== this.drag.pointerId) return;
 
         this.#pendingRestoreDrag = false;

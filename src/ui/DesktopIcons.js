@@ -150,8 +150,6 @@ export default class DesktopIcons {
     #selectIcon(icon) {
         this.#selectedIcons.add(icon);
         icon.classList.add("selected");
-
-        console.log("selected:", icon);
     }
 
     clearSelection() {
@@ -452,8 +450,6 @@ export default class DesktopIcons {
 
     #endDrag() {
         const center = this.#getGroupCenter();
-
-        console.log("Group center:", center);
 
         if (!this.#dragging) {
             return;
