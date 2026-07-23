@@ -781,6 +781,10 @@ export default class Window {
         return this.#state;
     }
 
+    get isFocused() {
+        return this.#focused;
+    }
+
     getTitle() {
         return this.#title;
     }

@@ -13,6 +13,7 @@ export default class NotesApp extends App {
         };
     }
 
+    #window;
     #notes = [];
     #selectedNoteId = null;
     #storageKey = "novadesk-notes";
@@ -23,6 +24,10 @@ export default class NotesApp extends App {
 
     async mount(window) {
         super.mount(window);
+
+        this.#window = window;
+
+        document.addEventListener('keydown', this.#handleKeyDown);
 
         window.content.innerHTML = `
 <div class="notes">
@@ -61,7 +66,6 @@ export default class NotesApp extends App {
 
     </aside>
 
-    <!-- Main editor -->
     <main class="notes__editor">
 
         <div class="notes__editor-header">
@@ -84,7 +88,9 @@ export default class NotesApp extends App {
     </main>
 
 </div>
-        `;
+    `;
+
+        window.content.addEventListener('keydown', this.#handleKeyDown);
 
         this.#bindEvents(window);
 
@@ -98,6 +104,7 @@ export default class NotesApp extends App {
             this.#renderNotes(window);
             this.#renderEditor(window);
         }
+
         await this.#createEditor(window);
     }
 
@@ -235,6 +242,19 @@ export default class NotesApp extends App {
             this.#toggleSidebar(window);
         });
     }
+
+    #handleKeyDown = (event) => {
+        if (
+            event.ctrlKey &&
+            event.altKey &&
+            event.key.toLowerCase() === 'n' &&
+            this.#window.isFocused
+        ) {
+            event.preventDefault();
+
+            this.#createNote(this.#window);
+        }
+    };
 
     #createNote(window) {
         const note = {
