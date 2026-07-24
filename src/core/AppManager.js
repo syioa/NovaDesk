@@ -39,7 +39,7 @@ export default class AppManager {
 
         const app = new AppClass();
 
-        app.mount(window);
+        app.mount(window, this.#eventBus);
 
         return app;
     }

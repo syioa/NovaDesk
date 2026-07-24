@@ -63,6 +63,16 @@ export default class Desktop {
             this.#desktopIcons.element
         );
 
+        this.#eventBus.on(
+            "notes:contextmenu",
+            ({ event, noteId }) => {
+                this.#onNotesContextMenu(
+                    event,
+                    noteId
+                );
+            }
+        );
+
         this.#element.addEventListener("contextmenu", (event) => {
             this.#onContextMenu(event);
         });
@@ -247,6 +257,40 @@ export default class Desktop {
             event.clientY,
             0,
             0
+        );
+    }
+
+    #onNotesContextMenu(event, noteId) {
+        console.log(
+            "Notes context menu received:",
+            noteId,
+            event.clientX,
+            event.clientY
+        );
+
+        const bounds =
+            this.#element.getBoundingClientRect();
+
+        this.#contextMenu.show(
+            event.clientX,
+            event.clientY,
+            [
+                {
+                    label: "Duplicate",
+                    action: () => {
+                        this.#eventBus.emit(
+                            "notes:duplicate",
+                            noteId
+                        );
+                    }
+                }
+            ],
+            {
+                left: bounds.left,
+                top: bounds.top,
+                right: bounds.right,
+                bottom: bounds.bottom
+            }
         );
     }
 

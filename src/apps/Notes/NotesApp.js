@@ -14,6 +14,7 @@ export default class NotesApp extends App {
     }
 
     #window;
+    #eventBus;
     #notes = [];
     #selectedNoteId = null;
     #storageKey = "novadesk-notes";
@@ -23,10 +24,21 @@ export default class NotesApp extends App {
     #sidebarCollapsed = false;
     #editorNoteId = null;
 
-    async mount(window) {
+    async mount(window, eventBus) {
         super.mount(window);
 
         this.#window = window;
+        this.#eventBus = eventBus;
+
+        this.#eventBus.on(
+            "notes:duplicate",
+            (noteId) => {
+                this.#duplicateNote(
+                    this.#window,
+                    noteId
+                );
+            }
+        );
 
         document.addEventListener('keydown', this.#handleKeyDown);
 
@@ -391,8 +403,67 @@ export default class NotesApp extends App {
                 );
             });
 
+            item.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                this.#eventBus.emit(
+                    "notes:contextmenu",
+                    {
+                        event,
+                        noteId: note.id
+                    }
+                );
+            });
+
             list.append(item);
         }
+    }
+
+    #duplicateNote(window, noteId) {
+        const note = this.#notes.find(
+            (note) => note.id === noteId
+        );
+
+        if (!note) {
+            return;
+        }
+
+        let number = 1;
+
+        let duplicatedTitle =
+            `${note.title} ${number}`;
+
+        while (
+            this.#notes.some(
+                (existingNote) =>
+                    existingNote.title === duplicatedTitle
+            )
+        ) {
+            number++;
+
+            duplicatedTitle =
+                `${note.title} ${number}`;
+        }
+
+        const duplicatedNote = {
+            id: crypto.randomUUID(),
+            title: duplicatedTitle,
+            content: note.content,
+            updatedAt: Date.now()
+        };
+
+        this.#notes.unshift(
+            duplicatedNote
+        );
+
+        this.#selectedNoteId =
+            duplicatedNote.id;
+
+        this.#saveNotes();
+
+        this.#renderNotes(window);
+        this.#renderEditor(window);
     }
 
     #startRenameNote(window, noteId, item) {
@@ -432,6 +503,14 @@ export default class NotesApp extends App {
                 note.updatedAt = Date.now();
 
                 this.#saveNotes();
+
+                const titleInput = window.content.querySelector(
+                    ".notes__title"
+                );
+
+                if (note.id === this.#selectedNoteId) {
+                    titleInput.value = note.title;
+                }
             }
 
             this.#renderNotes(window);

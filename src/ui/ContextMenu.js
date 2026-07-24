@@ -35,6 +35,7 @@ export default class ContextMenu {
         this.#renderItems(items);
 
         this.#element.style.display = "block";
+        this.#element.style.zIndex = "99999";
 
         this.#position(x, y, bounds);
 
