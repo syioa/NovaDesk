@@ -359,10 +359,12 @@ export default class NotesApp extends App {
         }
 
         for (const note of sortedNotes) {
-            const item = document.createElement("button");
+            const item = document.createElement("div");
 
-            item.type = "button";
             item.className = "notes__item";
+            item.tabIndex = 0;
+
+            item.dataset.noteId = note.id;
 
             item.textContent = note.title;
             item.title = note.title;
@@ -372,13 +374,86 @@ export default class NotesApp extends App {
                     "notes__item--selected"
                 );
             }
+            item.addEventListener("click", () => {
+                this.#selectNote(
+                    window,
+                    note.id
+                );
+            });
 
-            item.addEventListener("click", async () => {
-                this.#selectNote(window, note.id);
+            item.addEventListener("dblclick", (event) => {
+                event.preventDefault();
+
+                this.#startRenameNote(
+                    window,
+                    note.id,
+                    item
+                );
             });
 
             list.append(item);
         }
+    }
+
+    #startRenameNote(window, noteId, item) {
+        const note = this.#notes.find(
+            (note) => note.id === noteId
+        );
+
+        if (!note) {
+            return;
+        }
+
+        const input = document.createElement("input");
+
+        input.type = "text";
+        input.className = "notes__item-title-input";
+        input.value = note.title;
+
+        item.textContent = "";
+        item.append(input);
+
+        input.focus();
+        input.select();
+
+        let finished = false;
+
+        const finishRename = (save) => {
+            if (finished) {
+                return;
+            }
+
+            finished = true;
+
+            if (save) {
+                const newTitle = input.value.trim();
+
+                note.title = newTitle || "Untitled Note";
+                note.updatedAt = Date.now();
+
+                this.#saveNotes();
+            }
+
+            this.#renderNotes(window);
+        };
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                finishRename(true);
+                return;
+            }
+
+            if (event.key === "Escape") {
+                event.preventDefault();
+                finishRename(false);
+                return;
+            }
+        });
+
+        input.addEventListener("blur", () => {
+            finishRename(true);
+        });
     }
 
     #updateSelectedNote(window) {
@@ -516,7 +591,29 @@ export default class NotesApp extends App {
     async #selectNote(window, noteId) {
         this.#selectedNoteId = noteId;
 
-        this.#renderNotes(window);
+        const list = window.content.querySelector(
+            ".notes__list"
+        );
+
+        const items = list.querySelectorAll(
+            ".notes__item"
+        );
+
+        for (const item of items) {
+            item.classList.remove(
+                "notes__item--selected"
+            );
+        }
+
+        const selectedItem = [...items].find(
+            (item) => item.dataset.noteId === noteId
+        );
+
+        if (selectedItem) {
+            selectedItem.classList.add(
+                "notes__item--selected"
+            );
+        }
 
         this.#scrollSelectedNoteIntoView(window);
 
