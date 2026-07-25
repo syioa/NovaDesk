@@ -65,10 +65,11 @@ export default class Desktop {
 
         this.#eventBus.on(
             "notes:contextmenu",
-            ({ event, noteId }) => {
+            ({ event, noteId, view }) => {
                 this.#onNotesContextMenu(
                     event,
-                    noteId
+                    noteId,
+                    view
                 );
             }
         );
@@ -260,10 +261,11 @@ export default class Desktop {
         );
     }
 
-    #onNotesContextMenu(event, noteId) {
+    #onNotesContextMenu(event, noteId, view) {
         console.log(
             "Notes context menu received:",
             noteId,
+            view,
             event.clientX,
             event.clientY
         );
@@ -271,20 +273,36 @@ export default class Desktop {
         const bounds =
             this.#element.getBoundingClientRect();
 
+        const items = [];
+
+        if (view === "notes") {
+            items.push({
+                label: "Duplicate",
+                action: () => {
+                    this.#eventBus.emit(
+                        "notes:duplicate",
+                        noteId
+                    );
+                }
+            });
+        }
+
+        if (view === "trash") {
+            items.push({
+                label: "Restore",
+                action: () => {
+                    this.#eventBus.emit(
+                        "notes:restore",
+                        noteId
+                    );
+                }
+            });
+        }
+
         this.#contextMenu.show(
             event.clientX,
             event.clientY,
-            [
-                {
-                    label: "Duplicate",
-                    action: () => {
-                        this.#eventBus.emit(
-                            "notes:duplicate",
-                            noteId
-                        );
-                    }
-                }
-            ],
+            items,
             {
                 left: bounds.left,
                 top: bounds.top,

@@ -43,6 +43,16 @@ export default class NotesApp extends App {
             }
         );
 
+        this.#eventBus.on(
+            "notes:restore",
+            (noteId) => {
+                this.#restoreNote(
+                    this.#window,
+                    noteId
+                );
+            }
+        );
+
         document.addEventListener('keydown', this.#handleKeyDown);
 
         window.content.innerHTML = `
@@ -405,12 +415,15 @@ export default class NotesApp extends App {
 
         list.innerHTML = "";
 
-        const visibleNotes = this.#getVisibleNotes();
+        const visibleNotes =
+            this.#getVisibleNotes();
 
         if (visibleNotes.length === 0) {
-            const emptyMessage = document.createElement("div");
+            const emptyMessage =
+                document.createElement("div");
 
-            emptyMessage.className = "notes__empty";
+            emptyMessage.className =
+                "notes__empty";
 
             emptyMessage.textContent =
                 this.#currentView === "trash"
@@ -427,48 +440,68 @@ export default class NotesApp extends App {
         for (const note of visibleNotes) {
             const item = document.createElement("div");
 
-            item.className = "notes__item";
+            item.className =
+                "notes__item";
+
             item.tabIndex = 0;
 
-            item.dataset.noteId = note.id;
+            item.dataset.noteId =
+                note.id;
 
-            item.textContent = note.title;
-            item.title = note.title;
+            item.textContent =
+                note.title;
 
-            if (note.id === this.#selectedNoteId) {
+            item.title =
+                note.title;
+
+            if (
+                note.id ===
+                this.#selectedNoteId
+            ) {
                 item.classList.add(
                     "notes__item--selected"
                 );
             }
-            item.addEventListener("click", () => {
-                this.#selectNote(
-                    window,
-                    note.id
-                );
-            });
 
-            item.addEventListener("dblclick", (event) => {
-                event.preventDefault();
+            item.addEventListener(
+                "click",
+                () => {
+                    this.#selectNote(
+                        window,
+                        note.id
+                    );
+                }
+            );
 
-                this.#startRenameNote(
-                    window,
-                    note.id,
-                    item
-                );
-            });
+            item.addEventListener(
+                "dblclick",
+                (event) => {
+                    event.preventDefault();
 
-            item.addEventListener("contextmenu", (event) => {
-                event.preventDefault();
-                event.stopPropagation();
+                    this.#startRenameNote(
+                        window,
+                        note.id,
+                        item
+                    );
+                }
+            );
 
-                this.#eventBus.emit(
-                    "notes:contextmenu",
-                    {
-                        event,
-                        noteId: note.id
-                    }
-                );
-            });
+            item.addEventListener(
+                "contextmenu",
+                (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    this.#eventBus.emit(
+                        "notes:contextmenu",
+                        {
+                            event,
+                            noteId: note.id,
+                            view: this.#currentView
+                        }
+                    );
+                }
+            );
 
             list.append(item);
         }
@@ -487,8 +520,8 @@ export default class NotesApp extends App {
 
         let duplicatedTitle =
             `${note.title} ${number}`;
-
         while (
+
             this.#notes.some(
                 (existingNote) =>
                     existingNote.title === duplicatedTitle
@@ -515,6 +548,66 @@ export default class NotesApp extends App {
             duplicatedNote.id;
 
         this.#saveNotes();
+
+        this.#renderNotes(window);
+        this.#renderEditor(window);
+    }
+
+    #restoreNote(window, noteId) {
+        if (this.#currentView !== "trash") {
+            return;
+        }
+
+        const noteIndex = this.#trashedNotes.findIndex(
+            (note) => note.id === noteId
+        );
+
+        if (noteIndex === -1) {
+            return;
+        }
+
+        const [note] = this.#trashedNotes.splice(
+            noteIndex,
+            1
+        );
+
+        const restoredNote = {
+            ...note
+        };
+
+        delete restoredNote.deletedAt;
+
+        this.#notes.unshift(restoredNote);
+
+        this.#saveNotes();
+        this.#saveTrashedNotes();
+
+        this.#selectedNoteId = restoredNote.id;
+
+        this.#currentView = "notes";
+
+        this.#searchQuery = "";
+
+        const searchInput =
+            window.content.querySelector(
+                ".notes__search"
+            );
+
+        if (searchInput) {
+            searchInput.value = "";
+        }
+
+        const viewButtons =
+            window.content.querySelectorAll(
+                ".notes__view-button"
+            );
+
+        for (const button of viewButtons) {
+            button.classList.toggle(
+                "notes__view-button--active",
+                button.dataset.view === "notes"
+            );
+        }
 
         this.#renderNotes(window);
         this.#renderEditor(window);
