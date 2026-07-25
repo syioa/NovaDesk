@@ -16,8 +16,11 @@ export default class NotesApp extends App {
     #window;
     #eventBus;
     #notes = [];
+    #trashedNotes = [];
     #selectedNoteId = null;
+    #currentView = "notes";
     #storageKey = "novadesk-notes";
+    #trashStorageKey = "novadesk-notes-trash";
     #searchQuery = "";
     #editor = null;
     #loadingNote = false;
@@ -75,6 +78,24 @@ export default class NotesApp extends App {
             placeholder="Search notes..."
         />
 
+        <div class="notes__view-actions">
+    <button
+        class="notes__view-button notes__view-button--active"
+        type="button"
+        data-view="notes"
+    >
+        All Notes
+    </button>
+
+    <button
+        class="notes__view-button"
+        type="button"
+        data-view="trash"
+    >
+        Trash
+    </button>
+</div>
+
         <div class="notes__list"></div>
 
     </aside>
@@ -124,19 +145,36 @@ export default class NotesApp extends App {
             this.#storageKey
         );
 
-        if (!savedNotes) {
-            return;
+        const savedTrashedNotes = localStorage.getItem(
+            this.#trashStorageKey
+        );
+
+        if (savedNotes) {
+            try {
+                this.#notes = JSON.parse(savedNotes);
+            } catch (error) {
+                console.error(
+                    "Failed to load Notes data:",
+                    error
+                );
+
+                this.#notes = [];
+            }
         }
 
-        try {
-            this.#notes = JSON.parse(savedNotes);
-        } catch (error) {
-            console.error(
-                "Failed to load Notes data:",
-                error
-            );
+        if (savedTrashedNotes) {
+            try {
+                this.#trashedNotes = JSON.parse(
+                    savedTrashedNotes
+                );
+            } catch (error) {
+                console.error(
+                    "Failed to load Notes Trash data:",
+                    error
+                );
 
-            this.#notes = [];
+                this.#trashedNotes = [];
+            }
         }
     }
 
@@ -147,16 +185,31 @@ export default class NotesApp extends App {
         );
     }
 
+    #saveTrashedNotes() {
+        localStorage.setItem(
+            this.#trashStorageKey,
+            JSON.stringify(this.#trashedNotes)
+        );
+    }
+
     #deleteSelectedNote(window) {
         if (!this.#selectedNoteId) {
             return;
         }
 
         const confirmed = confirm(
-            "Are you sure you want to delete this note?"
+            "Are you sure you want to move this note to Trash?"
         );
 
         if (!confirmed) {
+            return;
+        }
+
+        const note = this.#notes.find(
+            (note) => note.id === this.#selectedNoteId
+        );
+
+        if (!note) {
             return;
         }
 
@@ -164,7 +217,13 @@ export default class NotesApp extends App {
             (note) => note.id !== this.#selectedNoteId
         );
 
+        this.#trashedNotes.unshift({
+            ...note,
+            deletedAt: Date.now()
+        });
+
         this.#saveNotes();
+        this.#saveTrashedNotes();
 
         if (this.#notes.length === 0) {
             this.#selectedNoteId = null;
@@ -222,6 +281,19 @@ export default class NotesApp extends App {
         const searchInput = window.content.querySelector(
             ".notes__search"
         );
+
+        const viewButtons = window.content.querySelectorAll(
+            ".notes__view-button"
+        );
+
+        for (const button of viewButtons) {
+            button.addEventListener("click", () => {
+                this.#switchView(
+                    window,
+                    button.dataset.view
+                );
+            });
+        }
 
         const toggleButton = window.content.querySelector(
             ".notes__toggle-button"
@@ -333,44 +405,26 @@ export default class NotesApp extends App {
 
         list.innerHTML = "";
 
-        const query = this.#searchQuery
-            .trim()
-            .toLowerCase();
+        const visibleNotes = this.#getVisibleNotes();
 
-        const sortedNotes = [...this.#notes]
-            .sort(
-                (a, b) =>
-                    (b.updatedAt ?? 0) -
-                    (a.updatedAt ?? 0)
-            )
-            .filter((note) => {
-                if (!query) {
-                    return true;
-                }
-
-                const title = note.title.toLowerCase();
-                const content = note.content.toLowerCase();
-
-                return (
-                    title.includes(query) ||
-                    content.includes(query)
-                );
-            });
-
-        if (sortedNotes.length === 0) {
+        if (visibleNotes.length === 0) {
             const emptyMessage = document.createElement("div");
 
             emptyMessage.className = "notes__empty";
-            emptyMessage.textContent = query
-                ? "No notes found"
-                : "No notes";
+
+            emptyMessage.textContent =
+                this.#currentView === "trash"
+                    ? "Trash is empty"
+                    : this.#searchQuery.trim()
+                        ? "No notes found"
+                        : "No notes";
 
             list.append(emptyMessage);
 
             return;
         }
 
-        for (const note of sortedNotes) {
+        for (const note of visibleNotes) {
             const item = document.createElement("div");
 
             item.className = "notes__item";
@@ -556,27 +610,53 @@ export default class NotesApp extends App {
         this.#renderNotes(window);
     }
 
-    #navigateNote(window, direction) {
-        const visibleNotes = [...this.#notes]
+    #getVisibleNotes() {
+        const notes =
+            this.#currentView === "trash"
+                ? this.#trashedNotes
+                : this.#notes;
+
+        const query = this.#searchQuery
+            .trim()
+            .toLowerCase();
+
+        return [...notes]
             .sort(
-                (a, b) =>
-                    (b.updatedAt ?? 0) -
-                    (a.updatedAt ?? 0)
+                (a, b) => {
+                    if (this.#currentView === "trash") {
+                        return (
+                            (b.deletedAt ?? 0) -
+                            (a.deletedAt ?? 0)
+                        );
+                    }
+
+                    return (
+                        (b.updatedAt ?? 0) -
+                        (a.updatedAt ?? 0)
+                    );
+                }
             )
             .filter((note) => {
-                const query = this.#searchQuery
-                    .trim()
-                    .toLowerCase();
-
                 if (!query) {
                     return true;
                 }
 
+                const title = note.title.toLowerCase();
+                const content = note.content.toLowerCase();
+
                 return (
-                    note.title.toLowerCase().includes(query) ||
-                    note.content.toLowerCase().includes(query)
+                    title.includes(query) ||
+                    content.includes(query)
                 );
             });
+    }
+
+    #navigateNote(window, direction) {
+        const visibleNotes = this.#getVisibleNotes();
+
+        if (this.#currentView === "trash") {
+            return;
+        }
 
         if (visibleNotes.length === 0) {
             return;
@@ -591,6 +671,7 @@ export default class NotesApp extends App {
                 window,
                 visibleNotes[0].id
             );
+
             return;
         }
 
@@ -648,6 +729,31 @@ export default class NotesApp extends App {
         );
     }
 
+    #switchView(window, view) {
+        if (
+            view !== "notes" &&
+            view !== "trash"
+        ) {
+            return;
+        }
+
+        this.#currentView = view;
+
+        const viewButtons =
+            window.content.querySelectorAll(
+                ".notes__view-button"
+            );
+
+        for (const button of viewButtons) {
+            button.classList.toggle(
+                "notes__view-button--active",
+                button.dataset.view === view
+            );
+        }
+
+        this.#renderNotes(window);
+    }
+
     #updateSelectedNoteFromEditor(markdown) {
         const note = this.#notes.find(
             (note) => note.id === this.#selectedNoteId
@@ -685,7 +791,8 @@ export default class NotesApp extends App {
         }
 
         const selectedItem = [...items].find(
-            (item) => item.dataset.noteId === noteId
+            (item) =>
+                item.dataset.noteId === noteId
         );
 
         if (selectedItem) {
@@ -695,6 +802,10 @@ export default class NotesApp extends App {
         }
 
         this.#scrollSelectedNoteIntoView(window);
+
+        if (this.#currentView === "trash") {
+            return;
+        }
 
         await this.#renderEditor(window);
     }
