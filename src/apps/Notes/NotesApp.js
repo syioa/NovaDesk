@@ -27,6 +27,17 @@ export default class NotesApp extends App {
     #sidebarCollapsed = false;
     #editorNoteId = null;
 
+    #sidebarPreviousWidth = 220;
+    #sidebarWidth = 220;
+    #sidebarCollapsedWidth = 44;
+
+    #isResizingSidebar = false;
+    #sidebarResizeStartX = 0;
+    #sidebarResizeStartWidth = 0;
+
+    #sidebarResizeFrame = null;
+    #sidebarResizePendingX = null;
+
     async mount(window, eventBus) {
         super.mount(window);
 
@@ -107,6 +118,8 @@ export default class NotesApp extends App {
 </div>
 
         <div class="notes__list"></div>
+
+        <div class="notes__sidebar-resize-handle"></div>
 
     </aside>
 
@@ -309,6 +322,10 @@ export default class NotesApp extends App {
             ".notes__toggle-button"
         );
 
+        const resizeHandle = window.content.querySelector(
+            ".notes__sidebar-resize-handle"
+        );
+
         newButton.addEventListener("click", () => {
             this.#createNote(window);
         });
@@ -334,6 +351,16 @@ export default class NotesApp extends App {
         toggleButton.addEventListener("click", () => {
             this.#toggleSidebar(window);
         });
+
+        resizeHandle.addEventListener(
+            "pointerdown",
+            (event) => {
+                this.#startSidebarResize(
+                    window,
+                    event
+                );
+            }
+        );
     }
 
     #handleKeyDown = (event) => {
@@ -388,6 +415,195 @@ export default class NotesApp extends App {
             this.#navigateNote(this.#window, 1);
             return;
         }
+    };
+
+    #startSidebarResize(window, event) {
+        this.#isResizingSidebar = true;
+
+        const notes =
+            window.content.querySelector(
+                ".notes"
+            );
+
+        notes.classList.add(
+            "notes--sidebar-resizing"
+        );
+
+        this.#sidebarResizeStartX = event.clientX;
+
+        this.#sidebarResizeStartWidth =
+            this.#sidebarCollapsed
+                ? this.#sidebarCollapsedWidth
+                : this.#sidebarWidth;
+
+        const resizeHandle =
+            event.currentTarget;
+
+        resizeHandle.setPointerCapture(
+            event.pointerId
+        );
+
+        resizeHandle.addEventListener(
+            "pointermove",
+            this.#handleSidebarResize
+        );
+
+        resizeHandle.addEventListener(
+            "pointerup",
+            this.#stopSidebarResize
+        );
+
+        resizeHandle.addEventListener(
+            "pointercancel",
+            this.#stopSidebarResize
+        );
+
+        document.body.style.cursor =
+            "ew-resize";
+
+        document.body.style.userSelect =
+            "none";
+    }
+
+    #handleSidebarResize = (event) => {
+        if (!this.#isResizingSidebar) {
+            return;
+        }
+
+        this.#sidebarResizePendingX =
+            event.clientX;
+
+        if (this.#sidebarResizeFrame !== null) {
+            return;
+        }
+
+        this.#sidebarResizeFrame =
+            requestAnimationFrame(() => {
+                this.#sidebarResizeFrame = null;
+
+                if (
+                    !this.#isResizingSidebar ||
+                    this.#sidebarResizePendingX === null
+                ) {
+                    return;
+                }
+
+                const deltaX =
+                    this.#sidebarResizePendingX -
+                    this.#sidebarResizeStartX;
+
+                const newWidth =
+                    this.#sidebarResizeStartWidth +
+                    deltaX;
+
+                // Dragging left to the collapsed threshold.
+                if (
+                    newWidth <=
+                    this.#sidebarCollapsedWidth
+                ) {
+                    this.#sidebarPreviousWidth =
+                        this.#sidebarWidth;
+
+                    this.#setSidebarCollapsed(
+                        this.#window,
+                        true
+                    );
+
+                    return;
+                }
+
+                // If dragging right from the collapsed state,
+                // smoothly expand from 44px.
+                if (this.#sidebarCollapsed) {
+                    this.#sidebarCollapsed = false;
+                }
+
+                this.#sidebarWidth =
+                    Math.min(
+                        400,
+                        Math.max(
+                            this.#sidebarCollapsedWidth,
+                            newWidth
+                        )
+                    );
+
+                this.#sidebarPreviousWidth =
+                    this.#sidebarWidth;
+
+                const sidebar =
+                    this.#window.content.querySelector(
+                        ".notes__sidebar"
+                    );
+
+                const notes =
+                    this.#window.content.querySelector(
+                        ".notes"
+                    );
+
+                notes.classList.remove(
+                    "notes--sidebar-collapsed"
+                );
+
+                sidebar.style.flexBasis =
+                    `${this.#sidebarWidth}px`;
+
+                sidebar.style.width =
+                    `${this.#sidebarWidth}px`;
+            });
+    };
+
+
+    #stopSidebarResize = (event) => {
+        if (!this.#isResizingSidebar) {
+            return;
+        }
+
+        this.#isResizingSidebar = false;
+
+        if (this.#sidebarResizeFrame !== null) {
+            cancelAnimationFrame(
+                this.#sidebarResizeFrame
+            );
+
+            this.#sidebarResizeFrame = null;
+        }
+
+        this.#sidebarResizePendingX = null;
+
+        const resizeHandle =
+            event.currentTarget;
+
+        resizeHandle.releasePointerCapture?.(
+            event.pointerId
+        );
+
+        resizeHandle.removeEventListener(
+            "pointermove",
+            this.#handleSidebarResize
+        );
+
+        resizeHandle.removeEventListener(
+            "pointerup",
+            this.#stopSidebarResize
+        );
+
+        resizeHandle.removeEventListener(
+            "pointercancel",
+            this.#stopSidebarResize
+        );
+
+        document.body.style.cursor = "";
+
+        document.body.style.userSelect = "";
+
+        const notes =
+            this.#window.content.querySelector(
+                ".notes"
+            );
+
+        notes.classList.remove(
+            "notes--sidebar-resizing"
+        );
     };
 
     #createNote(window) {
@@ -779,32 +995,89 @@ export default class NotesApp extends App {
     }
 
     #toggleSidebar(window) {
-        this.#sidebarCollapsed =
-            !this.#sidebarCollapsed;
+        this.#setSidebarCollapsed(
+            window,
+            !this.#sidebarCollapsed
+        );
+    }
 
-        const notes = window.content.querySelector(
-            ".notes"
+    #setSidebarCollapsed(window, collapsed) {
+        const sidebar =
+            window.content.querySelector(
+                ".notes__sidebar"
+            );
+
+        const notes =
+            window.content.querySelector(
+                ".notes"
+            );
+
+        const toggleButton =
+            window.content.querySelector(
+                ".notes__toggle-button"
+            );
+
+        if (!sidebar || !notes || !toggleButton) {
+            return;
+        }
+
+        if (collapsed) {
+            // Only save the current width when entering
+            // the collapsed state for the first time.
+            if (!this.#sidebarCollapsed) {
+                this.#sidebarPreviousWidth =
+                    this.#sidebarWidth;
+            }
+
+            this.#sidebarCollapsed = true;
+
+            notes.classList.add(
+                "notes--sidebar-collapsed"
+            );
+
+            sidebar.style.flexBasis =
+                `${this.#sidebarCollapsedWidth}px`;
+
+            sidebar.style.width =
+                `${this.#sidebarCollapsedWidth}px`;
+
+            toggleButton.textContent = "▶";
+
+            toggleButton.setAttribute(
+                "aria-label",
+                "Expand notes sidebar"
+            );
+
+            return;
+        }
+
+        // Restore the previously saved expanded width.
+        this.#sidebarCollapsed = false;
+
+        this.#sidebarWidth =
+            Math.min(
+                400,
+                Math.max(
+                    180,
+                    this.#sidebarPreviousWidth
+                )
+            );
+
+        notes.classList.remove(
+            "notes--sidebar-collapsed"
         );
 
-        notes.classList.toggle(
-            "notes--sidebar-collapsed",
-            this.#sidebarCollapsed
-        );
+        sidebar.style.flexBasis =
+            `${this.#sidebarWidth}px`;
 
-        const toggleButton = window.content.querySelector(
-            ".notes__toggle-button"
-        );
+        sidebar.style.width =
+            `${this.#sidebarWidth}px`;
 
-        toggleButton.textContent =
-            this.#sidebarCollapsed
-                ? "▶"
-                : "◀";
+        toggleButton.textContent = "◀";
 
         toggleButton.setAttribute(
             "aria-label",
-            this.#sidebarCollapsed
-                ? "Expand notes sidebar"
-                : "Collapse notes sidebar"
+            "Collapse notes sidebar"
         );
     }
 
