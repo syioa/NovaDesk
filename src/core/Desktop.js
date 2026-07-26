@@ -13,6 +13,7 @@ export default class Desktop {
     #registry;
     #contextMenu;
     #selectionRect;
+    #settingsStore;
 
     #desktopIcons;
     #uiManager;
@@ -26,10 +27,11 @@ export default class Desktop {
     #selectionStartX = 0;
     #selectionStartY = 0;
 
-    constructor(eventBus, registry, uiManager) {
+    constructor(eventBus, registry, uiManager, settingsStore) {
         this.#eventBus = eventBus;
         this.#registry = registry;
         this.#uiManager = uiManager;
+        this.#settingsStore = settingsStore;
 
         this.#element = document.createElement("main");
         this.#element.className = "desktop";
@@ -40,6 +42,8 @@ export default class Desktop {
         );
 
         this.#createLayers();
+
+        this.#applyWallpaper();
 
         this.#overlayLayer = this.getLayer("overlay");
 
@@ -71,6 +75,18 @@ export default class Desktop {
                     noteId,
                     view
                 );
+            }
+        );
+
+        this.#eventBus.on(
+            "settings:changed",
+            ({ path }) => {
+                if (
+                    path ===
+                    "appearance.wallpaper"
+                ) {
+                    this.#applyWallpaper();
+                }
             }
         );
 
@@ -327,6 +343,64 @@ export default class Desktop {
             right: window.innerWidth,
             bottom: window.innerHeight - rect.height
         };
+    }
+
+    #applyWallpaper() {
+        const wallpaper =
+            this.#settingsStore.get(
+                "appearance.wallpaper"
+            );
+
+        const wallpaperLayer =
+            this.getLayer("wallpaper");
+
+        console.log(
+            "Wallpaper setting:",
+            wallpaper
+        );
+
+        console.log(
+            "Wallpaper layer:",
+            wallpaperLayer
+        );
+
+        if (!wallpaperLayer) {
+            console.error(
+                "Wallpaper layer does not exist."
+            );
+
+            return;
+        }
+
+        if (wallpaper.type === "image") {
+            wallpaperLayer.style.backgroundImage =
+                `url("${wallpaper.value}")`;
+
+            wallpaperLayer.style.backgroundColor =
+                "";
+
+            wallpaperLayer.style.backgroundSize =
+                "cover";
+
+            wallpaperLayer.style.backgroundPosition =
+                "center";
+
+            wallpaperLayer.style.backgroundRepeat =
+                "no-repeat";
+
+            return;
+        }
+
+        wallpaperLayer.style.backgroundImage =
+            "none";
+
+        wallpaperLayer.style.backgroundColor =
+            wallpaper.value;
+
+        console.log(
+            "Applied wallpaper color:",
+            wallpaperLayer.style.backgroundColor
+        );
     }
 
     get element() {

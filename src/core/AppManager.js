@@ -2,11 +2,13 @@ export default class AppManager {
     #windowManager;
     #eventBus;
     #registry;
+    #settingsStore;
 
-    constructor(eventBus, windowManager, registry) {
+    constructor(eventBus, windowManager, registry, settingsStore) {
         this.#eventBus = eventBus;
         this.#windowManager = windowManager;
         this.#registry = registry;
+        this.#settingsStore = settingsStore;
 
         this.#eventBus.on("app:launch", (id) => {
             this.launch(id);
@@ -39,7 +41,11 @@ export default class AppManager {
 
         const app = new AppClass();
 
-        app.mount(window, this.#eventBus);
+        app.mount(
+            window,
+            this.#eventBus,
+            this.#settingsStore
+        );
 
         return app;
     }

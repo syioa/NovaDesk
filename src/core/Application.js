@@ -5,6 +5,7 @@ import AppManager from "./AppManager.js";
 import WelcomeApp from "../apps/Welcome/WelcomeApp.js";
 import ApplicationRegistry from "./ApplicationRegistry.js";
 import UIManager from "./UIManager.js";
+import SettingsStore from "../apps/Settings/SettingsStore.js";
 
 export default class Application {
     static instance = null;
@@ -17,6 +18,7 @@ export default class Application {
     #windowManager = null;
     #eventBus = null;
     #appManager = null;
+    #settingsStore = null;
 
     constructor() {
         if (Application.instance) {
@@ -38,6 +40,10 @@ export default class Application {
         return this.#appManager;
     }
 
+    get settingsStore() {
+        return this.#settingsStore;
+    }
+
     async boot() {
         this.#eventBus = new EventBus();
         this.#registry = new ApplicationRegistry();
@@ -47,6 +53,17 @@ export default class Application {
             console.log("Window created:", window);
         });
 
+        this.#settingsStore =
+            new SettingsStore(
+                this.#eventBus
+            );
+
+        this.#registry =
+            new ApplicationRegistry();
+
+        this.#uiManager =
+            new UIManager();
+
         if (this.#initialized) return;
 
         this.#initialized = true;
@@ -54,7 +71,8 @@ export default class Application {
         this.#desktop = new Desktop(
             this.#eventBus,
             this.#registry,
-            this.#uiManager
+            this.#uiManager,
+            this.#settingsStore
         );
 
         document.body.append(this.#desktop.element);
@@ -67,7 +85,8 @@ export default class Application {
         this.#appManager = new AppManager(
             this.#eventBus,
             this.#windowManager,
-            this.#registry
+            this.#registry,
+            this.#settingsStore
         );
 
         this.#appManager.launch("welcome");

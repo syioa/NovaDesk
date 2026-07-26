@@ -14,7 +14,6 @@ body {
 
 body {
     font-family: system-ui, sans-serif;
-    background: #111;
 }
 
 .desktop {
@@ -24,8 +23,10 @@ body {
     height: 100vh;
 
     overflow: hidden;
+}
 
-    background: linear-gradient(135deg, #4c6ef5, #364fc7);
+.desktop-layer-wallpaper {
+    height: 100%;
 }
 
 .desktop__snap-preview {
@@ -215,11 +216,6 @@ body {
 .window--resizing,
 .window--resizing * {
     cursor: inherit !important;
-}
-
-.window__resize-handle {
-    background: red;
-    opacity: 0.3;
 }
 
 .taskbar {
@@ -1009,6 +1005,17 @@ body {
         background 120ms ease;
 }
 
+.settings__empty {
+    padding: 20px 10px;
+
+    color: var(--muted-text-color,
+            rgba(0, 0, 0, 0.55));
+
+    font-size: 13px;
+
+    text-align: center;
+}
+
 .settings__search::placeholder {
     color: var(--muted-text-color,
             rgba(0, 0, 0, 0.5));
@@ -1120,7 +1127,9 @@ body {
     text-overflow: ellipsis;
 }
 
-/* ========================================
+/* =======================================
+
+
    Pages
 ======================================== */
 
@@ -1225,8 +1234,8 @@ body {
     min-width: 0;
     min-height: 0;
 
-    padding: 24px 32px 40px;
 
+    padding: 24px 32px 40px;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -1289,6 +1298,7 @@ body {
 
     font-size: 18px;
     font-weight: 600;
+
 }
 
 .settings__placeholder p {
@@ -1367,4 +1377,9 @@ body {
 
     font-size: 13px;
     text-align: center;
+}
+
+
+.desktop-layer-wallpaper {
+    pointer-events: none;
 }

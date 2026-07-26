@@ -12,6 +12,8 @@ export default class SettingsApp extends App {
     }
 
     #window;
+    #eventBus;
+    #settingsStore;
     #activeCategory = "appearance";
     #activePage = "wallpaper";
     #searchQuery = "";
@@ -26,19 +28,36 @@ export default class SettingsApp extends App {
                     id: "wallpaper",
                     name: "Wallpaper",
                     description:
-                        "Customize the wallpaper shown on your desktop."
+                        "Customize the wallpaper shown on your desktop.",
+                    render: (container) => {
+                        this.#renderWallpaperPage(
+                            container
+                        );
+                    }
                 },
                 {
                     id: "theme",
                     name: "Theme",
                     description:
-                        "Choose how NovaDesk looks."
+                        "Choose how NovaDesk looks.",
+                    render: (container) => {
+                        this.#renderPlaceholderPage(
+                            container,
+                            "Theme settings will be implemented here."
+                        );
+                    }
                 },
                 {
                     id: "accent-color",
                     name: "Accent Color",
                     description:
-                        "Choose the accent color used throughout NovaDesk."
+                        "Choose the accent color used throughout NovaDesk.",
+                    render: (container) => {
+                        this.#renderPlaceholderPage(
+                            container,
+                            "Accent color settings will be implemented here."
+                        );
+                    }
                 }
             ]
         },
@@ -52,19 +71,37 @@ export default class SettingsApp extends App {
                     id: "icon-size",
                     name: "Icon Size",
                     description:
-                        "Change the size of desktop icons."
+                        "Change the size of desktop icons.",
+                    render: (container) => {
+                        this.#renderPlaceholderPage(
+                            container,
+                            "Icon size settings will be implemented here."
+                        );
+                    }
                 },
                 {
                     id: "grid-size",
                     name: "Grid Size",
                     description:
-                        "Configure the desktop icon grid."
+                        "Configure the desktop icon grid.",
+                    render: (container) => {
+                        this.#renderPlaceholderPage(
+                            container,
+                            "Grid size settings will be implemented here."
+                        );
+                    }
                 },
                 {
                     id: "icon-spacing",
                     name: "Icon Spacing",
                     description:
-                        "Control the spacing between desktop icons."
+                        "Control the spacing between desktop icons.",
+                    render: (container) => {
+                        this.#renderPlaceholderPage(
+                            container,
+                            "Icon spacing settings will be implemented here."
+                        );
+                    }
                 }
             ]
         },
@@ -78,13 +115,25 @@ export default class SettingsApp extends App {
                     id: "animations",
                     name: "Animation Preferences",
                     description:
-                        "Configure window animations and transitions."
+                        "Configure window animations and transitions.",
+                    render: (container) => {
+                        this.#renderPlaceholderPage(
+                            container,
+                            "Animation settings will be implemented here."
+                        );
+                    }
                 },
                 {
                     id: "snap",
                     name: "Snap Behavior",
                     description:
-                        "Configure how windows behave when snapped."
+                        "Configure how windows behave when snapped.",
+                    render: (container) => {
+                        this.#renderPlaceholderPage(
+                            container,
+                            "Snap behavior settings will be implemented here."
+                        );
+                    }
                 }
             ]
         },
@@ -98,22 +147,36 @@ export default class SettingsApp extends App {
                     id: "version",
                     name: "NovaDesk Version",
                     description:
-                        "View the current NovaDesk version."
+                        "View the current NovaDesk version.",
+                    render: (container) => {
+                        this.#renderPlaceholderPage(
+                            container,
+                            "Version information will be implemented here."
+                        );
+                    }
                 },
                 {
                     id: "about",
                     name: "About",
                     description:
-                        "Learn more about NovaDesk."
+                        "Learn more about NovaDesk.",
+                    render: (container) => {
+                        this.#renderPlaceholderPage(
+                            container,
+                            "About NovaDesk will be implemented here."
+                        );
+                    }
                 }
             ]
         }
     ];
 
-    mount(window) {
+    mount(window, eventBus, settingsStore) {
         super.mount(window);
 
         this.#window = window;
+        this.#eventBus = eventBus;
+        this.#settingsStore = settingsStore;
 
         window.content.innerHTML = `
             <div class="settings">
@@ -183,12 +246,12 @@ export default class SettingsApp extends App {
 
         navigation.innerHTML = "";
 
-        let hasResults = false;
-
         const query =
             this.#searchQuery
                 .trim()
                 .toLowerCase();
+
+        let hasResults = false;
 
         for (const category of this.#categories) {
             const matchingPages =
@@ -239,14 +302,14 @@ export default class SettingsApp extends App {
                 category.id;
 
             categoryButton.innerHTML = `
-                <span class="settings__category-icon">
-                    ${category.icon}
-                </span>
+            <span class="settings__category-icon">
+                ${category.icon}
+            </span>
 
-                <span class="settings__category-name">
-                    ${category.name}
-                </span>
-            `;
+            <span class="settings__category-name">
+                ${category.name}
+            </span>
+        `;
 
             categoryButton.addEventListener(
                 "click",
@@ -327,6 +390,213 @@ export default class SettingsApp extends App {
         this.#updateNavigationState();
     }
 
+    #updateSetting(path, value) {
+        this.#settingsStore.set(
+            path,
+            value
+        );
+
+        this.#eventBus.emit(
+            "settings:changed",
+            {
+                path
+            }
+        );
+    }
+
+    #renderWallpaperPage(container) {
+        const wallpaper =
+            this.#settingsStore.get(
+                "appearance.wallpaper"
+            );
+
+        container.innerHTML = `
+        <div class="settings__wallpaper">
+
+            <div class="settings__setting-group">
+
+                <h2 class="settings__section-title">
+                    Wallpaper
+                </h2>
+
+                <p class="settings__section-description">
+                    Choose the wallpaper displayed
+                    on the NovaDesk desktop.
+                </p>
+
+                <div
+                    class="settings__wallpaper-preview"
+                ></div>
+
+            </div>
+
+            <div class="settings__setting-group">
+
+                <label
+                    class="settings__field-label"
+                    for="settings-wallpaper-color"
+                >
+                    Background Color
+                </label>
+
+                <div
+                    class="settings__color-control"
+                >
+                    <input
+                        id="settings-wallpaper-color"
+                        class="settings__color-input"
+                        type="color"
+                        value="${wallpaper.type === "color"
+                ? wallpaper.value
+                : "#1e1e1e"}"
+                    />
+
+                    <input
+                        class="settings__color-text"
+                        type="text"
+                        value="${wallpaper.type === "color"
+                ? wallpaper.value
+                : "#1e1e1e"}"
+                        placeholder="#1e1e1e"
+                    />
+                </div>
+
+            </div>
+
+            <div
+                class="settings__actions"
+            >
+
+                <button
+                    class="settings__button
+                           settings__button--primary"
+                    type="button"
+                    data-action="apply-wallpaper"
+                >
+                    Apply
+                </button>
+
+                <button
+                    class="settings__button"
+                    type="button"
+                    data-action="reset-wallpaper"
+                >
+                    Reset
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+        const preview =
+            container.querySelector(
+                ".settings__wallpaper-preview"
+            );
+
+        const colorInput =
+            container.querySelector(
+                ".settings__color-input"
+            );
+
+        const colorText =
+            container.querySelector(
+                ".settings__color-text"
+            );
+
+        const applyButton =
+            container.querySelector(
+                '[data-action="apply-wallpaper"]'
+            );
+
+        const resetButton =
+            container.querySelector(
+                '[data-action="reset-wallpaper"]'
+            );
+
+        const updatePreview = (color) => {
+            preview.style.backgroundColor =
+                color;
+        };
+
+        updatePreview(
+            colorInput.value
+        );
+
+        colorInput.addEventListener(
+            "input",
+            () => {
+                colorText.value =
+                    colorInput.value;
+
+                updatePreview(
+                    colorInput.value
+                );
+            }
+        );
+
+        colorText.addEventListener(
+            "input",
+            () => {
+                const value =
+                    colorText.value.trim();
+
+                if (
+                    /^#[0-9a-fA-F]{6}$/.test(
+                        value
+                    )
+                ) {
+                    colorInput.value =
+                        value;
+
+                    updatePreview(value);
+                }
+            }
+        );
+
+        applyButton.addEventListener(
+            "click",
+            () => {
+                const color =
+                    colorInput.value;
+
+                this.#updateSetting(
+                    "appearance.wallpaper",
+                    {
+                        type: "color",
+                        value: color
+                    }
+                );
+            }
+        );
+
+        resetButton.addEventListener(
+            "click",
+            () => {
+                const defaultColor =
+                    "#1e1e1e";
+
+                colorInput.value =
+                    defaultColor;
+
+                colorText.value =
+                    defaultColor;
+
+                updatePreview(
+                    defaultColor
+                );
+
+                this.#updateSetting(
+                    "appearance.wallpaper",
+                    {
+                        type: "color",
+                        value: defaultColor
+                    }
+                );
+            }
+        );
+    }
+
     #selectCategory(categoryId) {
         const category =
             this.#categories.find(
@@ -355,10 +625,10 @@ export default class SettingsApp extends App {
                     category.id === categoryId
             );
 
-
         if (!category) {
             return;
         }
+
         const page =
             category.pages.find(
                 (page) =>
@@ -413,8 +683,7 @@ export default class SettingsApp extends App {
         const category =
             this.#categories.find(
                 (category) =>
-                    category.id ===
-                    this.#activeCategory
+                    category.id === this.#activeCategory
             );
 
         if (!category) {
@@ -424,8 +693,7 @@ export default class SettingsApp extends App {
         const page =
             category.pages.find(
                 (page) =>
-                    page.id ===
-                    this.#activePage
+                    page.id === this.#activePage
             );
 
         if (!page) {
@@ -446,29 +714,46 @@ export default class SettingsApp extends App {
             `${category.name} / ${page.name}`;
 
         content.innerHTML = `
-            <header class="settings__page-header">
-                <h1 class="settings__page-title">
-                    ${page.name}
-                </h1>
+        <header class="settings__page-header">
+            <h1 class="settings__page-title">
+                ${page.name}
+            </h1>
 
-                <p class="settings__page-description">
-                    ${page.description}
-                </p>
-            </header>
+            <p class="settings__page-description">
+                ${page.description}
+            </p>
+        </header>
 
-            <section class="settings__page-content">
-                <div class="settings__placeholder">
-                    <h2>
-                        ${page.name}
-                    </h2>
+        <section class="settings__page-content"></section>
+    `;
 
-                    <p>
-                        Settings for this page
-                        will be implemented later.
-                    </p>
-                </div>
-            </section>
-        `;
+        const pageContent =
+            content.querySelector(
+                ".settings__page-content"
+            );
+
+        if (typeof page.render === "function") {
+            page.render(pageContent);
+        } else {
+            this.#renderPlaceholderPage(
+                pageContent,
+                "This settings page has not been implemented yet."
+            );
+        }
+    }
+
+    #renderPlaceholderPage(container, message) {
+        container.innerHTML = `
+        <div class="settings__placeholder">
+            <h2>
+                ${message}
+            </h2>
+
+            <p>
+                This settings page will be implemented later.
+            </p>
+        </div>
+    `;
     }
 
     destroy() {
