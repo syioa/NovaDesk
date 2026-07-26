@@ -645,7 +645,6 @@ export default class NotesApp extends App {
             });
     };
 
-
     #stopSidebarResize = (event) => {
         if (!this.#isResizingSidebar) {
             return;
