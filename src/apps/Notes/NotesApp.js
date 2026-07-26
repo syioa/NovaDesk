@@ -38,6 +38,10 @@ export default class NotesApp extends App {
     #sidebarResizeFrame = null;
     #sidebarResizePendingX = null;
 
+    #resizeObserver = null;
+    #responsiveSidebarCollapsed = false;
+    #responsiveBreakpoint = 700;
+
     async mount(window, eventBus) {
         super.mount(window);
 
@@ -168,6 +172,7 @@ export default class NotesApp extends App {
         this.#bindEvents(window);
 
         this.#loadNotes();
+        this.#setupResponsiveSidebar();
 
         if (this.#notes.length === 0) {
             this.#createNote(window);
@@ -586,6 +591,8 @@ export default class NotesApp extends App {
                     newWidth <=
                     this.#sidebarCollapsedWidth
                 ) {
+                    this.#responsiveSidebarCollapsed = false;
+
                     this.#sidebarPreviousWidth =
                         this.#sidebarWidth;
 
@@ -600,6 +607,7 @@ export default class NotesApp extends App {
                 // If dragging right from the collapsed state,
                 // smoothly expand from 44px.
                 if (this.#sidebarCollapsed) {
+                    this.#responsiveSidebarCollapsed = false;
                     this.#sidebarCollapsed = false;
                 }
 
@@ -690,6 +698,54 @@ export default class NotesApp extends App {
             "notes--sidebar-resizing"
         );
     };
+
+    #setupResponsiveSidebar() {
+        const notes = this.#window?.content.querySelector(
+            ".notes"
+        );
+
+        if (!notes) {
+            return;
+        }
+
+        this.#resizeObserver = new ResizeObserver(entries => {
+            const entry = entries[0];
+
+            if (!entry) {
+                return;
+            }
+
+            const width = entry.contentRect.width;
+
+            if (
+                width < this.#responsiveBreakpoint &&
+                !this.#responsiveSidebarCollapsed
+            ) {
+                this.#responsiveSidebarCollapsed = true;
+
+                this.#setSidebarCollapsed(
+                    this.#window,
+                    true
+                );
+
+                return;
+            }
+
+            if (
+                width >= this.#responsiveBreakpoint &&
+                this.#responsiveSidebarCollapsed
+            ) {
+                this.#responsiveSidebarCollapsed = false;
+
+                this.#setSidebarCollapsed(
+                    this.#window,
+                    false
+                );
+            }
+        });
+
+        this.#resizeObserver.observe(notes);
+    }
 
     #createNote(window) {
         const note = {
@@ -1170,6 +1226,8 @@ export default class NotesApp extends App {
     }
 
     #toggleSidebar(window) {
+        this.#responsiveSidebarCollapsed = false;
+
         this.#setSidebarCollapsed(
             window,
             !this.#sidebarCollapsed
@@ -1268,6 +1326,11 @@ export default class NotesApp extends App {
                 return view.state.doc.textContent;
             }
         );
+    }
+
+    destroy() {
+        this.#resizeObserver?.disconnect();
+        this.#resizeObserver = null;
     }
 
     #switchView(window, view) {
