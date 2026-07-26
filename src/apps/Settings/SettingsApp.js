@@ -183,6 +183,8 @@ export default class SettingsApp extends App {
 
         navigation.innerHTML = "";
 
+        let hasResults = false;
+
         const query =
             this.#searchQuery
                 .trim()
@@ -216,6 +218,8 @@ export default class SettingsApp extends App {
             ) {
                 continue;
             }
+
+            hasResults = true;
 
             const categoryElement =
                 document.createElement("section");
@@ -305,6 +309,21 @@ export default class SettingsApp extends App {
             );
         }
 
+        if (query && !hasResults) {
+            const emptyMessage =
+                document.createElement("div");
+
+            emptyMessage.className =
+                "settings__empty";
+
+            emptyMessage.textContent =
+                "No settings found.";
+
+            navigation.append(
+                emptyMessage
+            );
+        }
+
         this.#updateNavigationState();
     }
 
@@ -336,10 +355,10 @@ export default class SettingsApp extends App {
                     category.id === categoryId
             );
 
+
         if (!category) {
             return;
         }
-
         const page =
             category.pages.find(
                 (page) =>

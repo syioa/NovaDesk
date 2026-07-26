@@ -913,3 +913,458 @@ body {
     padding-right: 30px;
 
 }
+
+
+/* ========================================
+   Settings App
+======================================== */
+
+.settings {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--window-content-background, #f5f5f5);
+    color: var(--text-color, #222);
+}
+
+/* ========================================
+   Sidebar
+======================================== */
+
+.settings__sidebar {
+    display: flex;
+    flex-direction: column;
+
+    width: 260px;
+    min-width: 260px;
+    height: 100%;
+
+    overflow: hidden;
+
+    background: var(--settings-sidebar-background,
+            rgba(0, 0, 0, 0.04));
+
+    border-right: 1px solid var(--border-color,
+            rgba(0, 0, 0, 0.1));
+}
+
+/* ========================================
+   Sidebar Header
+======================================== */
+
+.settings__sidebar-header {
+    display: flex;
+    align-items: center;
+
+    min-height: 64px;
+    padding: 0 20px;
+}
+
+.settings__sidebar-title {
+    margin: 0;
+
+    font-size: 22px;
+    font-weight: 600;
+
+    color: inherit;
+}
+
+/* ========================================
+   Search
+======================================== */
+
+.settings__search-wrapper {
+    padding: 8px 14px 14px;
+}
+
+.settings__search {
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 38px;
+
+    padding: 0 12px;
+
+    border: 1px solid var(--border-color,
+            rgba(0, 0, 0, 0.15));
+
+    border-radius: 8px;
+
+    outline: none;
+
+    background: var(--input-background,
+            rgba(255, 255, 255, 0.8));
+
+    color: inherit;
+
+    font: inherit;
+    font-size: 14px;
+
+    transition:
+        border-color 120ms ease,
+        box-shadow 120ms ease,
+        background 120ms ease;
+}
+
+.settings__search::placeholder {
+    color: var(--muted-text-color,
+            rgba(0, 0, 0, 0.5));
+}
+
+.settings__search:focus {
+    border-color: var(--accent-color,
+            #3584e4);
+
+    box-shadow:
+        0 0 0 2px color-mix(in srgb,
+            var(--accent-color, #3584e4) 20%,
+            transparent);
+}
+
+/* ========================================
+   Navigation
+======================================== */
+
+.settings__navigation {
+    flex: 1;
+
+    min-height: 0;
+
+    padding: 4px 10px 16px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ========================================
+   Category
+======================================== */
+
+.settings__category {
+    margin-bottom: 10px;
+}
+
+.settings__category-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+    min-height: 40px;
+
+    padding: 8px 10px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: inherit;
+
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        background 120ms ease,
+        color 120ms ease;
+}
+
+.settings__category-button:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.settings__category-button--active {
+    background: color-mix(in srgb,
+            var(--accent-color, #3584e4) 14%,
+            transparent);
+
+    color: var(--accent-color,
+            #3584e4);
+}
+
+/* ========================================
+   Category Icon
+======================================== */
+
+.settings__category-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 24px;
+    height: 24px;
+
+    flex-shrink: 0;
+
+    font-size: 16px;
+}
+
+/* ========================================
+   Category Name
+======================================== */
+
+.settings__category-name {
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* ========================================
+   Pages
+======================================== */
+
+.settings__pages {
+    display: flex;
+    flex-direction: column;
+
+    margin-top: 2px;
+    padding-left: 34px;
+}
+
+/* ========================================
+   Page Button
+======================================== */
+
+.settings__page-button {
+    display: block;
+
+    width: 100%;
+    min-height: 36px;
+
+    padding: 7px 10px;
+
+    border: none;
+    border-radius: 7px;
+
+    background: transparent;
+
+    color: var(--muted-text-color,
+            rgba(0, 0, 0, 0.7));
+
+    font: inherit;
+    font-size: 13px;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        background 120ms ease,
+        color 120ms ease;
+}
+
+.settings__page-button:hover {
+    background: rgba(0, 0, 0, 0.05);
+
+    color: inherit;
+}
+
+.settings__page-button--active {
+    background: color-mix(in srgb,
+            var(--accent-color, #3584e4) 12%,
+            transparent);
+
+    color: var(--accent-color,
+            #3584e4);
+
+    font-weight: 500;
+}
+
+/* ========================================
+   Main Content
+======================================== */
+
+.settings__main {
+    display: flex;
+    flex-direction: column;
+
+    flex: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    overflow: hidden;
+
+    background: var(--settings-content-background,
+            #ffffff);
+}
+
+/* ========================================
+   Breadcrumb
+======================================== */
+
+.settings__breadcrumb {
+    flex-shrink: 0;
+
+    padding: 18px 32px 0;
+
+    color: var(--muted-text-color,
+            rgba(0, 0, 0, 0.55));
+
+    font-size: 13px;
+}
+
+/* ========================================
+   Page
+======================================== */
+
+.settings__page {
+    flex: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    padding: 24px 32px 40px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ========================================
+   Page Header
+======================================== */
+
+.settings__page-header {
+    max-width: 760px;
+
+    margin-bottom: 28px;
+}
+
+.settings__page-title {
+    margin: 0 0 8px;
+
+    font-size: 28px;
+    font-weight: 600;
+
+    line-height: 1.2;
+}
+
+.settings__page-description {
+    margin: 0;
+
+    color: var(--muted-text-color,
+            rgba(0, 0, 0, 0.6));
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ========================================
+   Page Content
+======================================== */
+
+.settings__page-content {
+    max-width: 760px;
+}
+
+/* ========================================
+   Placeholder
+======================================== */
+
+.settings__placeholder {
+    padding: 24px;
+
+    border: 1px solid var(--border-color,
+            rgba(0, 0, 0, 0.1));
+
+    border-radius: 12px;
+
+    background: var(--settings-card-background,
+            rgba(0, 0, 0, 0.025));
+}
+
+.settings__placeholder h2 {
+    margin: 0 0 8px;
+
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.settings__placeholder p {
+    margin: 0;
+
+    color: var(--muted-text-color,
+            rgba(0, 0, 0, 0.6));
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ========================================
+   Scrollbars
+======================================== */
+
+.settings__navigation,
+.settings__page {
+    scrollbar-width: thin;
+}
+
+/* ========================================
+   Responsive Layout
+======================================== */
+
+@media (max-width: 700px) {
+
+    .settings__sidebar {
+        width: 210px;
+        min-width: 210px;
+    }
+
+    .settings__breadcrumb {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+    .settings__page {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+}
+
+@media (max-width: 560px) {
+
+    .settings {
+        flex-direction: column;
+    }
+
+    .settings__sidebar {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        max-height: 45%;
+
+        border-right: none;
+        border-bottom: 1px solid var(--border-color,
+                rgba(0, 0, 0, 0.1));
+    }
+
+    .settings__navigation {
+        max-height: 220px;
+    }
+
+    .settings__main {
+        min-height: 0;
+    }
+}
+
+.settings__empty {
+    padding: 20px 10px;
+
+    color: var(--muted-text-color,
+            rgba(0, 0, 0, 0.55));
+
+    font-size: 13px;
+    text-align: center;
+}
