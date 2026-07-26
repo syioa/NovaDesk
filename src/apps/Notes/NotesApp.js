@@ -99,7 +99,7 @@ export default class NotesApp extends App {
             placeholder="Search notes..."
         />
 
-        <div class="notes__view-actions">
+<div class="notes__view-actions">
     <button
         class="notes__view-button notes__view-button--active"
         type="button"
@@ -114,6 +114,24 @@ export default class NotesApp extends App {
         data-view="trash"
     >
         Trash
+    </button>
+</div>
+
+<div class="notes__trash-actions">
+    <button
+        class="notes__trash-action-button
+               notes__restore-all-button"
+        type="button"
+    >
+        Restore All
+    </button>
+
+    <button
+        class="notes__trash-action-button
+               notes__empty-trash-button"
+        type="button"
+    >
+        Empty Trash
     </button>
 </div>
 
@@ -220,6 +238,11 @@ export default class NotesApp extends App {
             return;
         }
 
+        if (this.#currentView === "trash") {
+            this.#permanentlyDeleteNote(window);
+            return;
+        }
+
         const confirmed = confirm(
             "Are you sure you want to move this note to Trash?"
         );
@@ -229,16 +252,19 @@ export default class NotesApp extends App {
         }
 
         const note = this.#notes.find(
-            (note) => note.id === this.#selectedNoteId
+            (note) =>
+                note.id === this.#selectedNoteId
         );
 
         if (!note) {
             return;
         }
 
-        this.#notes = this.#notes.filter(
-            (note) => note.id !== this.#selectedNoteId
-        );
+        this.#notes =
+            this.#notes.filter(
+                (note) =>
+                    note.id !== this.#selectedNoteId
+            );
 
         this.#trashedNotes.unshift({
             ...note,
@@ -257,7 +283,42 @@ export default class NotesApp extends App {
             return;
         }
 
-        this.#selectedNoteId = this.#notes[0].id;
+        this.#selectedNoteId =
+            this.#notes[0].id;
+
+        this.#renderNotes(window);
+        this.#renderEditor(window);
+    }
+
+    #permanentlyDeleteNote(window) {
+        const note =
+            this.#trashedNotes.find(
+                (note) =>
+                    note.id === this.#selectedNoteId
+            );
+
+        if (!note) {
+            return;
+        }
+
+        const confirmed = confirm(
+            `Are you sure you want to permanently delete "${note.title}"?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        this.#trashedNotes =
+            this.#trashedNotes.filter(
+                (note) =>
+                    note.id !== this.#selectedNoteId
+            );
+
+        this.#saveTrashedNotes();
+
+        this.#selectedNoteId =
+            null;
 
         this.#renderNotes(window);
         this.#renderEditor(window);
@@ -309,6 +370,16 @@ export default class NotesApp extends App {
             ".notes__view-button"
         );
 
+        const restoreAllButton =
+            window.content.querySelector(
+                ".notes__restore-all-button"
+            );
+
+        const emptyTrashButton =
+            window.content.querySelector(
+                ".notes__empty-trash-button"
+            );
+
         for (const button of viewButtons) {
             button.addEventListener("click", () => {
                 this.#switchView(
@@ -317,6 +388,20 @@ export default class NotesApp extends App {
                 );
             });
         }
+
+        restoreAllButton.addEventListener(
+            "click",
+            () => {
+                this.#restoreAllNotes(window);
+            }
+        );
+
+        emptyTrashButton.addEventListener(
+            "click",
+            () => {
+                this.#emptyTrash(window);
+            }
+        );
 
         const toggleButton = window.content.querySelector(
             ".notes__toggle-button"
@@ -829,6 +914,96 @@ export default class NotesApp extends App {
         this.#renderEditor(window);
     }
 
+    #restoreAllNotes(window) {
+        if (this.#trashedNotes.length === 0) {
+            return;
+        }
+
+        const confirmed = confirm(
+            "Are you sure you want to restore all notes from Trash?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        const restoredNotes =
+            this.#trashedNotes.map(
+                (note) => {
+                    const restoredNote = {
+                        ...note
+                    };
+
+                    delete restoredNote.deletedAt;
+
+                    return restoredNote;
+                }
+            );
+
+        this.#notes.unshift(
+            ...restoredNotes
+        );
+
+        this.#trashedNotes = [];
+
+        this.#saveNotes();
+        this.#saveTrashedNotes();
+
+        this.#selectedNoteId =
+            restoredNotes[0]?.id ?? null;
+
+        this.#currentView = "notes";
+
+        this.#searchQuery = "";
+
+        const searchInput =
+            window.content.querySelector(
+                ".notes__search"
+            );
+
+        if (searchInput) {
+            searchInput.value = "";
+        }
+
+        const viewButtons =
+            window.content.querySelectorAll(
+                ".notes__view-button"
+            );
+
+        for (const button of viewButtons) {
+            button.classList.toggle(
+                "notes__view-button--active",
+                button.dataset.view === "notes"
+            );
+        }
+
+        this.#renderNotes(window);
+        this.#renderEditor(window);
+    }
+
+    #emptyTrash(window) {
+        if (this.#trashedNotes.length === 0) {
+            return;
+        }
+
+        const confirmed = confirm(
+            "Are you sure you want to permanently delete all notes in Trash?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        this.#trashedNotes = [];
+
+        this.#saveTrashedNotes();
+
+        this.#selectedNoteId = null;
+
+        this.#renderNotes(window);
+        this.#renderEditor(window);
+    }
+
     #startRenameNote(window, noteId, item) {
         const note = this.#notes.find(
             (note) => note.id === noteId
@@ -1104,6 +1279,30 @@ export default class NotesApp extends App {
         }
 
         this.#currentView = view;
+
+        const deleteButton =
+            window.content.querySelector(
+                ".notes__delete-button"
+            );
+
+        if (deleteButton) {
+            deleteButton.textContent =
+                view === "trash"
+                    ? "Delete Permanently"
+                    : "Move to Trash";
+        }
+
+        const trashActions =
+            window.content.querySelector(
+                ".notes__trash-actions"
+            );
+
+        if (trashActions) {
+            trashActions.classList.toggle(
+                "notes__trash-actions--visible",
+                view === "trash"
+            );
+        }
 
         const viewButtons =
             window.content.querySelectorAll(

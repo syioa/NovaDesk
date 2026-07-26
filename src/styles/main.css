@@ -709,6 +709,73 @@ body {
 }
 
 /* ========================================
+   Trash Actions
+======================================== */
+
+.notes__trash-actions {
+    display: none;
+
+    flex: 0 0 auto;
+
+    gap: 4px;
+
+    margin: 2px 6px 6px;
+    padding: 3px;
+
+    border: 1px solid #d6d6d6;
+    border-radius: 7px;
+
+    background: #e9e9e9;
+}
+
+.notes__trash-actions--visible {
+    display: flex;
+}
+
+.notes__trash-action-button {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 7px 8px;
+
+    border: none;
+    border-radius: 5px;
+
+    background: transparent;
+
+    color: #666666;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.notes__trash-action-button:hover {
+    background: #dedede;
+    color: #333333;
+}
+
+.notes__trash-action-button:active {
+    background: #d6d6d6;
+}
+
+.notes--sidebar-collapsed .notes__sidebar-header h2,
+.notes--sidebar-collapsed .notes__new-button,
+.notes--sidebar-collapsed .notes__search,
+.notes--sidebar-collapsed .notes__view-actions,
+.notes--sidebar-collapsed .notes__trash-actions,
+.notes--sidebar-collapsed .notes__list {
+    display: none;
+}
+
+/* ========================================
    Editor
 ======================================== */
 
