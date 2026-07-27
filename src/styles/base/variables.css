@@ -1,0 +1,55 @@
+:root {
+    /*
+     * NovaDesk semantic colors
+     *
+     * Raw Catppuccin colors are injected by ThemeManager.
+     */
+
+    --color-background:
+        var(--catppuccin-base);
+
+    --color-surface:
+        var(--catppuccin-surface-0);
+
+    --color-surface-raised:
+        var(--catppuccin-surface-1);
+
+    --color-surface-overlay:
+        var(--catppuccin-surface-2);
+
+    --color-mantle:
+        var(--catppuccin-mantle);
+
+    --color-crust:
+        var(--catppuccin-crust);
+
+    --color-border:
+        var(--catppuccin-overlay-0);
+
+    --color-border-strong:
+        var(--catppuccin-overlay-1);
+
+    --color-text-primary:
+        var(--catppuccin-text);
+
+    --color-text-secondary:
+        var(--catppuccin-subtext-1);
+
+    --color-text-muted:
+        var(--catppuccin-subtext-0);
+
+    --color-accent:
+        var(--catppuccin-blue);
+
+    --color-success:
+        var(--catppuccin-green);
+
+    --color-warning:
+        var(--catppuccin-yellow);
+
+    --color-danger:
+        var(--catppuccin-red);
+
+    --color-info:
+        var(--catppuccin-sky);
+}

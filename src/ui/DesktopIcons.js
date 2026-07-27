@@ -500,11 +500,6 @@ export default class DesktopIcons {
                     collidedIcon
                 );
 
-            console.log(
-                "drop direction:",
-                direction
-            );
-
             this.#splitGroupAroundTarget(
                 collidedIcon,
                 direction

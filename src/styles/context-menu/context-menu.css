@@ -1,0 +1,35 @@
+.context-menu {
+    position: fixed;
+    display: none;
+
+    min-width: 160px;
+    padding: 4px 0;
+
+    background: white;
+    border: 1px solid #ccc;
+}
+
+.context-menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.context-menu-separator {
+    height: 1px;
+    margin: 4px 0;
+    background: #d0d0d0;
+}
+
+.context-menu-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 16px;
+}
+
+.context-menu-arrow {
+    margin-left: 20px;
+}
+
+.context-menu-item.active {
+    background: rgba(0, 0, 0, 0.1);
+}

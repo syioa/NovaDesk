@@ -354,16 +354,6 @@ export default class Desktop {
         const wallpaperLayer =
             this.getLayer("wallpaper");
 
-        console.log(
-            "Wallpaper setting:",
-            wallpaper
-        );
-
-        console.log(
-            "Wallpaper layer:",
-            wallpaperLayer
-        );
-
         if (!wallpaperLayer) {
             console.error(
                 "Wallpaper layer does not exist."
@@ -396,11 +386,6 @@ export default class Desktop {
 
         wallpaperLayer.style.backgroundColor =
             wallpaper.value;
-
-        console.log(
-            "Applied wallpaper color:",
-            wallpaperLayer.style.backgroundColor
-        );
     }
 
     get element() {

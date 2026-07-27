@@ -1,0 +1,50 @@
+.desktop-icons {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    padding: 12px;
+
+    pointer-events: none;
+}
+
+.desktop-icon {
+    width: 72px;
+    border-radius: 6px;
+    gap: 6px;
+    padding: 8px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    cursor: default;
+    user-select: none;
+
+    transition: left 0.15s ease, top 0.15s ease;
+
+    pointer-events: auto;
+    position: absolute;
+}
+
+.desktop-icon:hover {
+    background: rgba(255, 255, 255, .12);
+}
+
+.desktop-icon-image {
+    font-size: 36px;
+}
+
+.desktop-icon-label {
+    text-align: center;
+    font-size: 13px;
+    color: white;
+}
+
+.desktop-icon.selected {
+    background: rgba(0, 120, 215, 0.35);
+    outline: 1px solid rgba(0, 120, 215, 0.7);
+}

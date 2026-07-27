@@ -1,0 +1,40 @@
+.desktop {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+}
+
+.desktop__snap-preview {
+    position: absolute;
+    inset: 0;
+
+    opacity: 0;
+    pointer-events: none;
+
+    border-radius: 10px;
+
+    background: rgb(80 140 255 / 18%);
+    border: 2px solid rgb(80 140 255 / 55%);
+
+    transition:
+        opacity 120ms ease,
+        left 120ms ease,
+        top 120ms ease,
+        width 120ms ease,
+        height 120ms ease;
+}
+
+.selection-box {
+    position: absolute;
+
+    border: 1px solid rgba(0, 120, 215, .9);
+
+    background: rgba(41, 37, 37, 0.18);
+
+    pointer-events: none;
+
+    display: none;
+}
