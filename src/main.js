@@ -1,7 +1,7 @@
-import "./styles/main.css";
-
 import Application from "./core/Application.js";
 import { flavors } from "@catppuccin/palette";
+
+import "./styles/main.css";
 
 const app = new Application();
 const themeManager = new ThemeManager();

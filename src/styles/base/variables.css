@@ -52,4 +52,23 @@
 
     --color-info:
         var(--catppuccin-sky);
+
+
+    /*
+     * NovaDesk typography
+     */
+
+    --font-family-sans:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    --font-family-monospace:
+        "JetBrains Mono",
+        "Fira Code",
+        "Cascadia Code",
+        Consolas,
+        monospace;
 }

@@ -22,6 +22,7 @@ export default class NotesApp extends App {
     #storageKey = "novadesk-notes";
     #trashStorageKey = "novadesk-notes-trash";
     #searchQuery = "";
+    #selectedTag = null;
     #editor = null;
     #loadingNote = false;
     #sidebarCollapsed = false;
@@ -62,6 +63,46 @@ export default class NotesApp extends App {
             "notes:restore",
             (noteId) => {
                 this.#restoreNote(
+                    this.#window,
+                    noteId
+                );
+            }
+        );
+
+        this.#eventBus.on(
+            "notes:rename",
+            (noteId) => {
+                this.#renameNoteFromContext(
+                    this.#window,
+                    noteId
+                );
+            }
+        );
+
+        this.#eventBus.on(
+            "notes:delete",
+            (noteId) => {
+                this.#deleteNoteFromContext(
+                    this.#window,
+                    noteId
+                );
+            }
+        );
+
+        this.#eventBus.on(
+            "notes:delete-permanently",
+            (noteId) => {
+                this.#deleteNotePermanentlyFromContext(
+                    this.#window,
+                    noteId
+                );
+            }
+        );
+
+        this.#eventBus.on(
+            "notes:pin",
+            (noteId) => {
+                this.#togglePinNote(
                     this.#window,
                     noteId
                 );
@@ -139,6 +180,11 @@ export default class NotesApp extends App {
     </button>
 </div>
 
+<div class="notes__tags-section">
+    <div class="notes__tags-header">Tags</div>
+    <div class="notes__tags-list"></div>
+</div>
+
         <div class="notes__list"></div>
 
         <div class="notes__sidebar-resize-handle"></div>
@@ -162,6 +208,8 @@ export default class NotesApp extends App {
             </button>
         </div>
 
+        <div class="notes__tags-row"></div>
+
         <div class="notes__content"></div>
 
     </main>
@@ -174,6 +222,8 @@ export default class NotesApp extends App {
         this.#loadNotes();
         this.#setupResponsiveSidebar();
 
+        await this.#createEditor(window);
+
         if (this.#notes.length === 0) {
             this.#createNote(window);
         } else {
@@ -182,8 +232,112 @@ export default class NotesApp extends App {
             this.#renderNotes(window);
             this.#renderEditor(window);
         }
+    }
 
-        await this.#createEditor(window);
+    #renameNoteFromContext(window, noteId) {
+        const item = window.content.querySelector(
+            `.notes__item[data-note-id="${noteId}"]`
+        );
+
+        if (!item) {
+            return;
+        }
+
+        if (this.#currentView === "trash") {
+            return;
+        }
+
+        this.#startRenameNote(
+            window,
+            noteId,
+            item
+        );
+    }
+
+    #deleteNoteFromContext(window, noteId) {
+        const note = this.#notes.find(
+            note => note.id === noteId
+        );
+
+        if (!note) {
+            return;
+        }
+
+        const confirmed = confirm(
+            `Move "${note.title}" to Trash?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        this.#notes =
+            this.#notes.filter(
+                note => note.id !== noteId
+            );
+
+        this.#trashedNotes.unshift({
+            ...note,
+            deletedAt: Date.now()
+        });
+
+        this.#saveNotes();
+        this.#saveTrashedNotes();
+
+        if (this.#selectedNoteId === noteId) {
+            this.#selectedNoteId =
+                this.#notes[0]?.id ?? null;
+
+            this.#renderEditor(window);
+        }
+
+        this.#renderNotes(window);
+    }
+
+    #deleteNotePermanentlyFromContext(window, noteId) {
+        const note =
+            this.#trashedNotes.find(
+                (note) => note.id === noteId
+            );
+
+        if (!note) {
+            return;
+        }
+
+        const confirmed = confirm(
+            `Permanently delete "${note.title}"?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        this.#trashedNotes =
+            this.#trashedNotes.filter(
+                (note) => note.id !== noteId
+            );
+
+        this.#saveTrashedNotes();
+
+        this.#renderNotes(window);
+        this.#renderEditor(window);
+    }
+
+    #togglePinNote(window, noteId) {
+        const note = this.#notes.find(
+            (note) => note.id === noteId
+        );
+
+        if (!note) {
+            return;
+        }
+
+        note.pinned = !note.pinned;
+        note.updatedAt = Date.now();
+
+        this.#saveNotes();
+
+        this.#renderNotes(window);
     }
 
     #loadNotes() {
@@ -295,6 +449,38 @@ export default class NotesApp extends App {
         this.#renderEditor(window);
     }
 
+    #deleteNote(window, noteId) {
+        const note = this.#notes.find(
+            note => note.id === noteId
+        );
+
+        if (!note) {
+            return;
+        }
+
+        this.#notes =
+            this.#notes.filter(
+                note => note.id !== noteId
+            );
+
+        this.#trashedNotes.unshift({
+            ...note,
+            deletedAt: Date.now()
+        });
+
+        this.#saveNotes();
+        this.#saveTrashedNotes();
+
+        if (this.#selectedNoteId === noteId) {
+            this.#selectedNoteId =
+                this.#notes[0]?.id ?? null;
+
+            this.#renderEditor(window);
+        }
+
+        this.#renderNotes(window);
+    }
+
     #permanentlyDeleteNote(window) {
         const note =
             this.#trashedNotes.find(
@@ -335,10 +521,17 @@ export default class NotesApp extends App {
         }
 
         this.#editor.editor.action((ctx) => {
-            const parser = ctx.get(parserCtx);
             const view = ctx.get(editorViewCtx);
 
-            const doc = parser(markdown);
+            let doc;
+
+            if (!markdown.trim()) {
+                const parser = ctx.get(parserCtx);
+                doc = parser(" ");
+            } else {
+                const parser = ctx.get(parserCtx);
+                doc = parser(markdown);
+            }
 
             const transaction = view.state.tr.replaceWith(
                 0,
@@ -751,6 +944,8 @@ export default class NotesApp extends App {
             id: crypto.randomUUID(),
             title: "Untitled Note",
             content: "",
+            tags: [],
+            pinned: false,
             updatedAt: Date.now()
         };
 
@@ -771,6 +966,8 @@ export default class NotesApp extends App {
 
         list.innerHTML = "";
 
+        this.#renderTagsList(window);
+
         const visibleNotes =
             this.#getVisibleNotes();
 
@@ -784,7 +981,7 @@ export default class NotesApp extends App {
             emptyMessage.textContent =
                 this.#currentView === "trash"
                     ? "Trash is empty"
-                    : this.#searchQuery.trim()
+                    : this.#searchQuery.trim() || this.#selectedTag
                         ? "No notes found"
                         : "No notes";
 
@@ -804,9 +1001,6 @@ export default class NotesApp extends App {
             item.dataset.noteId =
                 note.id;
 
-            item.textContent =
-                note.title;
-
             item.title =
                 note.title;
 
@@ -817,6 +1011,52 @@ export default class NotesApp extends App {
                 item.classList.add(
                     "notes__item--selected"
                 );
+            }
+
+            const titleRow = document.createElement("div");
+            titleRow.className = "notes__item-title-row";
+
+            const titleEl = document.createElement("span");
+            titleEl.className = "notes__item-title";
+            titleEl.textContent = note.title;
+
+            titleRow.append(titleEl);
+
+            if (note.pinned && this.#currentView === "notes") {
+                const pinIcon = document.createElement("span");
+                pinIcon.className = "notes__item-pin";
+                pinIcon.style.color = "var(--color-success)"
+                pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="1.25em" height="1.25em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill="currentColor" d="m15.113 3.21l.094.083l5.5 5.5a1 1 0 0 1-1.175 1.59l-3.172 3.171l-1.424 3.797a1 1 0 0 1-.158.277l-.07.08l-1.5 1.5a1 1 0 0 1-1.32.082l-.095-.083L9 16.415l-3.793 3.792a1 1 0 0 1-1.497-1.32l.083-.094L7.585 15l-2.792-2.793a1 1 0 0 1-.083-1.32l.083-.094l1.5-1.5a1 1 0 0 1 .258-.187l.098-.042l3.796-1.425l3.171-3.17a1 1 0 0 1 1.497-1.26z" />
+</svg >
+                    `;
+                titleRow.append(pinIcon);
+            }
+
+            item.append(titleRow);
+
+            const snippet = this.#getNoteSnippet(note.content);
+
+            if (snippet) {
+                const snippetEl = document.createElement("div");
+                snippetEl.className = "notes__item-snippet";
+                snippetEl.textContent = snippet;
+                item.append(snippetEl);
+            }
+
+            if (note.tags?.length) {
+                const tagsRow = document.createElement("div");
+                tagsRow.className = "notes__item-tags";
+
+                for (const tag of note.tags) {
+                    const tagEl = document.createElement("span");
+                    tagEl.className = "notes__item-tag";
+                    tagEl.textContent = `#${tag}`;
+                    tagsRow.append(tagEl);
+                }
+
+                item.append(tagsRow);
             }
 
             item.addEventListener(
@@ -830,30 +1070,28 @@ export default class NotesApp extends App {
             );
 
             item.addEventListener(
-                "dblclick",
-                (event) => {
-                    event.preventDefault();
-
-                    this.#startRenameNote(
-                        window,
-                        note.id,
-                        item
-                    );
-                }
-            );
-
-            item.addEventListener(
                 "contextmenu",
-                (event) => {
+                async (event) => {
                     event.preventDefault();
                     event.stopPropagation();
+
+                    if (
+                        note.id !== this.#selectedNoteId &&
+                        this.#currentView === "notes"
+                    ) {
+                        await this.#selectNote(
+                            window,
+                            note.id
+                        );
+                    }
 
                     this.#eventBus.emit(
                         "notes:contextmenu",
                         {
                             event,
                             noteId: note.id,
-                            view: this.#currentView
+                            view: this.#currentView,
+                            pinned: !!note.pinned
                         }
                     );
                 }
@@ -861,6 +1099,199 @@ export default class NotesApp extends App {
 
             list.append(item);
         }
+    }
+
+    #getNoteSnippet(content) {
+        if (!content) {
+            return "";
+        }
+
+        const plain = content
+            .replace(/^#{1,6}\s+/gm, "")
+            .replace(/[*_`~>]/g, "")
+            .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        if (!plain) {
+            return "";
+        }
+
+        return plain.length > 90
+            ? `${plain.slice(0, 90)}…`
+            : plain;
+    }
+
+    #renderTagsList(window) {
+        const container = window.content.querySelector(
+            ".notes__tags-list"
+        );
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = "";
+
+        const tagCounts = new Map();
+
+        for (const note of this.#notes) {
+            for (const tag of note.tags ?? []) {
+                tagCounts.set(
+                    tag,
+                    (tagCounts.get(tag) ?? 0) + 1
+                );
+            }
+        }
+
+        if (tagCounts.size === 0) {
+            const empty = document.createElement("div");
+            empty.className = "notes__tags-empty";
+            empty.textContent = "No tags yet";
+            container.append(empty);
+            return;
+        }
+
+        const sortedTags = [...tagCounts.keys()].sort(
+            (a, b) => a.localeCompare(b)
+        );
+
+        for (const tag of sortedTags) {
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.className = "notes__tag-chip";
+            button.textContent = `#${tag}`;
+
+            if (tag === this.#selectedTag) {
+                button.classList.add(
+                    "notes__tag-chip--active"
+                );
+            }
+
+            button.addEventListener("click", () => {
+                this.#selectedTag =
+                    this.#selectedTag === tag ? null : tag;
+
+                this.#renderNotes(window);
+            });
+
+            container.append(button);
+        }
+    }
+
+    #renderTagsRow(window, note) {
+        const row = window.content.querySelector(
+            ".notes__tags-row"
+        );
+
+        if (!row) {
+            return;
+        }
+
+        row.innerHTML = "";
+
+        if (!note) {
+            return;
+        }
+
+        for (const tag of note.tags ?? []) {
+            const chip = document.createElement("span");
+            chip.className = "notes__editor-tag";
+
+            const label = document.createElement("span");
+            label.textContent = `#${tag}`;
+
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "notes__editor-tag-remove";
+            remove.textContent = "×";
+            remove.setAttribute(
+                "aria-label",
+                `Remove tag ${tag}`
+            );
+
+            remove.addEventListener("click", () => {
+                this.#removeTagFromNote(
+                    window,
+                    note.id,
+                    tag
+                );
+            });
+
+            chip.append(label, remove);
+            row.append(chip);
+        }
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "notes__editor-tag-input";
+        input.placeholder = "Add tag…";
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === ",") {
+                event.preventDefault();
+
+                const value = input.value
+                    .trim()
+                    .replace(/^#/, "");
+
+                if (value) {
+                    this.#addTagToNote(
+                        window,
+                        note.id,
+                        value
+                    );
+                }
+
+                input.value = "";
+            }
+        });
+
+        row.append(input);
+    }
+
+    #addTagToNote(window, noteId, tag) {
+        const note = this.#notes.find(
+            (note) => note.id === noteId
+        );
+
+        if (!note) {
+            return;
+        }
+
+        note.tags = note.tags ?? [];
+
+        if (!note.tags.includes(tag)) {
+            note.tags.push(tag);
+            note.updatedAt = Date.now();
+
+            this.#saveNotes();
+        }
+
+        this.#renderTagsRow(window, note);
+        this.#renderNotes(window);
+    }
+
+    #removeTagFromNote(window, noteId, tag) {
+        const note = this.#notes.find(
+            (note) => note.id === noteId
+        );
+
+        if (!note) {
+            return;
+        }
+
+        note.tags = (note.tags ?? []).filter(
+            (existingTag) => existingTag !== tag
+        );
+
+        note.updatedAt = Date.now();
+
+        this.#saveNotes();
+
+        this.#renderTagsRow(window, note);
+        this.#renderNotes(window);
     }
 
     #duplicateNote(window, noteId) {
@@ -893,6 +1324,8 @@ export default class NotesApp extends App {
             id: crypto.randomUUID(),
             title: duplicatedTitle,
             content: note.content,
+            tags: [...(note.tags ?? [])],
+            pinned: false,
             updatedAt: Date.now()
         };
 
@@ -1074,11 +1507,13 @@ export default class NotesApp extends App {
         input.className = "notes__item-title-input";
         input.value = note.title;
 
-        item.textContent = "";
+        item.innerHTML = "";
         item.append(input);
 
-        input.focus();
-        input.select();
+        requestAnimationFrame(() => {
+            input.focus();
+            input.select();
+        });
 
         let finished = false;
 
@@ -1124,7 +1559,9 @@ export default class NotesApp extends App {
         });
 
         input.addEventListener("blur", () => {
-            finishRename(true);
+            setTimeout(() => {
+                finishRename(true);
+            }, 100);
         });
     }
 
@@ -1169,6 +1606,14 @@ export default class NotesApp extends App {
                         );
                     }
 
+                    const pinnedDiff =
+                        (b.pinned ? 1 : 0) -
+                        (a.pinned ? 1 : 0);
+
+                    if (pinnedDiff !== 0) {
+                        return pinnedDiff;
+                    }
+
                     return (
                         (b.updatedAt ?? 0) -
                         (a.updatedAt ?? 0)
@@ -1176,6 +1621,14 @@ export default class NotesApp extends App {
                 }
             )
             .filter((note) => {
+                if (
+                    this.#currentView === "notes" &&
+                    this.#selectedTag &&
+                    !note.tags?.includes(this.#selectedTag)
+                ) {
+                    return false;
+                }
+
                 if (!query) {
                     return true;
                 }
@@ -1342,6 +1795,10 @@ export default class NotesApp extends App {
 
         this.#currentView = view;
 
+        if (view === "trash") {
+            this.#selectedTag = null;
+        }
+
         const deleteButton =
             window.content.querySelector(
                 ".notes__delete-button"
@@ -1362,6 +1819,18 @@ export default class NotesApp extends App {
         if (trashActions) {
             trashActions.classList.toggle(
                 "notes__trash-actions--visible",
+                view === "trash"
+            );
+        }
+
+        const tagsSection =
+            window.content.querySelector(
+                ".notes__tags-section"
+            );
+
+        if (tagsSection) {
+            tagsSection.classList.toggle(
+                "notes__tags-section--hidden",
                 view === "trash"
             );
         }
@@ -1467,10 +1936,15 @@ export default class NotesApp extends App {
 
         if (!note) {
             titleInput.value = "";
+
+            this.#renderTagsRow(window, null);
+
             return;
         }
 
         titleInput.value = note.title;
+
+        this.#renderTagsRow(window, note);
 
         if (this.#editor) {
             this.#editorNoteId = note.id;

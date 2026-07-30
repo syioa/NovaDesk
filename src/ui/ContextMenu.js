@@ -63,6 +63,12 @@ export default class ContextMenu {
 
         entry.className = "context-menu-item";
 
+        if (item.danger) {
+            entry.classList.add(
+                "context-menu-item--danger"
+            );
+        }
+
         const label = document.createElement("span");
         entry.addEventListener("pointerenter", () => {
             entry.classList.add("active");

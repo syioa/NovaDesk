@@ -1,3 +1,6 @@
+/* Themes --> catppuccin.css*/
+@import "./themes/catppuccin.css";
+
 /* Base --> reset/variables */
 @import "./base/variables.css";
 @import "./base/reset.css";

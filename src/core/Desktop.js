@@ -69,11 +69,12 @@ export default class Desktop {
 
         this.#eventBus.on(
             "notes:contextmenu",
-            ({ event, noteId, view }) => {
+            ({ event, noteId, view, pinned }) => {
                 this.#onNotesContextMenu(
                     event,
                     noteId,
-                    view
+                    view,
+                    pinned
                 );
             }
         );
@@ -277,42 +278,93 @@ export default class Desktop {
         );
     }
 
-    #onNotesContextMenu(event, noteId, view) {
-        console.log(
-            "Notes context menu received:",
-            noteId,
-            view,
-            event.clientX,
-            event.clientY
-        );
-
+    #onNotesContextMenu(event, noteId, view, pinned) {
         const bounds =
             this.#element.getBoundingClientRect();
 
         const items = [];
 
         if (view === "notes") {
-            items.push({
-                label: "Duplicate",
-                action: () => {
-                    this.#eventBus.emit(
-                        "notes:duplicate",
-                        noteId
-                    );
+            items.push(
+                {
+                    label: pinned ? "Unpin" : "Pin to Top",
+                    action: () => {
+                        this.#eventBus.emit(
+                            "notes:pin",
+                            noteId
+                        );
+                    }
+                },
+                {
+                    type: "separator"
+                },
+                {
+                    label: "Rename",
+                    action: () => {
+                        this.#eventBus.emit(
+                            "notes:rename",
+                            noteId
+                        );
+                    }
+                },
+                {
+                    label: "Duplicate",
+                    action: () => {
+                        this.#eventBus.emit(
+                            "notes:duplicate",
+                            noteId
+                        );
+                    }
+                },
+                {
+                    type: "separator"
+                },
+                {
+                    label: "Move to Trash",
+                    action: () => {
+                        this.#eventBus.emit(
+                            "notes:delete",
+                            noteId
+                        );
+                    }
+                },
+                {
+                    label: "Delete Permanently",
+                    danger: true,
+                    action: () => {
+                        this.#eventBus.emit(
+                            "notes:delete-permanently",
+                            noteId
+                        );
+                    }
                 }
-            });
+            );
         }
 
         if (view === "trash") {
-            items.push({
-                label: "Restore",
-                action: () => {
-                    this.#eventBus.emit(
-                        "notes:restore",
-                        noteId
-                    );
+            items.push(
+                {
+                    label: "Restore",
+                    action: () => {
+                        this.#eventBus.emit(
+                            "notes:restore",
+                            noteId
+                        );
+                    }
+                },
+                {
+                    type: "separator"
+                },
+                {
+                    label: "Delete Permanently",
+                    action: () => {
+                        this.#eventBus.emit(
+                            "notes:delete-permanently",
+                            noteId
+                        );
+                    }
                 }
-            });
+            );
         }
 
         this.#contextMenu.show(
