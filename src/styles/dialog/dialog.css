@@ -1,0 +1,177 @@
+/* ========================================
+   Dialog
+======================================== */
+
+.dialog-backdrop {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 10000;
+
+    background: color-mix(in srgb,
+            var(--color-crust) 45%,
+            transparent);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition:
+        opacity 160ms ease;
+}
+
+.dialog-backdrop--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+
+/* ========================================
+   Dialog Window
+======================================== */
+
+.dialog {
+    width: min(420px, calc(100vw - 32px));
+
+    background: var(--color-surface);
+
+    border: 1px solid var(--color-surface-raised);
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 20px 50px rgb(0 0 0 / 35%);
+
+    overflow: hidden;
+
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease;
+}
+
+.dialog--visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+
+/* ========================================
+   Header
+======================================== */
+
+.dialog__header {
+    padding: 20px 20px 8px;
+}
+
+.dialog__title {
+    margin: 0;
+
+    color: var(--color-text-primary);
+
+    font-size: 17px;
+    font-weight: 600;
+}
+
+
+/* ========================================
+   Content
+======================================== */
+
+.dialog__content {
+    padding: 8px 20px 20px;
+}
+
+.dialog__message {
+    margin: 0;
+
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* ========================================
+   Actions
+======================================== */
+
+.dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+
+    padding: 12px 20px 16px;
+
+    background: var(--color-surface-raised);
+}
+
+
+/* ========================================
+   Buttons
+======================================== */
+
+.dialog__button {
+    min-width: 80px;
+
+    padding: 8px 14px;
+
+    border: 0;
+    border-radius: 7px;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        background 120ms ease,
+        transform 120ms ease;
+}
+
+.dialog__button:active {
+    transform: scale(0.97);
+}
+
+
+/* Secondary */
+
+.dialog__button--secondary {
+    color: var(--color-text-primary);
+    background: transparent;
+}
+
+.dialog__button--secondary:hover {
+    background: var(--color-surface);
+}
+
+
+/* Primary */
+
+.dialog__button--primary {
+    color: var(--color-text-primary);
+    background: var(--color-accent);
+}
+
+.dialog__button--primary:hover {
+    filter: brightness(1.1);
+}
+
+
+/* Danger */
+
+.dialog__button--danger {
+    color: var(--catppuccin-crust);
+    background: var(--color-danger);
+}
+
+.dialog__button--danger:hover {
+    filter: brightness(1.1);
+}

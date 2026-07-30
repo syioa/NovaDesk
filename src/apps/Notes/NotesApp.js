@@ -3,6 +3,7 @@ import { Crepe } from "@milkdown/crepe";
 import "@milkdown/crepe/theme/common/style.css";
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { editorViewCtx, parserCtx } from "@milkdown/core";
+// import DialogService from "../../ui/DialogService.js";
 
 export default class NotesApp extends App {
     static get manifest() {
@@ -254,7 +255,7 @@ export default class NotesApp extends App {
         );
     }
 
-    #deleteNoteFromContext(window, noteId) {
+    async #deleteNoteFromContext(window, noteId) {
         const note = this.#notes.find(
             note => note.id === noteId
         );
@@ -263,9 +264,13 @@ export default class NotesApp extends App {
             return;
         }
 
-        const confirmed = confirm(
-            `Move "${note.title}" to Trash?`
-        );
+        const confirmed = await app.dialogs.confirm({
+            title: "Move Note to Trash?",
+            message: `Move "${note.title}" to Trash?`,
+            confirmText: "Move to Trash",
+            cancelText: "Cancel",
+            destructive: true
+        });
 
         if (!confirmed) {
             return;
@@ -294,7 +299,7 @@ export default class NotesApp extends App {
         this.#renderNotes(window);
     }
 
-    #deleteNotePermanentlyFromContext(window, noteId) {
+    async #deleteNotePermanentlyFromContext(window, noteId) {
         const note =
             this.#trashedNotes.find(
                 (note) => note.id === noteId
@@ -304,9 +309,13 @@ export default class NotesApp extends App {
             return;
         }
 
-        const confirmed = confirm(
-            `Permanently delete "${note.title}"?`
-        );
+        const confirmed = await app.dialogs.confirm({
+            title: "Delete Note Permanently?",
+            message: `Permanently delete "${note.title}"? This action cannot be undone.`,
+            confirmText: "Delete Permanently",
+            cancelText: "Cancel",
+            destructive: true
+        });
 
         if (!confirmed) {
             return;
@@ -392,7 +401,7 @@ export default class NotesApp extends App {
         );
     }
 
-    #deleteSelectedNote(window) {
+    async #deleteSelectedNote(window) {
         if (!this.#selectedNoteId) {
             return;
         }
@@ -402,9 +411,13 @@ export default class NotesApp extends App {
             return;
         }
 
-        const confirmed = confirm(
-            "Are you sure you want to move this note to Trash?"
-        );
+        const confirmed = await app.dialogs.confirm({
+            title: "Move Note to Trash?",
+            message: "Are you sure you want to move this note to Trash?",
+            confirmText: "Move to Trash",
+            cancelText: "Cancel",
+            destructive: true
+        });
 
         if (!confirmed) {
             return;
@@ -481,7 +494,7 @@ export default class NotesApp extends App {
         this.#renderNotes(window);
     }
 
-    #permanentlyDeleteNote(window) {
+    async #permanentlyDeleteNote(window) {
         const note =
             this.#trashedNotes.find(
                 (note) =>
@@ -492,9 +505,13 @@ export default class NotesApp extends App {
             return;
         }
 
-        const confirmed = confirm(
-            `Are you sure you want to permanently delete "${note.title}"?`
-        );
+        const confirmed = await app.dialogs.confirm({
+            title: "Delete Note Permanently?",
+            message: `Are you sure you want to permanently delete "${note.title}"? This action cannot be undone.`,
+            confirmText: "Delete Permanently",
+            cancelText: "Cancel",
+            destructive: true
+        });
 
         if (!confirmed) {
             return;
@@ -959,7 +976,7 @@ export default class NotesApp extends App {
         this.#renderEditor(window);
     }
 
-    #renderNotes(window) {
+    async #renderNotes(window) {
         const list = window.content.querySelector(
             ".notes__list"
         );
@@ -1402,14 +1419,17 @@ export default class NotesApp extends App {
         this.#renderEditor(window);
     }
 
-    #restoreAllNotes(window) {
+    async #restoreAllNotes(window) {
         if (this.#trashedNotes.length === 0) {
             return;
         }
 
-        const confirmed = confirm(
-            "Are you sure you want to restore all notes from Trash?"
-        );
+        const confirmed = await app.dialogs.confirm({
+            title: "Restore All Notes?",
+            message: "Are you sure you want to restore all notes from Trash?",
+            confirmText: "Restore All",
+            cancelText: "Cancel"
+        });
 
         if (!confirmed) {
             return;
@@ -1469,14 +1489,18 @@ export default class NotesApp extends App {
         this.#renderEditor(window);
     }
 
-    #emptyTrash(window) {
+    async #emptyTrash(window) {
         if (this.#trashedNotes.length === 0) {
             return;
         }
 
-        const confirmed = confirm(
-            "Are you sure you want to permanently delete all notes in Trash?"
-        );
+        const confirmed = await app.dialogs.confirm({
+            title: "Empty Trash?",
+            message: "Are you sure you want to permanently delete all notes in Trash? This action cannot be undone.",
+            confirmText: "Empty Trash",
+            cancelText: "Cancel",
+            destructive: true
+        });
 
         if (!confirmed) {
             return;

@@ -5,11 +5,11 @@
     "": {
       "name": "novadesk",
       "dependencies": {
-        "@catppuccin/palette": "latest",
-        "@milkdown/crepe": "latest",
+        "@catppuccin/palette": "^1.8.0",
+        "@milkdown/crepe": "^7.21.3",
       },
       "devDependencies": {
-        "vite": "latest",
+        "vite": "^8.1.5",
       },
     },
   },

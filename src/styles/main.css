@@ -9,21 +9,24 @@
 @import "./desktop/desktop.css";
 @import "./desktop/wallpaper.css";
 
-/* Windows --> window*/
+/* Windows --> window */
 @import "./windows/window.css";
 
-/* Taskbar --> taskbar*/
+/* Taskbar --> taskbar */
 @import "./taskbar/taskbar.css";
 
-/* start-menu --> start menu*/
+/* start-menu --> start menu */
 @import "./start-menu/start-menu.css";
 
-/* context-menu --> context-menu*/
+/* context-menu --> context-menu */
 @import "./context-menu/context-menu.css";
 
-/* desktop-icons --> desktop-icons*/
+/* desktop-icons --> desktop-icons */
 @import "./desktop-icons/desktop-icons.css";
 
-/* Apps --> notes/settings*/
+/* Apps --> notes/settings */
 @import "./apps/notes.css";
 @import "./apps/settings.css";
+
+/* dialog --> dialog */
+@import "./dialog/dialog.css";

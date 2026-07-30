@@ -6,6 +6,7 @@ import WelcomeApp from "../apps/Welcome/WelcomeApp.js";
 import ApplicationRegistry from "./ApplicationRegistry.js";
 import UIManager from "./UIManager.js";
 import SettingsStore from "../apps/Settings/SettingsStore.js";
+import DialogService from "../ui/components/dialog/DialogService.js";
 
 export default class Application {
     static instance = null;
@@ -19,6 +20,7 @@ export default class Application {
     #eventBus = null;
     #appManager = null;
     #settingsStore = null;
+    #dialogService = null;
 
     constructor() {
         if (Application.instance) {
@@ -44,6 +46,10 @@ export default class Application {
         return this.#settingsStore;
     }
 
+    get dialogs() {
+        return this.#dialogService;
+    }
+
     async boot() {
         this.#eventBus = new EventBus();
         this.#registry = new ApplicationRegistry();
@@ -58,12 +64,6 @@ export default class Application {
                 this.#eventBus
             );
 
-        this.#registry =
-            new ApplicationRegistry();
-
-        this.#uiManager =
-            new UIManager();
-
         if (this.#initialized) return;
 
         this.#initialized = true;
@@ -76,6 +76,11 @@ export default class Application {
         );
 
         document.body.append(this.#desktop.element);
+
+        this.#dialogService = new DialogService(
+            this.#uiManager,
+            this.#desktop.getLayer("overlay")
+        );
 
         this.#windowManager = new WindowManager(
             this.#desktop,
