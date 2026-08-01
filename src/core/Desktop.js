@@ -320,20 +320,11 @@ export default class Desktop {
                     type: "separator"
                 },
                 {
-                    label: "Move to Trash",
-                    action: () => {
-                        this.#eventBus.emit(
-                            "notes:delete",
-                            noteId
-                        );
-                    }
-                },
-                {
-                    label: "Delete Permanently",
+                    label: "Delete",
                     danger: true,
                     action: () => {
                         this.#eventBus.emit(
-                            "notes:delete-permanently",
+                            "notes:delete",
                             noteId
                         );
                     }
@@ -355,15 +346,6 @@ export default class Desktop {
                 {
                     type: "separator"
                 },
-                {
-                    label: "Delete Permanently",
-                    action: () => {
-                        this.#eventBus.emit(
-                            "notes:delete-permanently",
-                            noteId
-                        );
-                    }
-                }
             );
         }
 

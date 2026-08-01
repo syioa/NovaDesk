@@ -156,7 +156,7 @@
 /* Primary */
 
 .dialog__button--primary {
-    color: var(--color-text-primary);
+    color: var(--color-crust);
     background: var(--color-accent);
 }
 

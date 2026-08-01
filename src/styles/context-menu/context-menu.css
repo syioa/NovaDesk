@@ -65,6 +65,15 @@
         color 0.12s ease;
 }
 
+.context-menu__item--destructive {
+    color: var(--color-red);
+}
+
+.context-menu__item--destructive:hover {
+    background: var(--color-red);
+    color: var(--color-crust);
+}
+
 .context-menu-item:hover,
 .context-menu-item.active {
     background: var(--color-surface-raised);

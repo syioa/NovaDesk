@@ -14,6 +14,7 @@ export default class NotesApp extends App {
         };
     }
 
+    #selectedTag = null;
     #window;
     #eventBus;
     #notes = [];
@@ -23,7 +24,6 @@ export default class NotesApp extends App {
     #storageKey = "novadesk-notes";
     #trashStorageKey = "novadesk-notes-trash";
     #searchQuery = "";
-    #selectedTag = null;
     #editor = null;
     #loadingNote = false;
     #sidebarCollapsed = false;
@@ -118,49 +118,66 @@ export default class NotesApp extends App {
     <!-- Sidebar -->
     <aside class="notes__sidebar">
 
-        <div class="notes__sidebar-header">
-            <h2>Notes</h2>
+<div class="notes__sidebar-header">
 
-            <div class="notes__sidebar-actions">
+    <div class="notes__sidebar-actions">
+
+            <button
+            class="notes__view-button notes__view-button--active"
+            type="button"
+            data-view="notes"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" width="1.25em" height="1.25em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path d="M6 4h12a2 2 0 0 1 2 2v7h-5a2 2 0 0 0-2 2v5H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2" />
+		<path d="M20 13v.172a2 2 0 0 1-.586 1.414l-4.828 4.828a2 2 0 0 1-1.414.586H13" />
+	</g>
+</svg>
+
+        </button>
+
                 <button
-                    class="notes__new-button"
-                    type="button"
-                >
-                    +
-                </button>
+            class="notes__view-button"
+            type="button"
+            data-view="trash"
+        >
+<svg xmlns="http://www.w3.org/2000/svg" width="1.25em" height="1.25em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16m-10 4v6m4-6v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+</svg>
 
-                <button
-                    class="notes__toggle-button"
-                    type="button"
-                    aria-label="Collapse notes sidebar"
-                >
-                    ◀
-                </button>
-            </div>
-        </div>
+        </button>
 
-        <input
-            class="notes__search"
-            type="search"
-            placeholder="Search notes..."
-        />
+        <button
+            class="notes__new-button"
+            type="button"
+        >
+            +
+        </button>
 
-<div class="notes__view-actions">
-    <button
-        class="notes__view-button notes__view-button--active"
-        type="button"
-        data-view="notes"
-    >
-        All Notes
-    </button>
+        <button
+            class="notes__toggle-button"
+            type="button"
+            aria-label="Collapse notes sidebar"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" width="1.25em" height="1.25em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5-2v16" />
+</svg>
 
-    <button
-        class="notes__view-button"
-        type="button"
-        data-view="trash"
-    >
-        Trash
-    </button>
+        </button>
+
+    </div>
+
+</div>
+
+<div class="notes__search-container">
+    <input
+        class="notes__search"
+        type="search"
+        placeholder="Search notes..."
+    />
 </div>
 
 <div class="notes__trash-actions">
@@ -1750,7 +1767,10 @@ export default class NotesApp extends App {
             sidebar.style.width =
                 `${this.#sidebarCollapsedWidth}px`;
 
-            toggleButton.textContent = "▶";
+            toggleButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="1.25em" height="1.25em" viewBox="0 0 24 24">
+	            <path d="M0 0h24v24H0z" fill="none" />
+	            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5-2v16" />
+            </svg>`;
 
             toggleButton.setAttribute(
                 "aria-label",
@@ -1782,7 +1802,10 @@ export default class NotesApp extends App {
         sidebar.style.width =
             `${this.#sidebarWidth}px`;
 
-        toggleButton.textContent = "◀";
+        toggleButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="1.25em" height="1.25em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5-2v16" />
+</svg>`;
 
         toggleButton.setAttribute(
             "aria-label",
