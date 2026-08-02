@@ -7,40 +7,42 @@ export default class SettingsStore {
             wallpaper: {
                 type: "color",
                 value: "#1e1e1e"
-            }
+            },
+            theme: "auto",
+            accentColor: "#3584e4"
+        },
+        desktop: {
+            iconSize: 64,
+            gridColumns: 8,
+            iconSpacing: 16
+        },
+        windows: {
+            enableAnimations: true,
+            snapEnabled: true,
+            snapAssist: true
+        },
+        system: {
+            version: "3.2.1"
         }
     };
 
     constructor(eventBus) {
         this.#eventBus = eventBus;
-
         this.#load();
     }
 
     #load() {
-        const saved =
-            localStorage.getItem(
-                this.#storageKey
-            );
+        const saved = localStorage.getItem(this.#storageKey);
 
         if (!saved) {
             return;
         }
 
         try {
-            const parsed =
-                JSON.parse(saved);
-
-            this.#settings =
-                this.#mergeSettings(
-                    this.#settings,
-                    parsed
-                );
+            const parsed = JSON.parse(saved);
+            this.#settings = this.#mergeSettings(this.#settings, parsed);
         } catch (error) {
-            console.error(
-                "Failed to load NovaDesk settings:",
-                error
-            );
+            console.error("Failed to load NovaDesk settings:", error);
         }
     }
 
@@ -48,41 +50,41 @@ export default class SettingsStore {
         return {
             ...defaults,
             ...saved,
-
             appearance: {
                 ...defaults.appearance,
                 ...saved.appearance,
-
                 wallpaper: {
                     ...defaults.appearance.wallpaper,
-                    ...saved.appearance?.wallpaper
+                    ...(saved.appearance?.wallpaper || {})
                 }
+            },
+            desktop: {
+                ...defaults.desktop,
+                ...saved.desktop
+            },
+            windows: {
+                ...defaults.windows,
+                ...saved.windows
+            },
+            system: {
+                ...defaults.system,
+                ...saved.system
             }
         };
     }
 
     #save() {
-        localStorage.setItem(
-            this.#storageKey,
-            JSON.stringify(this.#settings)
-        );
+        localStorage.setItem(this.#storageKey, JSON.stringify(this.#settings));
     }
 
     get(path) {
-        const parts =
-            path.split(".");
-
-        let value =
-            this.#settings;
+        const parts = path.split(".");
+        let value = this.#settings;
 
         for (const part of parts) {
-            if (
-                value === null ||
-                value === undefined
-            ) {
+            if (value === null || value === undefined) {
                 return undefined;
             }
-
             value = value[part];
         }
 
@@ -90,50 +92,61 @@ export default class SettingsStore {
     }
 
     set(path, value) {
-        const parts =
-            path.split(".");
+        const parts = path.split(".");
+        let target = this.#settings;
 
-        let target =
-            this.#settings;
+        for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i];
 
-        for (
-            let i = 0;
-            i < parts.length - 1;
-            i++
-        ) {
-            const part =
-                parts[i];
-
-            if (
-                !target[part] ||
-                typeof target[part] !== "object"
-            ) {
+            if (!target[part] || typeof target[part] !== "object") {
                 target[part] = {};
             }
 
-            target =
-                target[part];
+            target = target[part];
         }
 
-        const key =
-            parts[parts.length - 1];
-
+        const key = parts[parts.length - 1];
         target[key] = value;
 
         this.#save();
 
-        this.#eventBus.emit(
-            "settings:changed",
-            {
-                path,
-                value
-            }
-        );
+        this.#eventBus.emit("settings:changed", {
+            path,
+            value
+        });
     }
 
     getAll() {
-        return structuredClone(
-            this.#settings
-        );
+        return structuredClone(this.#settings);
+    }
+
+    reset() {
+        this.#settings = {
+            appearance: {
+                wallpaper: {
+                    type: "color",
+                    value: "#1e1e1e"
+                },
+                theme: "auto",
+                accentColor: "#3584e4"
+            },
+            desktop: {
+                iconSize: 64,
+                gridColumns: 8,
+                iconSpacing: 16
+            },
+            windows: {
+                enableAnimations: true,
+                snapEnabled: true,
+                snapAssist: true
+            },
+            system: {
+                version: "3.2.1"
+            }
+        };
+
+        this.#save();
+
+        this.#eventBus.emit("settings:reset", {});
     }
 }
