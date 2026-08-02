@@ -279,6 +279,63 @@
 }
 
 /* ========================================
+   URL Input (for Wallpaper)
+======================================== */
+
+.settings__url-input {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 500px;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
+    border-radius: 8px;
+    background: var(--input-background, rgba(255, 255, 255, 0.8));
+    color: inherit;
+    font: inherit;
+    font-size: 14px;
+    font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    margin-bottom: 12px;
+}
+
+.settings__url-input::placeholder {
+    color: var(--muted-text-color, rgba(0, 0, 0, 0.5));
+}
+
+.settings__url-input:focus {
+    border-color: var(--accent-color, #3584e4);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color, #3584e4) 20%, transparent);
+}
+
+/* ========================================
+   Status Messages
+======================================== */
+
+.settings__url-status {
+    margin: 8px 0 16px;
+    font-size: 13px;
+    min-height: 20px;
+}
+
+.settings__status-success {
+    color: #27ae60;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.settings__status-error {
+    color: #c0392b;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ========================================
    Color Controls
 ======================================== */
 
@@ -329,6 +386,10 @@
     border-radius: 8px;
     margin-bottom: 24px;
     background: #1e1e1e;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
 }
 
 /* ========================================
@@ -480,6 +541,7 @@
     background: var(--slider-bg, rgba(0, 0, 0, 0.1));
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
     margin: 16px 0 8px;
     cursor: pointer;
 }
@@ -841,5 +903,9 @@
 
     .settings__info-grid {
         grid-template-columns: 1fr;
+    }
+
+    .settings__url-input {
+        max-width: 100%;
     }
 }

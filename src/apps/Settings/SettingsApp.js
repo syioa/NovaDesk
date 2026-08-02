@@ -231,6 +231,7 @@ export default class SettingsApp extends App {
 
     #renderWallpaperPage(container) {
         const wallpaper = this.#settingsStore.get("appearance.wallpaper");
+        const currentImageUrl = wallpaper.type === "image" ? wallpaper.value : "";
 
         container.innerHTML = `
             <div class="settings__wallpaper">
@@ -243,23 +244,20 @@ export default class SettingsApp extends App {
                 </div>
 
                 <div class="settings__setting-group">
-                    <label class="settings__field-label" for="settings-wallpaper-color">
-                        Background Color
+                    <label class="settings__field-label" for="settings-wallpaper-url">
+                        Image URL
                     </label>
-                    <div class="settings__color-control">
-                        <input
-                            id="settings-wallpaper-color"
-                            class="settings__color-input"
-                            type="color"
-                            value="${wallpaper.type === "color" ? wallpaper.value : "#1e1e1e"}"
-                        />
-                        <input
-                            class="settings__color-text"
-                            type="text"
-                            value="${wallpaper.type === "color" ? wallpaper.value : "#1e1e1e"}"
-                            placeholder="#1e1e1e"
-                        />
-                    </div>
+                    <p class="settings__section-description">
+                        Paste the URL of an image to use as your wallpaper. Supports common image formats (JPG, PNG, GIF, WebP).
+                    </p>
+                    <input
+                        id="settings-wallpaper-url"
+                        class="settings__url-input"
+                        type="text"
+                        placeholder="https://example.com/image.jpg"
+                        value="${currentImageUrl}"
+                    />
+                    <div class="settings__url-status"></div>
                 </div>
 
                 <div class="settings__actions">
@@ -267,53 +265,94 @@ export default class SettingsApp extends App {
                         Apply
                     </button>
                     <button class="settings__button" type="button" data-action="reset-wallpaper">
-                        Reset
+                        Reset to Default
                     </button>
                 </div>
             </div>
         `;
 
         const preview = container.querySelector(".settings__wallpaper-preview");
-        const colorInput = container.querySelector(".settings__color-input");
-        const colorText = container.querySelector(".settings__color-text");
+        const urlInput = container.querySelector(".settings__url-input");
+        const statusDiv = container.querySelector(".settings__url-status");
         const applyButton = container.querySelector('[data-action="apply-wallpaper"]');
         const resetButton = container.querySelector('[data-action="reset-wallpaper"]');
 
-        const updatePreview = (color) => {
-            preview.style.backgroundColor = color;
+        const updatePreview = (url) => {
+            if (!url.trim()) {
+                preview.style.backgroundImage = "none";
+                preview.style.backgroundColor = "#1e1e1e";
+                statusDiv.innerHTML = "";
+                return;
+            }
+
+            const img = new Image();
+            img.onload = () => {
+                preview.style.backgroundImage = `url('${url}')`;
+                preview.style.backgroundColor = "#1e1e1e";
+                statusDiv.innerHTML = '<span class="settings__status-success">✓ Image loaded successfully</span>';
+            };
+            img.onerror = () => {
+                preview.style.backgroundImage = "none";
+                preview.style.backgroundColor = "#1e1e1e";
+                statusDiv.innerHTML = '<span class="settings__status-error">✗ Failed to load image. Check the URL and try again.</span>';
+            };
+            img.src = url;
         };
 
-        updatePreview(colorInput.value);
+        // Initialize preview with current wallpaper
+        if (currentImageUrl) {
+            updatePreview(currentImageUrl);
+        } else {
+            preview.style.backgroundColor = "#1e1e1e";
+        }
 
-        colorInput.addEventListener("input", () => {
-            colorText.value = colorInput.value;
-            updatePreview(colorInput.value);
-        });
-
-        colorText.addEventListener("input", () => {
-            const value = colorText.value.trim();
-            if (/^#[0-9a-fA-F]{6}$/.test(value)) {
-                colorInput.value = value;
-                updatePreview(value);
-            }
+        urlInput.addEventListener("input", () => {
+            // Debounce preview updates
+            clearTimeout(urlInput.debounceTimer);
+            urlInput.debounceTimer = setTimeout(() => {
+                updatePreview(urlInput.value);
+            }, 500);
         });
 
         applyButton.addEventListener("click", () => {
-            const color = colorInput.value;
-            this.#updateSetting("appearance.wallpaper", {
-                type: "color",
-                value: color
-            });
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                statusDiv.innerHTML = '<span class="settings__status-error">✗ Please enter an image URL</span>';
+                return;
+            }
+
+            // Validate URL format
+            try {
+                new URL(url);
+            } catch {
+                statusDiv.innerHTML = '<span class="settings__status-error">✗ Invalid URL format</span>';
+                return;
+            }
+
+            // Test if image loads
+            const img = new Image();
+            img.onload = () => {
+                this.#updateSetting("appearance.wallpaper", {
+                    type: "image",
+                    value: url
+                });
+                statusDiv.innerHTML = '<span class="settings__status-success">✓ Wallpaper applied successfully</span>';
+            };
+            img.onerror = () => {
+                statusDiv.innerHTML = '<span class="settings__status-error">✗ Failed to load image. The URL may be invalid or the image may not be accessible.</span>';
+            };
+            img.src = url;
         });
 
         resetButton.addEventListener("click", () => {
-            const defaultColor = "#1e1e1e";
-            colorInput.value = defaultColor;
-            colorText.value = defaultColor;
-            updatePreview(defaultColor);
+            urlInput.value = "";
+            preview.style.backgroundImage = "none";
+            preview.style.backgroundColor = "#1e1e1e";
+            statusDiv.innerHTML = "";
             this.#updateSetting("appearance.wallpaper", {
                 type: "color",
-                value: defaultColor
+                value: "#1e1e1e"
             });
         });
     }
