@@ -3,6 +3,7 @@ export default class DesktopIcons {
     #registry;
     #element;
     #lastValidPosition;
+    #settingsStore;
 
     #selectedIcons = new Set();
     #iconPositions = new Map();
@@ -10,9 +11,6 @@ export default class DesktopIcons {
     #previousZIndexes = new Map();
     #dragVisualPositions = new Map();
     #dragStartPositionsPixel = new Map();
-
-    #gridSize = 96;
-    #gridGap = 16;
 
     #dragging = false;
     #wasDragging = false;
@@ -31,14 +29,53 @@ export default class DesktopIcons {
 
     #dragZIndex = 10;
 
-    constructor(eventBus, registry) {
+    // Desktop settings
+    #iconSize = 64;
+    #gridColumns = 8;
+    #iconSpacing = 16;
+
+    constructor(eventBus, registry, settingsStore) {
         this.#eventBus = eventBus;
         this.#registry = registry;
+        this.#settingsStore = settingsStore;
 
         this.#element = document.createElement("div");
         this.#element.className = "desktop-icons";
 
+        this.#loadDesktopSettings();
+
         this.#render();
+
+        this.#applyIconSize();
+
+        this.#eventBus.on(
+            "settings:changed",
+            ({ path, value }) => {
+                if (path === "desktop.iconSize") {
+                    this.#iconSize = value;
+
+                    this.#applyIconSize();
+
+                    requestAnimationFrame(() => {
+                        this.#reflowIcons();
+                    });
+                }
+
+                if (path === "desktop.iconSpacing") {
+                    this.#iconSpacing = value;
+
+                    requestAnimationFrame(() => {
+                        this.#reflowIcons();
+                    });
+                }
+
+                if (path === "desktop.gridColumns") {
+                    this.#gridColumns = value;
+
+                    this.#reflowIcons();
+                }
+            }
+        );
 
         this.#element.addEventListener("click", (event) => {
             if (event.target === this.#element) {
@@ -81,62 +118,103 @@ export default class DesktopIcons {
         const icon = document.createElement("div");
         icon.className = "desktop-icon";
 
-        const manifest = AppClass.manifest;
+        const manifest =
+            AppClass.manifest;
 
-        const image = document.createElement("div");
-        image.className = "desktop-icon-image";
-        image.textContent = manifest.icon;
+        const image =
+            document.createElement("div");
 
-        const label = document.createElement("div");
-        label.className = "desktop-icon-label";
-        label.textContent = manifest.name;
+        image.className =
+            "desktop-icon-image";
 
-        icon.append(image, label);
+        image.textContent =
+            manifest.icon;
 
-        icon.addEventListener("click", () => {
-            if (this.#wasDragging) {
-                this.#wasDragging = false;
-                return;
+        const label =
+            document.createElement("div");
+
+        label.className =
+            "desktop-icon-label";
+
+        label.textContent =
+            manifest.name;
+
+        icon.append(
+            image,
+            label
+        );
+
+        icon.addEventListener(
+            "click",
+            () => {
+                if (this.#wasDragging) {
+                    this.#wasDragging = false;
+                    return;
+                }
+
+                this.#selectIcon(icon);
             }
-
-            this.#selectIcon(icon);
-        });
+        );
 
         icon.addEventListener(
             "pointerdown",
             (event) => {
-                this.#startDrag(icon, event);
+                this.#startDrag(
+                    icon,
+                    event
+                );
             }
         );
 
-        icon.addEventListener("dblclick", () => {
-            this.#eventBus.emit(
-                "app:launch",
-                manifest.id
+        icon.addEventListener(
+            "dblclick",
+            () => {
+                this.#eventBus.emit(
+                    "app:launch",
+                    manifest.id
+                );
+            }
+        );
+
+        const index =
+            this.#iconPositions.size;
+
+        const column =
+            index % this.#gridColumns;
+
+        const row =
+            Math.floor(
+                index /
+                this.#gridColumns
             );
-        });
 
-
-        const index = this.#iconPositions.size;
-
-        const column = index % 6;
-        const row = Math.floor(index / 6);
-
-        const grid = {
-            column,
-            row
-        };
-
-        const pixel =
-            this.#gridToPixel(
+        /*
+         * Find the nearest available cell.
+         */
+        const grid =
+            this.#findNearestFreeCell(
                 column,
                 row
             );
 
+        /*
+         * Store the actual grid position.
+         */
         this.#iconPositions.set(
             icon,
             grid
         );
+
+        /*
+         * IMPORTANT:
+         * Use the free cell, not the
+         * originally requested cell.
+         */
+        const pixel =
+            this.#gridToPixel(
+                grid.column,
+                grid.row
+            );
 
         icon.style.left =
             `${pixel.x}px`;
@@ -150,6 +228,230 @@ export default class DesktopIcons {
     #selectIcon(icon) {
         this.#selectedIcons.add(icon);
         icon.classList.add("selected");
+    }
+
+    #applyIconSize() {
+        const iconSize =
+            this.#settingsStore.get(
+                "desktop.iconSize"
+            ) ?? 36;
+
+        this.#iconSize = iconSize;
+
+        for (
+            const icon
+            of this.#element.querySelectorAll(
+                ".desktop-icon-image"
+            )
+        ) {
+            icon.style.width =
+                `${iconSize}px`;
+
+            icon.style.height =
+                `${iconSize}px`;
+
+            icon.style.fontSize =
+                `${iconSize}px`;
+        }
+    }
+
+    #reflowIcons() {
+        const occupied =
+            new Set();
+
+        /*
+         * Process icons in their current DOM order.
+         *
+         * Existing positions are preserved whenever
+         * possible.
+         */
+        for (
+            const icon
+            of this.#element.children
+        ) {
+            const current =
+                this.#iconPositions.get(icon);
+
+            if (!current) {
+                continue;
+            }
+
+            const key =
+                `${current.column},${current.row}`;
+
+            let grid =
+                current;
+
+            /*
+             * If the current cell is already occupied,
+             * find the nearest free cell.
+             */
+            if (
+                occupied.has(key) ||
+                current.column >=
+                this.#gridColumns
+            ) {
+                grid =
+                    this.#findNearestFreeCell(
+                        Math.min(
+                            current.column,
+                            this.#gridColumns - 1
+                        ),
+                        current.row
+                    );
+            }
+
+            /*
+             * Mark this cell as occupied.
+             */
+            occupied.add(
+                `${grid.column},${grid.row}`
+            );
+
+            /*
+             * Save the potentially updated position.
+             */
+            this.#iconPositions.set(
+                icon,
+                grid
+            );
+
+            const pixel =
+                this.#gridToPixel(
+                    grid.column,
+                    grid.row
+                );
+
+            icon.style.transition =
+                "left 0.15s ease, top 0.15s ease";
+
+            icon.style.left =
+                `${pixel.x}px`;
+
+            icon.style.top =
+                `${pixel.y}px`;
+        }
+    }
+
+    #loadDesktopSettings() {
+        this.#iconSize =
+            this.#settingsStore.get(
+                "desktop.iconSize"
+            ) ?? 64;
+
+        this.#iconSpacing =
+            this.#settingsStore.get(
+                "desktop.iconSpacing"
+            ) ?? 16;
+
+        this.#gridColumns =
+            this.#settingsStore.get(
+                "desktop.gridColumns"
+            ) ?? 8;
+    }
+
+    #findNearestFreeCell(
+        preferredColumn,
+        preferredRow
+    ) {
+        const isOccupied = (
+            column,
+            row
+        ) => {
+            return [
+                ...this.#iconPositions.values()
+            ].some(
+                position =>
+                    position.column === column &&
+                    position.row === row
+            );
+        };
+
+        /*
+         * First, try the preferred cell.
+         */
+        if (
+            preferredColumn >= 0 &&
+            preferredColumn < this.#gridColumns &&
+            preferredRow >= 0 &&
+            !isOccupied(
+                preferredColumn,
+                preferredRow
+            )
+        ) {
+            return {
+                column: preferredColumn,
+                row: preferredRow
+            };
+        }
+
+        /*
+         * Search outward from the preferred cell.
+         */
+        for (
+            let distance = 1;
+            distance < 100;
+            distance++
+        ) {
+            for (
+                let rowOffset = -distance;
+                rowOffset <= distance;
+                rowOffset++
+            ) {
+                for (
+                    let columnOffset = -distance;
+                    columnOffset <= distance;
+                    columnOffset++
+                ) {
+                    /*
+                     * Only check the outer edge
+                     * of the current search ring.
+                     */
+                    if (
+                        Math.abs(rowOffset) !== distance &&
+                        Math.abs(columnOffset) !== distance
+                    ) {
+                        continue;
+                    }
+
+                    const column =
+                        preferredColumn +
+                        columnOffset;
+
+                    const row =
+                        preferredRow +
+                        rowOffset;
+
+                    if (
+                        column < 0 ||
+                        column >= this.#gridColumns ||
+                        row < 0
+                    ) {
+                        continue;
+                    }
+
+                    if (
+                        !isOccupied(
+                            column,
+                            row
+                        )
+                    ) {
+                        return {
+                            column,
+                            row
+                        };
+                    }
+                }
+            }
+        }
+
+        /*
+         * Fallback.
+         */
+        return {
+            column: 0,
+            row: 0
+        };
     }
 
     clearSelection() {
@@ -1131,16 +1433,16 @@ export default class DesktopIcons {
                 const desktopHeight =
                     this.#element.clientHeight;
 
+                const cellSize =
+                    this.#getGridCellSize();
+
                 const maxRow =
                     Math.floor(
                         (
                             desktopHeight -
-                            this.#gridGap
+                            this.#iconSpacing
                         ) /
-                        (
-                            this.#gridSize +
-                            this.#gridGap
-                        )
+                        cellSize
                     );
 
                 /*
@@ -1245,24 +1547,35 @@ export default class DesktopIcons {
         return Math.round(value / grid) * grid;
     }
     #gridToPixel(column, row) {
+        const cellSize =
+            this.#getGridCellSize();
+
         return {
-            x: column * this.#gridSize,
-            y: row * this.#gridSize
+            x: column * cellSize,
+            y: row * cellSize
         };
     }
+
     #pixelToGrid(x, y) {
+        const cellSize =
+            this.#getGridCellSize();
+
         return {
             column: Math.round(
-                x / this.#gridSize
+                x / cellSize
             ),
             row: Math.round(
-                y / this.#gridSize
+                y / cellSize
             )
         };
     }
+
     #snapPositionToGrid(x, y) {
         const grid =
-            this.#pixelToGrid(x, y);
+            this.#pixelToGrid(
+                x,
+                y
+            );
 
         return this.#gridToPixel(
             grid.column,
@@ -1291,6 +1604,13 @@ export default class DesktopIcons {
         return (
             a.column === b.column &&
             a.row === b.row
+        );
+    }
+
+    #getGridCellSize() {
+        return (
+            88 +
+            this.#iconSpacing
         );
     }
 }

@@ -60,8 +60,9 @@ export default class Desktop {
         );
 
         this.#desktopIcons = new DesktopIcons(
-            this.#eventBus,
-            this.#registry
+            eventBus,
+            registry,
+            settingsStore
         );
         this.getLayer("icons").append(
             this.#desktopIcons.element

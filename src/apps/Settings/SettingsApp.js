@@ -1,4 +1,5 @@
 import App from "../app.js";
+import DesktopSettingsPanel from "./DesktopSettingsPanel.js";
 
 export default class SettingsApp extends App {
     static get manifest() {
@@ -50,22 +51,11 @@ export default class SettingsApp extends App {
             icon: "🖥",
             pages: [
                 {
-                    id: "icon-size",
-                    name: "Icon Size",
-                    description: "Change the size of desktop icons.",
-                    render: (container) => this.#renderIconSizePage(container)
-                },
-                {
-                    id: "grid-size",
-                    name: "Grid Size",
-                    description: "Configure the desktop icon grid.",
-                    render: (container) => this.#renderGridSizePage(container)
-                },
-                {
-                    id: "icon-spacing",
-                    name: "Icon Spacing",
-                    description: "Control the spacing between desktop icons.",
-                    render: (container) => this.#renderIconSpacingPage(container)
+                    id: "desktop-settings",
+                    name: "Desktop",
+                    description: "Customize your desktop icons, grid, and spacing.",
+                    render: (container) =>
+                        this.#renderDesktopSettingsPage(container)
                 }
             ]
         },
@@ -145,6 +135,15 @@ export default class SettingsApp extends App {
         this.#bindEvents();
         this.#renderNavigation();
         this.#renderPage();
+    }
+
+    #renderDesktopSettingsPage(container) {
+        const panel = new DesktopSettingsPanel(
+            this.#settingsStore,
+            this.#eventBus
+        );
+
+        panel.mount(container);
     }
 
     #bindEvents() {
@@ -340,10 +339,10 @@ export default class SettingsApp extends App {
                 statusDiv.innerHTML = '<span class="settings__status-success">✓ Wallpaper applied successfully</span>';
             };
             img.onerror = () => {
-                statusDiv.innerHTML = '<span class="settings__status-error">✗ Failed to load image. The URL may be invalid or the image may not be accessible.</span>';
             };
             img.src = url;
         });
+        statusDiv.innerHTML = '<span class="settings__status-error">✗ Failed to load image. The URL may be invalid or the image may not be accessible.</span>';
 
         resetButton.addEventListener("click", () => {
             urlInput.value = "";
@@ -474,154 +473,6 @@ export default class SettingsApp extends App {
                 this.#updateSetting("appearance.accentColor", value);
                 this.#renderAccentColorPage(container);
             }
-        });
-    }
-
-    #renderIconSizePage(container) {
-        const iconSize = this.#settingsStore.get("desktop.iconSize") || 64;
-
-        container.innerHTML = `
-            <div class="settings__icon-size">
-                <div class="settings__setting-group">
-                    <h2 class="settings__section-title">Icon size</h2>
-                    <p class="settings__section-description">
-                        Adjust the size of icons displayed on your desktop.
-                    </p>
-
-                    <div class="settings__slider-control">
-                        <label class="settings__field-label">Size: <span class="settings__slider-value">${iconSize}px</span></label>
-                        <input
-                            type="range"
-                            min="32"
-                            max="128"
-                            step="8"
-                            value="${iconSize}"
-                            class="settings__slider"
-                        />
-                        <div class="settings__slider-labels">
-                            <span>Small (32px)</span>
-                            <span>Large (128px)</span>
-                        </div>
-                    </div>
-
-                    <div class="settings__icon-preview">
-                        <div class="settings__icon-preview-item" style="width: ${iconSize}px; height: ${iconSize}px;">
-                            📁
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        const slider = container.querySelector(".settings__slider");
-        const valueDisplay = container.querySelector(".settings__slider-value");
-        const preview = container.querySelector(".settings__icon-preview-item");
-
-        slider.addEventListener("input", (e) => {
-            const value = parseInt(e.target.value);
-            valueDisplay.textContent = `${value}px`;
-            preview.style.width = `${value}px`;
-            preview.style.height = `${value}px`;
-            this.#updateSetting("desktop.iconSize", value);
-        });
-    }
-
-    #renderGridSizePage(container) {
-        const gridCols = this.#settingsStore.get("desktop.gridColumns") || 8;
-
-        container.innerHTML = `
-            <div class="settings__grid-size">
-                <div class="settings__setting-group">
-                    <h2 class="settings__section-title">Grid size</h2>
-                    <p class="settings__section-description">
-                        Configure how many icons fit across the desktop.
-                    </p>
-
-                    <div class="settings__slider-control">
-                        <label class="settings__field-label">Columns: <span class="settings__slider-value">${gridCols}</span></label>
-                        <input
-                            type="range"
-                            min="4"
-                            max="16"
-                            step="1"
-                            value="${gridCols}"
-                            class="settings__slider"
-                        />
-                        <div class="settings__slider-labels">
-                            <span>4 columns</span>
-                            <span>16 columns</span>
-                        </div>
-                    </div>
-
-                    <div class="settings__grid-preview">
-                        <div class="settings__grid-preview-grid" style="grid-template-columns: repeat(${gridCols}, 1fr);">
-                            ${Array(gridCols).fill('📁').map(icon => `<div class="settings__grid-preview-item">${icon}</div>`).join('')}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        const slider = container.querySelector(".settings__slider");
-        const valueDisplay = container.querySelector(".settings__slider-value");
-        const grid = container.querySelector(".settings__grid-preview-grid");
-
-        slider.addEventListener("input", (e) => {
-            const value = parseInt(e.target.value);
-            valueDisplay.textContent = value;
-            grid.style.gridTemplateColumns = `repeat(${value}, 1fr)`;
-            grid.innerHTML = Array(value).fill('📁').map(icon => `<div class="settings__grid-preview-item">${icon}</div>`).join('');
-            this.#updateSetting("desktop.gridColumns", value);
-        });
-    }
-
-    #renderIconSpacingPage(container) {
-        const spacing = this.#settingsStore.get("desktop.iconSpacing") || 16;
-
-        container.innerHTML = `
-            <div class="settings__icon-spacing">
-                <div class="settings__setting-group">
-                    <h2 class="settings__section-title">Icon spacing</h2>
-                    <p class="settings__section-description">
-                        Control the space between desktop icons.
-                    </p>
-
-                    <div class="settings__slider-control">
-                        <label class="settings__field-label">Spacing: <span class="settings__slider-value">${spacing}px</span></label>
-                        <input
-                            type="range"
-                            min="4"
-                            max="32"
-                            step="2"
-                            value="${spacing}"
-                            class="settings__slider"
-                        />
-                        <div class="settings__slider-labels">
-                            <span>Compact (4px)</span>
-                            <span>Spacious (32px)</span>
-                        </div>
-                    </div>
-
-                    <div class="settings__spacing-preview">
-                        <div class="settings__spacing-preview-items" style="gap: ${spacing}px;">
-                            <div class="settings__spacing-preview-item">📁</div>
-                            <div class="settings__spacing-preview-item">📄</div>
-                            <div class="settings__spacing-preview-item">🖼</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        const slider = container.querySelector(".settings__slider");
-        const valueDisplay = container.querySelector(".settings__slider-value");
-        const preview = container.querySelector(".settings__spacing-preview-items");
-
-        slider.addEventListener("input", (e) => {
-            const value = parseInt(e.target.value);
-            valueDisplay.textContent = `${value}px`;
-            preview.style.gap = `${value}px`;
-            this.#updateSetting("desktop.iconSpacing", value);
         });
     }
 
@@ -814,8 +665,8 @@ export default class SettingsApp extends App {
         if (!category) return;
 
         const page = category.pages.find((p) => p.id === pageId);
+        
         if (!page) return;
-
         this.#activeCategory = categoryId;
         this.#activePage = pageId;
 

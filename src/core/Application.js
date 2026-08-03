@@ -6,6 +6,7 @@ import WelcomeApp from "../apps/Welcome/WelcomeApp.js";
 import ApplicationRegistry from "./ApplicationRegistry.js";
 import UIManager from "./UIManager.js";
 import SettingsStore from "../apps/Settings/SettingsStore.js";
+import DesktopSettingsPanel from "../apps/Settings/DesktopSettingsPanel.js";
 import DialogService from "../ui/components/dialog/DialogService.js";
 
 export default class Application {

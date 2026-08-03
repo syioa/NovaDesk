@@ -2,49 +2,82 @@
     position: absolute;
     inset: 0;
 
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    padding: 12px;
-
     pointer-events: none;
 }
 
 .desktop-icon {
-    width: 72px;
-    border-radius: 6px;
-    gap: 6px;
-    padding: 8px;
+    position: absolute;
+
+    width: 88px;
+    min-height: 88px;
+
+    padding: 8px 6px;
+
+    box-sizing: border-box;
 
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: flex-start;
+
+    gap: 6px;
+
+    border-radius: 8px;
 
     cursor: default;
     user-select: none;
 
-    transition: left 0.15s ease, top 0.15s ease;
-
     pointer-events: auto;
-    position: absolute;
+
+    transition:
+        left 0.15s ease,
+        top 0.15s ease,
+        background 0.12s ease;
 }
 
 .desktop-icon:hover {
-    background: rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .desktop-icon-image {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 48px;
+    height: 48px;
+
     font-size: 36px;
+    line-height: 1;
+
+    flex-shrink: 0;
 }
 
 .desktop-icon-label {
+    width: 100%;
+
     text-align: center;
     font-size: 13px;
+    line-height: 1.3;
+
     color: white;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+
+    overflow-wrap: anywhere;
 }
 
 .desktop-icon.selected {
     background: rgba(0, 120, 215, 0.35);
-    outline: 1px solid rgba(0, 120, 215, 0.7);
+
+    outline:
+        1px solid rgba(0, 120, 215, 0.7);
 }

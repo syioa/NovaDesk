@@ -811,6 +811,48 @@
     border-color: color-mix(in srgb, var(--accent-color, #3584e4) 90%, black);
 }
 
+
+/*----------------------------*/
+
+.settings-section__footer {
+    display: flex;
+    justify-content: flex-start;
+
+    margin-top: 24px;
+    padding-top: 20px;
+
+    border-top: 1px solid var(--color-border);
+}
+
+.settings-reset-button {
+    padding: 9px 16px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+
+    font: inherit;
+    font-size: 13px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.1s ease;
+}
+
+.settings-reset-button:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-accent);
+}
+
+.settings-reset-button:active {
+    transform: scale(0.97);
+}
+
 /* ========================================
    Actions
 ======================================== */
