@@ -8,8 +8,8 @@ export default class SettingsStore {
                 type: "color",
                 value: "#1e1e1e"
             },
-            theme: "auto",
-            accentColor: "#3584e4"
+            theme: "system",
+            accentColor: "#0A84FF"
         },
         desktop: {
             iconSize: 64,
@@ -127,8 +127,8 @@ export default class SettingsStore {
                     type: "color",
                     value: "#1e1e1e"
                 },
-                theme: "auto",
-                accentColor: "#3584e4"
+                theme: "system",
+                accentColor: "#0A84FF"
             },
             desktop: {
                 iconSize: 64,

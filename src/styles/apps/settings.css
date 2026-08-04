@@ -845,7 +845,7 @@
 }
 
 .settings-reset-button:hover {
-    background: var(--color-surface-hover);
+    background: var(--color-border);
     border-color: var(--color-accent);
 }
 

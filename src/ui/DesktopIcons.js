@@ -12,6 +12,8 @@ export default class DesktopIcons {
     #dragVisualPositions = new Map();
     #dragStartPositionsPixel = new Map();
 
+    #positionStorageKey = "novadesk-icon-positions";
+
     #dragging = false;
     #wasDragging = false;
 
@@ -43,6 +45,8 @@ export default class DesktopIcons {
         this.#element.className = "desktop-icons";
 
         this.#loadDesktopSettings();
+
+        this.#loadIconPositions();
 
         this.#render();
 
@@ -121,6 +125,9 @@ export default class DesktopIcons {
         const manifest =
             AppClass.manifest;
 
+        icon.dataset.appId =
+            manifest.id;
+
         const image =
             document.createElement("div");
 
@@ -176,39 +183,50 @@ export default class DesktopIcons {
             }
         );
 
-        const index =
-            this.#iconPositions.size;
-
-        const column =
-            index % this.#gridColumns;
-
-        const row =
-            Math.floor(
-                index /
-                this.#gridColumns
+        /*
+         * Restore the saved position if this icon
+         * already has one.
+         */
+        let grid =
+            this.#iconPositions.get(
+                icon.dataset.appId
             );
 
         /*
-         * Find the nearest available cell.
+         * If this is a new icon with no saved position,
+         * assign it the next available grid cell.
          */
-        const grid =
-            this.#findNearestFreeCell(
-                column,
-                row
+        if (!grid) {
+
+            const index =
+                this.#iconPositions.size;
+
+            const column =
+                index % this.#gridColumns;
+
+            const row =
+                Math.floor(
+                    index /
+                    this.#gridColumns
+                );
+
+            grid =
+                this.#findNearestFreeCell(
+                    column,
+                    row
+                );
+
+            /*
+             * Save the newly assigned position.
+             */
+            this.#iconPositions.set(
+                icon.dataset.appId,
+                grid
             );
+        }
 
         /*
-         * Store the actual grid position.
-         */
-        this.#iconPositions.set(
-            icon,
-            grid
-        );
-
-        /*
-         * IMPORTANT:
-         * Use the free cell, not the
-         * originally requested cell.
+         * Use the saved or newly assigned grid position.
          */
         const pixel =
             this.#gridToPixel(
@@ -270,7 +288,7 @@ export default class DesktopIcons {
             of this.#element.children
         ) {
             const current =
-                this.#iconPositions.get(icon);
+                this.#iconPositions.get(icon.dataset.appId)
 
             if (!current) {
                 continue;
@@ -312,7 +330,7 @@ export default class DesktopIcons {
              * Save the potentially updated position.
              */
             this.#iconPositions.set(
-                icon,
+                icon.dataset.appId,
                 grid
             );
 
@@ -348,6 +366,56 @@ export default class DesktopIcons {
             this.#settingsStore.get(
                 "desktop.gridColumns"
             ) ?? 8;
+    }
+
+    #loadIconPositions() {
+        try {
+            const raw = localStorage.getItem(this.#positionStorageKey);
+
+            if (!raw) {
+                return;
+            }
+
+            const data = JSON.parse(raw);
+
+            this.#iconPositions.clear();
+
+            for (const [id, position] of Object.entries(data)) {
+                if (
+                    Number.isInteger(position.column) &&
+                    Number.isInteger(position.row)
+                ) {
+                    this.#iconPositions.set(id, {
+                        column: position.column,
+                        row: position.row
+                    });
+                }
+            }
+        }
+        catch (error) {
+            console.warn("Failed to load desktop icon positions.", error);
+        }
+    }
+
+    #saveIconPositions() {
+        try {
+            const data = {};
+
+            for (const [id, position] of this.#iconPositions) {
+                data[id] = {
+                    column: position.column,
+                    row: position.row
+                };
+            }
+
+            localStorage.setItem(
+                this.#positionStorageKey,
+                JSON.stringify(data)
+            );
+        }
+        catch (error) {
+            console.warn("Failed to save desktop icon positions.", error);
+        }
     }
 
     #findNearestFreeCell(
@@ -502,7 +570,7 @@ export default class DesktopIcons {
         this.#dragStartPositions.clear();
         for (const icon of this.#dragIcons) {
             const position =
-                this.#iconPositions.get(icon);
+                this.#iconPositions.get(icon.dataset.appId)
 
             const pixel =
                 this.#getIconPixelPosition(icon);
@@ -556,16 +624,13 @@ export default class DesktopIcons {
         this.#dragOffsetY =
             event.clientY - pixel.y;
 
-        const position =
-            this.#getIconPixelPosition(icon);
-
         this.#lastValidPosition = {
-            x: position.x,
-            y: position.y
+            x: pixel.x,
+            y: pixel.y
         };
 
-        this.#iconStartX = position.x;
-        this.#iconStartY = position.y;
+        this.#iconStartX = pixel.x;
+        this.#iconStartY = pixel.y;
 
         icon.setPointerCapture(
             event.pointerId
@@ -802,10 +867,42 @@ export default class DesktopIcons {
                     collidedIcon
                 );
 
-            this.#splitGroupAroundTarget(
-                collidedIcon,
-                direction
-            );
+            const resolved =
+                this.#splitGroupAroundTarget(
+                    collidedIcon,
+                    direction
+                );
+
+            if (resolved) {
+                this.#saveIconPositions();
+            } else {
+                /*
+                 * Collision could not be resolved
+                 * because the push chain reached
+                 * the desktop boundary.
+                 *
+                 * Restore the dragged icons to
+                 * their original positions.
+                 */
+                for (const icon of this.#dragIcons) {
+                    const start =
+                        this.#dragStartPositions.get(
+                            icon
+                        );
+
+                    const pixel =
+                        this.#gridToPixel(
+                            start.column,
+                            start.row
+                        );
+
+                    icon.style.left =
+                        `${pixel.x}px`;
+
+                    icon.style.top =
+                        `${pixel.y}px`;
+                }
+            }
         } else {
             for (const icon of this.#dragIcons) {
 
@@ -841,11 +938,14 @@ export default class DesktopIcons {
                         snapped.y
                     );
 
+                // fix:
                 this.#iconPositions.set(
-                    icon,
+                    icon.dataset.appId,
                     grid
                 );
             }
+
+            this.#saveIconPositions();
         }
 
         for (const icon of this.#dragIcons) {
@@ -867,13 +967,9 @@ export default class DesktopIcons {
     #checkCollision(draggedIcon, x, y) {
 
         const grid =
-            this.#pixelToGrid(
-                x,
-                y
-            );
+            this.#pixelToGrid(x, y);
 
-
-        for (const [icon, position] of this.#iconPositions) {
+        for (const icon of this.#element.children) {
 
             if (
                 icon === draggedIcon ||
@@ -882,17 +978,21 @@ export default class DesktopIcons {
                 continue;
             }
 
+            const position =
+                this.#iconPositions.get(icon.dataset.appId);
+
+            if (!position) {
+                continue;
+            }
 
             const sameCell =
                 grid.column === position.column &&
                 grid.row === position.row;
 
-
             if (sameCell) {
                 return icon;
             }
         }
-
 
         return null;
     }
@@ -937,17 +1037,35 @@ export default class DesktopIcons {
         let totalY = 0;
 
         for (const icon of this.#dragIcons) {
-            const position =
-                this.#getIconPixelPosition(icon);
-            const rect = icon.getBoundingClientRect();
+            const x =
+                parseFloat(icon.style.left) || 0;
 
-            totalX += position.x + rect.width / 2;
-            totalY += position.y + rect.height / 2;
+            const y =
+                parseFloat(icon.style.top) || 0;
+
+            const width =
+                icon.offsetWidth;
+
+            const height =
+                icon.offsetHeight;
+
+            totalX +=
+                x +
+                width / 2;
+
+            totalY +=
+                y +
+                height / 2;
         }
 
         return {
-            x: totalX / this.#dragIcons.length,
-            y: totalY / this.#dragIcons.length
+            x:
+                totalX /
+                this.#dragIcons.length,
+
+            y:
+                totalY /
+                this.#dragIcons.length
         };
     }
 
@@ -956,7 +1074,18 @@ export default class DesktopIcons {
             this.#getGroupCenter();
 
         const targetPosition =
-            this.#iconPositions.get(targetIcon);
+            this.#iconPositions.get(
+                targetIcon.dataset.appId
+            );
+
+        if (!targetPosition) {
+            console.warn(
+                "Missing icon position:",
+                targetIcon.dataset.appId
+            );
+
+            return "right";
+        }
 
         const targetPixel =
             this.#gridToPixel(
@@ -964,17 +1093,14 @@ export default class DesktopIcons {
                 targetPosition.row
             );
 
-        const targetRect =
-            targetIcon.getBoundingClientRect();
-
         const targetCenter = {
             x:
                 targetPixel.x +
-                targetRect.width / 2,
+                targetIcon.offsetWidth / 2,
 
             y:
                 targetPixel.y +
-                targetRect.height / 2
+                targetIcon.offsetHeight / 2
         };
 
         const dx =
@@ -985,7 +1111,10 @@ export default class DesktopIcons {
             groupCenter.y -
             targetCenter.y;
 
-        if (Math.abs(dx) > Math.abs(dy)) {
+        if (
+            Math.abs(dx) >
+            Math.abs(dy)
+        ) {
             return dx < 0
                 ? "left"
                 : "right";
@@ -1006,7 +1135,7 @@ export default class DesktopIcons {
         for (const icon of this.#dragIcons) {
 
             const start =
-                this.#iconPositions.get(icon);
+                this.#iconPositions.get(icon.dataset.appId)
 
 
             const column =
@@ -1033,7 +1162,7 @@ export default class DesktopIcons {
 
 
             this.#iconPositions.set(
-                icon,
+                icon.dataset.appId,
                 {
                     column,
                     row
@@ -1044,7 +1173,9 @@ export default class DesktopIcons {
 
     #getPlacementOffset(targetIcon, direction) {
         const targetPosition =
-            this.#iconPositions.get(targetIcon);
+            this.#iconPositions.get(
+                targetIcon.dataset.appId
+            );
 
         const targetRect =
             targetIcon.getBoundingClientRect();
@@ -1137,44 +1268,60 @@ export default class DesktopIcons {
 
     #splitGroupAroundTarget(targetIcon, direction) {
         const targetGrid =
-            this.#iconPositions.get(targetIcon);
+            this.#iconPositions.get(
+                targetIcon.dataset.appId
+            );
 
         if (!targetGrid) {
-            return;
+            return false;
         }
+
+        const {
+            maxColumn,
+            maxRow
+        } = this.#getGridBounds();
 
         const horizontal =
             direction === "left" ||
             direction === "right";
 
-        const dragged =
-            [...this.#dragIcons];
-
+        /*
+         * All icons that are not being dragged.
+         */
         const stationaryIcons =
             [...this.#element.children].filter(
-                icon => !this.#dragIcons.includes(icon)
+                icon =>
+                    !this.#dragIcons.includes(icon)
             );
 
         /*
-         * Sort the dragged icons according to their
-         * original grid order so multi-selection order
-         * is preserved.
+         * Current occupancy map.
+         *
+         * key = "column,row"
+         * value = icon
          */
-        dragged.sort((a, b) => {
-            const aStart =
-                this.#dragStartPositions.get(a);
+        const occupancy =
+            new Map();
 
-            const bStart =
-                this.#dragStartPositions.get(b);
+        for (const icon of stationaryIcons) {
+            const position =
+                this.#iconPositions.get(
+                    icon.dataset.appId
+                );
 
-            return horizontal
-                ? aStart.column - bStart.column
-                : aStart.row - bStart.row;
-        });
+            if (!position) {
+                continue;
+            }
+
+            occupancy.set(
+                `${position.column},${position.row}`,
+                icon
+            );
+        }
 
         /*
-         * Determine the grid cells the dragged group
-         * should occupy relative to the target.
+         * The target is stationary and therefore
+         * already exists in occupancy.
          */
         const targetColumn =
             targetGrid.column;
@@ -1182,120 +1329,97 @@ export default class DesktopIcons {
         const targetRow =
             targetGrid.row;
 
-        const newPositions = new Map();
+        /*
+         * Determine the order of the dragged icons
+         * based on their ORIGINAL positions.
+         *
+         * This is important because #iconPositions
+         * may be changed later during resolution.
+         */
+        const orderedDragged =
+            [...this.#dragIcons].sort(
+                (a, b) => {
+                    const aStart =
+                        this.#dragStartPositions.get(
+                            a
+                        );
 
-        let minColumn = Infinity;
-        let maxColumn = -Infinity;
-        let minRow = Infinity;
-        let maxRow = -Infinity;
+                    const bStart =
+                        this.#dragStartPositions.get(
+                            b
+                        );
 
-        for (const icon of dragged) {
+                    if (horizontal) {
+                        return (
+                            aStart.column -
+                            bStart.column
+                        );
+                    }
 
-            const position =
-                this.#dragStartPositions.get(icon);
+                    return (
+                        aStart.row -
+                        bStart.row
+                    );
+                }
+            );
 
-            minColumn =
-                Math.min(
-                    minColumn,
-                    position.column
-                );
-
-            maxColumn =
-                Math.max(
-                    maxColumn,
-                    position.column
-                );
-
-            minRow =
-                Math.min(
-                    minRow,
-                    position.row
-                );
-
-            maxRow =
-                Math.max(
-                    maxRow,
-                    position.row
-                );
+        /*
+         * Reverse order when approaching from the
+         * opposite direction.
+         */
+        if (
+            direction === "right" ||
+            direction === "bottom"
+        ) {
+            orderedDragged.reverse();
         }
 
         /*
-         * Calculate the group's size in grid cells.
-         */
-        const groupWidth =
-            maxColumn - minColumn;
-
-        const groupHeight =
-            maxRow - minRow;
-
-
-        /*
-         * Place the dragged group around the target.
+         * The desired cells for the dragged icons.
          *
-         * The target is inserted into the middle of
-         * the dragged group's sequence.
+         * Example with 2 dragged icons:
+         *
+         * LEFT:
+         *
+         *     A B C
+         *
+         * RIGHT:
+         *
+         *     C A B
+         *
+         * The target itself remains stationary.
          */
-        if (horizontal) {
+        const desiredPositions =
+            new Map();
 
-            const orderedDragged =
-                [...dragged].sort((a, b) => {
+        const middleIndex =
+            Math.floor(
+                orderedDragged.length / 2
+            );
 
-                    const aStart =
-                        this.#dragStartPositions.get(a);
+        for (
+            let i = 0;
+            i < orderedDragged.length;
+            i++
+        ) {
+            const icon =
+                orderedDragged[i];
 
-                    const bStart =
-                        this.#dragStartPositions.get(b);
+            let column =
+                targetColumn;
 
-                    return (
-                        aStart.column -
-                        bStart.column
-                    );
-                });
+            let row =
+                targetRow;
 
-            /*
-             * When approaching from the right,
-             * reverse the group order.
-             */
-            if (direction === "right") {
-                orderedDragged.reverse();
-            }
-
-            /*
-             * For two icons:
-             *
-             * left approach:
-             *   A C B
-             *
-             * right approach:
-             *   B C A
-             */
-            const middleIndex =
-                Math.floor(
-                    orderedDragged.length / 2
-                );
-
-            for (
-                let i = 0;
-                i < orderedDragged.length;
-                i++
-            ) {
-
-                const icon =
-                    orderedDragged[i];
-
-                let column;
-
+            if (horizontal) {
                 if (i < middleIndex) {
-
                     column =
                         targetColumn -
                         (
                             middleIndex -
                             i
                         );
-
                 } else {
-
                     column =
                         targetColumn +
                         (
@@ -1304,221 +1428,357 @@ export default class DesktopIcons {
                         ) +
                         1;
                 }
-
-                newPositions.set(
-                    icon,
-                    {
-                        column,
-                        row: targetRow
-                    }
-                );
-            }
-
-        } else {
-
-            /*
-             * Get every stationary icon in the target's
-             * column.
-             */
-            const columnIcons =
-                stationaryIcons
-                    .filter(icon => {
-
-                        const position =
-                            this.#iconPositions.get(icon);
-
-                        return (
-                            position &&
-                            position.column ===
-                            targetColumn
+            } else {
+                if (i < middleIndex) {
+                    row =
+                        targetRow -
+                        (
+                            middleIndex -
+                            i
                         );
-                    })
-                    .sort((a, b) => {
-
-                        const aPosition =
-                            this.#iconPositions.get(a);
-
-                        const bPosition =
-                            this.#iconPositions.get(b);
-
-                        return (
-                            aPosition.row -
-                            bPosition.row
-                        );
-                    });
-
-            /*
-             * Remove dragged icons from the sequence.
-             * They will be inserted at the target position.
-             */
-            const sequence =
-                columnIcons.filter(
-                    icon =>
-                        !this.#dragIcons.includes(icon)
-                );
-
-            /*
-             * Find the target's position in the sequence.
-             */
-            let targetIndex =
-                sequence.indexOf(targetIcon);
-
-            if (targetIndex === -1) {
-                targetIndex = 0;
+                } else {
+                    row =
+                        targetRow +
+                        (
+                            i -
+                            middleIndex
+                        ) +
+                        1;
+                }
             }
 
-            /*
-             * If the group approaches from the bottom,
-             * insert after the target instead.
-             */
-            if (direction === "bottom") {
-                targetIndex += 1;
-            }
-
-            /*
-             * Insert the dragged icons into the sequence.
-             */
-            sequence.splice(
-                targetIndex,
-                0,
-                ...dragged
+            desiredPositions.set(
+                icon,
+                {
+                    column,
+                    row
+                }
             );
+        }
 
-            /*
-             * Rebuild the entire affected column.
-             *
-             * Every icon receives exactly one unique
-             * grid cell.
-             */
+        /*
+         * Check whether a cell is inside the
+         * valid desktop grid.
+         */
+        const isValidCell = (
+            column,
+            row
+        ) => {
+            return (
+                column >= 0 &&
+                column <= maxColumn &&
+                row >= 0 &&
+                row <= maxRow
+            );
+        };
+
+        /*
+         * We will construct the final state here.
+         *
+         * This is separate from #iconPositions so
+         * the operation is atomic.
+         */
+        const finalPositions =
+            new Map();
+
+        /*
+         * Copy all stationary positions first.
+         */
+        for (const icon of stationaryIcons) {
+            const position =
+                this.#iconPositions.get(
+                    icon.dataset.appId
+                );
+
+            if (!position) {
+                continue;
+            }
+
+            finalPositions.set(
+                icon,
+                {
+                    column:
+                        position.column,
+
+                    row:
+                        position.row
+                }
+            );
+        }
+
+        /*
+         * Find the icon occupying a cell in the
+         * temporary final state.
+         */
+        const getOccupant = (
+            column,
+            row,
+            ignoreIcon = null
+        ) => {
             for (
-                let i = 0;
-                i < sequence.length;
-                i++
+                const [
+                    icon,
+                    position
+                ]
+                of finalPositions
             ) {
-
-                const icon =
-                    sequence[i];
-
-                const oldPosition =
-                    this.#iconPositions.get(icon);
-
-                if (!oldPosition) {
+                if (
+                    icon === ignoreIcon
+                ) {
                     continue;
                 }
 
-                const grid = {
+                if (
+                    position.column === column &&
+                    position.row === row
+                ) {
+                    return icon;
+                }
+            }
+
+            return null;
+        };
+
+        /*
+         * Recursively push an icon.
+         *
+         * The pushed icon moves in the SAME direction
+         * as the collision.
+         *
+         * If anything in the chain cannot move,
+         * the whole push fails.
+         */
+        const pushIcon = (
+            icon,
+            visited = new Set()
+        ) => {
+            if (visited.has(icon)) {
+                return false;
+            }
+
+            visited.add(icon);
+
+            const position =
+                finalPositions.get(icon);
+
+            if (!position) {
+                return false;
+            }
+
+            let nextColumn =
+                position.column;
+
+            let nextRow =
+                position.row;
+
+            if (horizontal) {
+                nextColumn +=
+                    direction === "left"
+                        ? -1
+                        : 1;
+            } else {
+                nextRow +=
+                    direction === "top"
+                        ? -1
+                        : 1;
+            }
+
+            /*
+             * The chain reached the desktop edge.
+             *
+             * We cannot push this icon.
+             */
+            if (
+                !isValidCell(
+                    nextColumn,
+                    nextRow
+                )
+            ) {
+                return false;
+            }
+
+            const blocking =
+                getOccupant(
+                    nextColumn,
+                    nextRow,
+                    icon
+                );
+
+            /*
+             * Push the blocking icon first.
+             */
+            if (blocking) {
+                const pushed =
+                    pushIcon(
+                        blocking,
+                        visited
+                    );
+
+                if (!pushed) {
+                    return false;
+                }
+            }
+
+            /*
+             * After the recursive push,
+             * the destination must now be free.
+             */
+            const stillBlocking =
+                getOccupant(
+                    nextColumn,
+                    nextRow,
+                    icon
+                );
+
+            if (stillBlocking) {
+                return false;
+            }
+
+            /*
+             * Move the icon.
+             */
+            finalPositions.set(
+                icon,
+                {
                     column:
-                        targetColumn,
+                        nextColumn,
 
                     row:
-                        oldPosition.row
-                };
-
-                /*
-                 * Use the first available row from the
-                 * target's original position.
-                 */
-                const baseRow =
-                    this.#iconPositions.get(
-                        targetIcon
-                    ).row;
-
-                const firstRow =
-                    baseRow -
-                    targetIndex;
-
-                /*
-                 * Keep the sequence inside the top boundary.
-                 */
-                const desktopHeight =
-                    this.#element.clientHeight;
-
-                const cellSize =
-                    this.#getGridCellSize();
-
-                const maxRow =
-                    Math.floor(
-                        (
-                            desktopHeight -
-                            this.#iconSpacing
-                        ) /
-                        cellSize
-                    );
-
-                /*
-                 * Calculate the first row needed to keep
-                 * the entire sequence inside the desktop.
-                 */
-                const sequenceHeight =
-                    sequence.length - 1;
-
-                let startRow =
-                    firstRow;
-
-                /*
-                 * Prevent the sequence from going above
-                 * the top boundary.
-                 */
-                if (startRow < 0) {
-                    startRow = 0;
+                        nextRow
                 }
+            );
 
-                /*
-                 * Prevent the sequence from going below
-                 * the bottom boundary.
-                 */
-                if (
-                    startRow +
-                    sequenceHeight >
-                    maxRow
-                ) {
-                    startRow =
-                        maxRow -
-                        sequenceHeight;
-                }
+            return true;
+        };
 
-                /*
-                 * The sequence may be larger than the
-                 * available grid area. Never allow a
-                 * negative starting row.
-                 */
-                startRow =
-                    Math.max(
-                        0,
-                        startRow
-                    );
-
-                grid.row =
-                    startRow +
-                    i;
-
-                newPositions.set(
-                    icon,
-                    grid
+        /*
+         * First resolve all dragged destinations.
+         *
+         * We do this one icon at a time.
+         */
+        for (
+            const [
+                draggedIcon,
+                desired
+            ]
+            of desiredPositions
+        ) {
+            /*
+             * The dragged icon itself is not in
+             * finalPositions yet, so only stationary
+             * icons can occupy this destination.
+             */
+            const blocking =
+                getOccupant(
+                    desired.column,
+                    desired.row
                 );
+
+            if (blocking) {
+
+                /*
+                 * Push the stationary chain.
+                 */
+                const pushed =
+                    pushIcon(
+                        blocking
+                    );
+
+                if (!pushed) {
+                    /*
+                     * Collision cannot be resolved.
+                     *
+                     * Do not partially apply anything.
+                     */
+                    return false;
+                }
+            }
+
+            /*
+             * Verify the destination is now free.
+             */
+            const stillBlocking =
+                getOccupant(
+                    desired.column,
+                    desired.row
+                );
+
+            if (stillBlocking) {
+                return false;
+            }
+
+            /*
+             * Place the dragged icon in the
+             * resolved destination.
+             */
+            finalPositions.set(
+                draggedIcon,
+                {
+                    column:
+                        desired.column,
+
+                    row:
+                        desired.row
+                }
+            );
+        }
+
+        /*
+         * Final safety check:
+         *
+         * No two icons may occupy the same cell.
+         */
+        const usedCells =
+            new Set();
+
+        for (
+            const [
+                icon,
+                position
+            ]
+            of finalPositions
+        ) {
+            const key =
+                `${position.column},${position.row}`;
+
+            if (usedCells.has(key)) {
+                return false;
+            }
+
+            usedCells.add(key);
+        }
+
+        /*
+         * Final safety check:
+         *
+         * No icon may exist outside the desktop.
+         */
+        for (
+            const position
+            of finalPositions.values()
+        ) {
+            if (
+                !isValidCell(
+                    position.column,
+                    position.row
+                )
+            ) {
+                return false;
             }
         }
 
         /*
-         * Find stationary icons occupying cells that
-         * the dragged group wants to use.
+         * Everything is valid.
+         *
+         * Now apply the complete final state.
          */
-
-
-        /*
- * Shift stationary icons as a chain.
- *
- * If one icon is pushed into another icon's cell,
- * the second icon is pushed as well.
- */
-
-
-
-        /*
-         * Apply all new grid positions.
-         */
-        for (const [icon, grid] of newPositions) {
-
+        for (
+            const [
+                icon,
+                grid
+            ]
+            of finalPositions
+        ) {
             const pixel =
                 this.#gridToPixel(
                     grid.column,
@@ -1535,10 +1795,62 @@ export default class DesktopIcons {
                 `${pixel.y}px`;
 
             this.#iconPositions.set(
-                icon,
-                grid
+                icon.dataset.appId,
+                {
+                    column:
+                        grid.column,
+
+                    row:
+                        grid.row
+                }
             );
         }
+
+        return true;
+    }
+
+    #getGridBounds() {
+        const cellSize =
+            this.#getGridCellSize();
+
+        const desktopWidth =
+            this.#element.clientWidth;
+
+        const desktopHeight =
+            Math.min(
+                this.#element.clientHeight,
+                window.innerHeight -
+                this.#element.getBoundingClientRect().top
+            );
+
+        const maxColumn =
+            Math.max(
+                0,
+                Math.floor(
+                    (
+                        desktopWidth -
+                        this.#iconSize
+                    ) /
+                    cellSize
+                )
+            );
+
+        const maxRow =
+            Math.max(
+                0,
+                Math.floor(
+                    (
+                        desktopHeight -
+                        this.#iconSize
+                    ) /
+                    cellSize
+                )
+            );
+
+        return {
+            maxColumn,
+            maxRow
+        };
     }
 
     #snapToGrid(value) {
@@ -1585,7 +1897,7 @@ export default class DesktopIcons {
 
     #getIconPixelPosition(icon) {
         const grid =
-            this.#iconPositions.get(icon);
+            this.#iconPositions.get(icon.dataset.appId)
 
         if (!grid) {
             return {

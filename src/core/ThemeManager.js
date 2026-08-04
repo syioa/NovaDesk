@@ -3,6 +3,9 @@ import { flavors } from "@catppuccin/palette";
 export default class ThemeManager {
     #root;
     #flavor;
+    #eventBus;
+    #settingsStore;
+    #systemThemeMediaQuery;
 
     #colorMap = {
         rosewater: "--catppuccin-rosewater",
@@ -39,11 +42,175 @@ export default class ThemeManager {
 
     constructor({
         root = document.documentElement,
-        flavor = "mocha"
+        eventBus,
+        settingsStore
     } = {}) {
         this.#root = root;
+        this.#eventBus = eventBus;
+        this.#settingsStore = settingsStore;
 
-        this.setFlavor(flavor);
+        this.#systemThemeMediaQuery =
+            window.matchMedia(
+                "(prefers-color-scheme: dark)"
+            );
+
+        this.#bindEvents();
+
+        this.#bindSystemThemeChanges();
+
+        this.#applySavedSettings();
+    }
+
+    #applySavedSettings() {
+        const theme =
+            this.#settingsStore.get(
+                "appearance.theme"
+            );
+
+        const accentColor =
+            this.#settingsStore.get(
+                "appearance.accentColor"
+            );
+
+        this.#applyTheme(theme);
+
+        this.#applyAccentColor(accentColor);
+    }
+
+    #bindEvents() {
+        this.#eventBus.on(
+            "settings:changed",
+            ({ path, value }) => {
+                console.log(
+                    "ThemeManager received:",
+                    path,
+                    value
+                );
+
+                if (
+                    path === "appearance.theme"
+                ) {
+                    if (
+                        value !== "light" &&
+                        value !== "dark" &&
+                        value !== "system" &&
+                        value !== "auto"
+                    ) {
+                        console.warn(
+                            "Ignoring invalid theme:",
+                            value
+                        );
+
+                        return;
+                    }
+
+                    this.#applyTheme(value);
+
+                    return;
+                }
+
+                if (
+                    path === "appearance.accentColor"
+                ) {
+                    if (!value) {
+                        return;
+                    }
+
+                    this.#applyAccentColor(value);
+                }
+            }
+        );
+
+        this.#eventBus.on(
+            "settings:reset",
+            () => {
+                this.#applySavedSettings();
+            }
+        );
+    }
+
+    #bindSystemThemeChanges() {
+        this.#systemThemeMediaQuery.addEventListener(
+            "change",
+            () => {
+                const theme =
+                    this.#settingsStore.get(
+                        "appearance.theme"
+                    );
+
+                if (
+                    theme === "system" ||
+                    theme === "auto"
+                ) {
+                    this.#applySystemTheme();
+                }
+            }
+        );
+    }
+
+    #applyTheme(theme) {
+        console.log(
+            "Applying theme:",
+            theme
+        );
+
+
+        if (theme === "dark") {
+            this.#applyDarkTheme();
+            return;
+        }
+
+        if (theme === "light") {
+            this.#applyLightTheme();
+            return;
+        }
+
+        if (
+            theme === "system" ||
+            theme === "auto"
+        ) {
+            this.#applySystemTheme();
+            return;
+        }
+
+        console.warn(
+            `Unknown theme "${theme}". Falling back to system theme.`
+        );
+
+        this.#applySystemTheme();
+    }
+
+    #applyDarkTheme() {
+        this.#root.dataset.theme = "dark";
+
+        this.setFlavor("mocha");
+    }
+
+    #applyLightTheme() {
+        this.#root.dataset.theme = "light";
+
+        this.setFlavor("latte");
+    }
+
+    #applySystemTheme() {
+        if (
+            this.#systemThemeMediaQuery.matches
+        ) {
+            this.#applyDarkTheme();
+        } else {
+            this.#applyLightTheme();
+        }
+    }
+
+    #applyAccentColor(color) {
+        if (!color) {
+            return;
+        }
+
+        this.#root.style.setProperty(
+            "--color-accent",
+            color
+        );
     }
 
     setFlavor(flavorName) {

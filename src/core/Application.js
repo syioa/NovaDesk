@@ -8,6 +8,7 @@ import UIManager from "./UIManager.js";
 import SettingsStore from "../apps/Settings/SettingsStore.js";
 import DesktopSettingsPanel from "../apps/Settings/DesktopSettingsPanel.js";
 import DialogService from "../ui/components/dialog/DialogService.js";
+import ThemeManager from "./ThemeManager.js";
 
 export default class Application {
     static instance = null;
@@ -22,6 +23,7 @@ export default class Application {
     #appManager = null;
     #settingsStore = null;
     #dialogService = null;
+    #themeManager = null;
 
     constructor() {
         if (Application.instance) {
@@ -51,19 +53,25 @@ export default class Application {
         return this.#dialogService;
     }
 
+    get themeManager() {
+        return this.#themeManager;
+    }
+
     async boot() {
         this.#eventBus = new EventBus();
         this.#registry = new ApplicationRegistry();
         this.#uiManager = new UIManager();
 
-        this.#eventBus.on("window:created", (window) => {
-            console.log("Window created:", window);
-        });
-
         this.#settingsStore =
             new SettingsStore(
                 this.#eventBus
             );
+
+        this.#themeManager =
+            new ThemeManager({
+                eventBus: this.#eventBus,
+                settingsStore: this.#settingsStore
+            });
 
         if (this.#initialized) return;
 

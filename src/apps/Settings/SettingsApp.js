@@ -225,7 +225,6 @@ export default class SettingsApp extends App {
 
     #updateSetting(path, value) {
         this.#settingsStore.set(path, value);
-        this.#eventBus.emit("settings:changed", { path });
     }
 
     #renderWallpaperPage(container) {
@@ -665,7 +664,7 @@ export default class SettingsApp extends App {
         if (!category) return;
 
         const page = category.pages.find((p) => p.id === pageId);
-        
+
         if (!page) return;
         this.#activeCategory = categoryId;
         this.#activePage = pageId;
