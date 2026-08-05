@@ -1,11 +1,15 @@
 import { flavors } from "@catppuccin/palette";
 
+console.log("Latte mauve:", flavors.latte.colors.mauve.hex);
+console.log("Mocha mauve:", flavors.mocha.colors.mauve.hex);
+
 export default class ThemeManager {
     #root;
     #flavor;
     #eventBus;
     #settingsStore;
     #systemThemeMediaQuery;
+    #applyWallpaper;
 
     #colorMap = {
         rosewater: "--catppuccin-rosewater",
@@ -67,14 +71,7 @@ export default class ThemeManager {
                 "appearance.theme"
             );
 
-        const accentColor =
-            this.#settingsStore.get(
-                "appearance.accentColor"
-            );
-
         this.#applyTheme(theme);
-
-        this.#applyAccentColor(accentColor);
     }
 
     #bindEvents() {
@@ -154,41 +151,43 @@ export default class ThemeManager {
             theme
         );
 
+        switch (theme) {
+            case "dark":
+                this.#applyDarkTheme();
+                break;
 
-        if (theme === "dark") {
-            this.#applyDarkTheme();
-            return;
+            case "light":
+                this.#applyLightTheme();
+                break;
+
+            case "system":
+            case "auto":
+                this.#applySystemTheme();
+                break;
+
+            default:
+                console.warn(
+                    `Unknown theme "${theme}". Falling back to system theme.`
+                );
+
+                this.#applySystemTheme();
         }
 
-        if (theme === "light") {
-            this.#applyLightTheme();
-            return;
-        }
+        const accentColor =
+            this.#settingsStore.get(
+                "appearance.accentColor"
+            );
 
-        if (
-            theme === "system" ||
-            theme === "auto"
-        ) {
-            this.#applySystemTheme();
-            return;
-        }
-
-        console.warn(
-            `Unknown theme "${theme}". Falling back to system theme.`
-        );
-
-        this.#applySystemTheme();
+        this.#applyAccentColor(accentColor);
     }
 
     #applyDarkTheme() {
         this.#root.dataset.theme = "dark";
-
         this.setFlavor("mocha");
     }
 
     #applyLightTheme() {
         this.#root.dataset.theme = "light";
-
         this.setFlavor("latte");
     }
 
@@ -202,18 +201,42 @@ export default class ThemeManager {
         }
     }
 
-    #applyAccentColor(color) {
+    #applySettings() {
+        const theme =
+            this.#settingsStore.get(
+                "appearance.theme"
+            );
+
+        this.#applyTheme(theme);
+
+        this.#applyWallpaper();
+    }
+
+    #applyAccentColor(colorName) {
+        if (!colorName || colorName === "theme") {
+            this.#root.style.removeProperty("--color-accent");
+            return;
+        }
+
+        const color =
+            this.#flavor.colors[colorName];
+
         if (!color) {
+            console.warn(
+                `Unknown accent color "${colorName}".`
+            );
+
             return;
         }
 
         this.#root.style.setProperty(
             "--color-accent",
-            color
+            color.hex
         );
     }
 
     setFlavor(flavorName) {
+        console.log("Setting flavor:", flavorName);
         const flavor = flavors[flavorName];
 
         if (!flavor) {
@@ -257,5 +280,55 @@ export default class ThemeManager {
                 color.hex
             );
         }
+        this.#applySemanticColors();
+    }
+
+    #applySemanticColors() {
+        const root = this.#root.style;
+
+        root.setProperty(
+            "--color-background",
+            "var(--catppuccin-base)"
+        );
+
+        root.setProperty(
+            "--color-surface",
+            "var(--catppuccin-mantle)"
+        );
+
+        root.setProperty(
+            "--color-surface-raised",
+            "var(--catppuccin-surface-0)"
+        );
+
+        root.setProperty(
+            "--color-border",
+            "var(--catppuccin-surface-1)"
+        );
+
+        root.setProperty(
+            "--color-text-primary",
+            "var(--catppuccin-text)"
+        );
+
+        root.setProperty(
+            "--color-text-secondary",
+            "var(--catppuccin-subtext-1)"
+        );
+
+        root.setProperty(
+            "--color-text-muted",
+            "var(--catppuccin-overlay-1)"
+        );
+
+        root.setProperty(
+            "--color-accent",
+            "var(--catppuccin-mauve)"
+        );
+
+        root.setProperty(
+            "--color-accent-hover",
+            "var(--catppuccin-lavender)"
+        );
     }
 }

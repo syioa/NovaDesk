@@ -267,18 +267,6 @@
 }
 
 /* ========================================
-   Form Elements
-======================================== */
-
-.settings__field-label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: inherit;
-}
-
-/* ========================================
    URL Input (for Wallpaper)
 ======================================== */
 
@@ -336,46 +324,6 @@
 }
 
 /* ========================================
-   Color Controls
-======================================== */
-
-.settings__color-control {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 24px;
-}
-
-.settings__color-input {
-    width: 64px;
-    height: 64px;
-    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
-    border-radius: 8px;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.settings__color-text {
-    flex: 1;
-    max-width: 200px;
-    height: 40px;
-    padding: 0 12px;
-    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
-    border-radius: 6px;
-    font-family: monospace;
-    font-size: 13px;
-    background: var(--input-background, rgba(255, 255, 255, 0.8));
-    color: inherit;
-    transition: border-color 120ms ease;
-}
-
-.settings__color-text:focus {
-    outline: none;
-    border-color: var(--accent-color, #3584e4);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color, #3584e4) 20%, transparent);
-}
-
-/* ========================================
    Wallpaper Preview
 ======================================== */
 
@@ -425,12 +373,6 @@
 .settings__color-button--active {
     border-color: rgba(0, 0, 0, 0.3);
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8), 0 0 0 5px rgba(0, 0, 0, 0.2);
-}
-
-.settings__custom-color {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
 }
 
 /* ========================================

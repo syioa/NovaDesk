@@ -393,17 +393,32 @@ export default class SettingsApp extends App {
     }
 
     #renderAccentColorPage(container) {
-        const accentColor = this.#settingsStore.get("appearance.accentColor") || "#3584e4";
+        const accentColor =
+            this.#settingsStore.get("appearance.accentColor")
+            ?? "theme";
+
+        const colorPickerValue =
+            accentColor === "theme"
+                ? "#3584e4"
+                : accentColor;
 
         const colors = [
-            { name: "Blue", value: "#3584e4" },
-            { name: "Purple", value: "#9945ff" },
-            { name: "Pink", value: "#ff006e" },
-            { name: "Red", value: "#ff3b30" },
-            { name: "Orange", value: "#ff9500" },
-            { name: "Yellow", value: "#ffd60a" },
-            { name: "Green", value: "#30b0c0" },
-            { name: "Teal", value: "#00d9ff" }
+            { name: "Theme", value: "theme" },
+
+            { name: "Rosewater", value: "rosewater" },
+            { name: "Flamingo", value: "flamingo" },
+            { name: "Pink", value: "pink" },
+            { name: "Mauve", value: "mauve" },
+            { name: "Red", value: "red" },
+            { name: "Maroon", value: "maroon" },
+            { name: "Peach", value: "peach" },
+            { name: "Yellow", value: "yellow" },
+            { name: "Green", value: "green" },
+            { name: "Teal", value: "teal" },
+            { name: "Sky", value: "sky" },
+            { name: "Sapphire", value: "sapphire" },
+            { name: "Blue", value: "blue" },
+            { name: "Lavender", value: "lavender" }
         ];
 
         container.innerHTML = `
@@ -420,28 +435,13 @@ export default class SettingsApp extends App {
                                 class="settings__color-button ${accentColor === color.value ? "settings__color-button--active" : ""}"
                                 data-color="${color.value}"
                                 title="${color.name}"
-                                style="background-color: ${color.value};"
+                                ${color.value === "theme"
+                ? ""
+                : `style="background: var(--catppuccin-${color.value});"`}
                             >
                                 ${accentColor === color.value ? '✓' : ''}
                             </button>
                         `).join('')}
-                    </div>
-
-                    <div class="settings__custom-color">
-                        <label class="settings__field-label">Custom color</label>
-                        <div class="settings__color-control">
-                            <input
-                                class="settings__color-input"
-                                type="color"
-                                value="${accentColor}"
-                            />
-                            <input
-                                class="settings__color-text"
-                                type="text"
-                                value="${accentColor}"
-                                placeholder="#3584e4"
-                            />
-                        </div>
                     </div>
                 </div>
             </div>
@@ -449,7 +449,6 @@ export default class SettingsApp extends App {
 
         const colorButtons = container.querySelectorAll(".settings__color-button");
         const colorInput = container.querySelector(".settings__color-input");
-        const colorText = container.querySelector(".settings__color-text");
 
         colorButtons.forEach((button) => {
             button.addEventListener("click", () => {
@@ -458,27 +457,12 @@ export default class SettingsApp extends App {
                 this.#renderAccentColorPage(container);
             });
         });
-
-        colorInput.addEventListener("input", () => {
-            colorText.value = colorInput.value;
-            this.#updateSetting("appearance.accentColor", colorInput.value);
-            this.#renderAccentColorPage(container);
-        });
-
-        colorText.addEventListener("input", () => {
-            const value = colorText.value.trim();
-            if (/^#[0-9a-fA-F]{6}$/.test(value)) {
-                colorInput.value = value;
-                this.#updateSetting("appearance.accentColor", value);
-                this.#renderAccentColorPage(container);
-            }
-        });
     }
 
     #renderAnimationsPage(container) {
         const enableAnimations = this.#settingsStore.get("windows.enableAnimations") ?? true;
-
         container.innerHTML = `
+
             <div class="settings__animations">
                 <div class="settings__setting-group">
                     <h2 class="settings__section-title">Window animations</h2>
@@ -714,8 +698,8 @@ export default class SettingsApp extends App {
             <header class="settings__page-header">
                 <h1 class="settings__page-title">${page.name}</h1>
                 <p class="settings__page-description">${page.description}</p>
-            </header>
-            <section class="settings__page-content"></section>
+                <section class="settings__page-content"></section>
+                </header>
         `;
 
         const pageContent = content.querySelector(".settings__page-content");

@@ -38,8 +38,9 @@
     --color-text-muted:
         var(--catppuccin-subtext-0);
 
-    --color-accent:
-        var(--catppuccin-blue);
+    --color-accent: var(--catppuccin-mauve);
+
+    --color-accent-hover: var(--catppuccin-lavender);
 
     --color-success:
         var(--catppuccin-green);

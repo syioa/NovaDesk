@@ -106,11 +106,13 @@
 ======================================== */
 
 .notes {
-    --notes-accent: #cba6f7;
-    --notes-accent-hover: #cba6f7;
+    --notes-accent: var(--color-accent);
+    --notes-accent-hover: var(--color-accent-hover);
+
     --notes-accent-muted: color-mix(in srgb,
             var(--notes-accent) 14%,
             transparent);
+
     --notes-accent-selected: color-mix(in srgb,
             var(--notes-accent) 20%,
             transparent);

@@ -386,6 +386,31 @@ export default class Desktop {
                 "appearance.wallpaper"
             );
 
+        if (!wallpaper) {
+            console.warn(
+                "No wallpaper settings found."
+            );
+
+            return;
+        }
+
+        switch (wallpaper.type) {
+            case "image":
+                this.#applyImageWallpaper(wallpaper.value);
+                break;
+
+            case "color":
+                this.#applyColorWallpaper(wallpaper.value);
+                break;
+
+            default:
+                console.warn(
+                    `Unknown wallpaper type: ${wallpaper.type}`
+                );
+        }
+    }
+
+    #applyImageWallpaper(value) {
         const wallpaperLayer =
             this.getLayer("wallpaper");
 
@@ -397,21 +422,30 @@ export default class Desktop {
             return;
         }
 
-        if (wallpaper.type === "image") {
-            wallpaperLayer.style.backgroundImage =
-                `url("${wallpaper.value}")`;
+        wallpaperLayer.style.backgroundImage =
+            `url("${value}")`;
 
-            wallpaperLayer.style.backgroundColor =
-                "";
+        wallpaperLayer.style.backgroundColor =
+            "";
 
-            wallpaperLayer.style.backgroundSize =
-                "cover";
+        wallpaperLayer.style.backgroundSize =
+            "cover";
 
-            wallpaperLayer.style.backgroundPosition =
-                "center";
+        wallpaperLayer.style.backgroundPosition =
+            "center";
 
-            wallpaperLayer.style.backgroundRepeat =
-                "no-repeat";
+        wallpaperLayer.style.backgroundRepeat =
+            "no-repeat";
+    }
+
+    #applyColorWallpaper(value) {
+        const wallpaperLayer =
+            this.getLayer("wallpaper");
+
+        if (!wallpaperLayer) {
+            console.error(
+                "Wallpaper layer does not exist."
+            );
 
             return;
         }
@@ -420,7 +454,7 @@ export default class Desktop {
             "none";
 
         wallpaperLayer.style.backgroundColor =
-            wallpaper.value;
+            value;
     }
 
     get element() {
