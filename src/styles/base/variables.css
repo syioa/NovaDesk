@@ -40,7 +40,7 @@
 
     --color-accent: var(--catppuccin-mauve);
 
-    --color-accent-hover: var(--catppuccin-lavender);
+    --color-accent-hover: color-mix(in srgb, var(--color-accent) 90%, black);
 
     --color-success:
         var(--catppuccin-green);
@@ -53,7 +53,6 @@
 
     --color-info:
         var(--catppuccin-sky);
-
 
     /*
      * NovaDesk typography

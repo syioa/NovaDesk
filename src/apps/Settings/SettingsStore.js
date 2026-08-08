@@ -16,11 +16,6 @@ export default class SettingsStore {
             gridColumns: 8,
             iconSpacing: 16
         },
-        windows: {
-            enableAnimations: true,
-            snapEnabled: true,
-            snapAssist: true
-        },
         system: {
             version: "3.2.1"
         }
@@ -61,10 +56,6 @@ export default class SettingsStore {
             desktop: {
                 ...defaults.desktop,
                 ...saved.desktop
-            },
-            windows: {
-                ...defaults.windows,
-                ...saved.windows
             },
             system: {
                 ...defaults.system,
@@ -134,11 +125,6 @@ export default class SettingsStore {
                 iconSize: 64,
                 gridColumns: 8,
                 iconSpacing: 16
-            },
-            windows: {
-                enableAnimations: true,
-                snapEnabled: true,
-                snapAssist: true
             },
             system: {
                 version: "3.2.1"

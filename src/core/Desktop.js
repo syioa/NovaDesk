@@ -363,10 +363,6 @@ export default class Desktop {
         );
     }
 
-    #openSettings() {
-        console.log("Settings clicked");
-    }
-
     getWorkArea() {
         const rect = this.#taskbar
             .getElement()

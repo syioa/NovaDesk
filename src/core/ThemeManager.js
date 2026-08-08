@@ -1,8 +1,5 @@
 import { flavors } from "@catppuccin/palette";
 
-console.log("Latte mauve:", flavors.latte.colors.mauve.hex);
-console.log("Mocha mauve:", flavors.mocha.colors.mauve.hex);
-
 export default class ThemeManager {
     #root;
     #flavor;
@@ -37,9 +34,9 @@ export default class ThemeManager {
 
         surface2: "--catppuccin-surface-2",
         surface1: "--catppuccin-surface-1",
+        base: "--catppuccin-base",
         surface0: "--catppuccin-surface-0",
 
-        base: "--catppuccin-base",
         mantle: "--catppuccin-mantle",
         crust: "--catppuccin-crust"
     };
@@ -78,12 +75,6 @@ export default class ThemeManager {
         this.#eventBus.on(
             "settings:changed",
             ({ path, value }) => {
-                console.log(
-                    "ThemeManager received:",
-                    path,
-                    value
-                );
-
                 if (
                     path === "appearance.theme"
                 ) {
@@ -146,11 +137,6 @@ export default class ThemeManager {
     }
 
     #applyTheme(theme) {
-        console.log(
-            "Applying theme:",
-            theme
-        );
-
         switch (theme) {
             case "dark":
                 this.#applyDarkTheme();
@@ -213,8 +199,8 @@ export default class ThemeManager {
     }
 
     #applyAccentColor(colorName) {
+        this.#root.style.removeProperty("--color-accent");
         if (!colorName || colorName === "theme") {
-            this.#root.style.removeProperty("--color-accent");
             return;
         }
 
@@ -236,7 +222,6 @@ export default class ThemeManager {
     }
 
     setFlavor(flavorName) {
-        console.log("Setting flavor:", flavorName);
         const flavor = flavors[flavorName];
 
         if (!flavor) {
@@ -328,7 +313,7 @@ export default class ThemeManager {
 
         root.setProperty(
             "--color-accent-hover",
-            "var(--catppuccin-lavender)"
+            "color-mix(in srgb, var(--color-accent) 90%, black)"
         );
     }
 }

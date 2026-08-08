@@ -462,11 +462,9 @@
             transparent);
     border-radius: 6px;
 
-    background: color-mix(in srgb,
-            var(--notes-accent) 95%,
-            var(--color-crust));
+    background: var(--color-surface);
 
-    color: var(--color-crust);
+    color: var(--color-text-primary);
 
     outline: none;
     font: inherit;
@@ -482,18 +480,12 @@
 
 
 .notes__search::placeholder {
-    color: color-mix(in srgb,
-            var(--color-crust) 65%,
-            transparent);
+    color: var(--color-text-muted);
 }
 
 .notes__search:focus {
-    border-color: var(--color-crust);
-
-    box-shadow:
-        0 0 0 2px color-mix(in srgb,
-            var(--color-crust) 15%,
-            transparent);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
 /* ========================================
@@ -744,8 +736,8 @@
     border-radius: 8px;
 
     background: transparent;
-
     color: var(--color-text-secondary);
+
 
     text-align: left;
 
@@ -956,9 +948,9 @@
     line-height: 1;
 
     cursor: pointer;
-
     transition: background 0.15s ease;
 }
+
 
 .notes__editor-tag-remove:hover {
     background: color-mix(in srgb,

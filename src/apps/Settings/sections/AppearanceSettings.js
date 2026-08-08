@@ -516,24 +516,9 @@ export default class AppearanceSettings {
             label
         );
 
-        console.log(
-            "Creating theme card:",
-            theme
-        );
-
         card.addEventListener(
             "click",
             () => {
-                console.log(
-                    "THEME CARD CLICKED:",
-                    theme
-                );
-
-                console.log(
-                    "THEME ID:",
-                    theme?.id
-                );
-
                 this.#store.set(
                     "appearance.theme",
                     theme.id

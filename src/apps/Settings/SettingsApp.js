@@ -60,25 +60,6 @@ export default class SettingsApp extends App {
             ]
         },
         {
-            id: "windows",
-            name: "Windows",
-            icon: "▣",
-            pages: [
-                {
-                    id: "animations",
-                    name: "Animation Preferences",
-                    description: "Configure window animations and transitions.",
-                    render: (container) => this.#renderAnimationsPage(container)
-                },
-                {
-                    id: "snap",
-                    name: "Snap Behavior",
-                    description: "Configure how windows behave when snapped.",
-                    render: (container) => this.#renderSnapPage(container)
-                }
-            ]
-        },
-        {
             id: "system",
             name: "System",
             icon: "⚙",
@@ -456,41 +437,6 @@ export default class SettingsApp extends App {
                 this.#updateSetting("appearance.accentColor", color);
                 this.#renderAccentColorPage(container);
             });
-        });
-    }
-
-    #renderAnimationsPage(container) {
-        const enableAnimations = this.#settingsStore.get("windows.enableAnimations") ?? true;
-        container.innerHTML = `
-
-            <div class="settings__animations">
-                <div class="settings__setting-group">
-                    <h2 class="settings__section-title">Window animations</h2>
-                    <p class="settings__section-description">
-                        Enable or disable animations when opening, closing, and moving windows.
-                    </p>
-
-                    <label class="settings__toggle">
-                        <input
-                            type="checkbox"
-                            class="settings__toggle-input"
-                            ${enableAnimations ? "checked" : ""}
-                        />
-                        <span class="settings__toggle-track"></span>
-                        <span class="settings__toggle-thumb"></span>
-                        <span class="settings__toggle-label">Enable window animations</span>
-                    </label>
-
-                    <p class="settings__setting-description">
-                        When enabled, windows will animate smoothly when opening and closing. Disable this for better performance on older systems.
-                    </p>
-                </div>
-            </div>
-        `;
-
-        const toggle = container.querySelector(".settings__toggle-input");
-        toggle.addEventListener("change", (e) => {
-            this.#updateSetting("windows.enableAnimations", e.target.checked);
         });
     }
 
