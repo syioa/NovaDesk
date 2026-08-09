@@ -43,11 +43,33 @@ export default class DesktopSettingsPanel {
     #template() {
         return `
         <section class="settings-section" data-section="desktop">
-            <h2 class="settings-section__title">Desktop</h2>
 
-            ${this.#rowTemplate("iconSize", "Icon Size", "px")}
-            ${this.#rowTemplate("gridColumns", "Grid Columns", "")}
-            ${this.#rowTemplate("iconSpacing", "Icon Spacing", "px")}
+            <div class="settings-section__label">
+                Icon Grid
+            </div>
+
+            <div class="settings-group">
+                ${this.#rowTemplate(
+            "iconSize",
+            "Icon Size",
+            "Size of desktop icons",
+            "px"
+        )}
+
+                ${this.#rowTemplate(
+            "gridColumns",
+            "Grid Columns",
+            "Icons per row",
+            ""
+        )}
+
+                ${this.#rowTemplate(
+            "iconSpacing",
+            "Icon Spacing",
+            "Gap between icons",
+            "px"
+        )}
+            </div>
 
             <div class="settings-section__footer">
                 <button
@@ -58,34 +80,58 @@ export default class DesktopSettingsPanel {
                     Reset to Default
                 </button>
             </div>
+
         </section>
     `;
     }
 
-    #rowTemplate(key, label, unit) {
+    #rowTemplate(key, label, description, unit) {
         const { min, max, step } = this.#limits[key];
+
         return `
-            <div class="settings-row" data-key="${key}">
-                <label class="settings-row__label" for="${key}-input">${label}</label>
-                <div class="settings-row__control">
-                    <input
-                        type="range"
-                        id="${key}-slider"
-                        min="${min}"
-                        max="${max}"
-                        step="${step}"
-                    />
-                    <input
-                        type="number"
-                        id="${key}-input"
-                        min="${min}"
-                        max="${max}"
-                        step="${step}"
-                    />
-                    <span class="settings-row__unit">${unit}</span>
+        <div class="settings-row" data-key="${key}">
+
+            <div class="settings-row__info">
+                <label
+                    class="settings-row__label"
+                    for="${key}-input"
+                >
+                    ${label}
+                </label>
+
+                <div class="settings-row__description">
+                    ${description}
                 </div>
             </div>
-        `;
+
+            <div class="settings-row__control">
+
+                <input
+                    class="settings-row__slider"
+                    type="range"
+                    id="${key}-slider"
+                    min="${min}"
+                    max="${max}"
+                    step="${step}"
+                />
+
+                <input
+                    class="settings-row__value"
+                    type="number"
+                    id="${key}-input"
+                    min="${min}"
+                    max="${max}"
+                    step="${step}"
+                    aria-label="${label} value"
+                />
+
+                <span class="settings-row__unit">
+                    ${unit}
+                </span>
+
+            </div>
+        </div>
+    `;
     }
 
     #cacheEls() {
@@ -131,16 +177,28 @@ export default class DesktopSettingsPanel {
             const { slider, input } = this.#els[key];
 
             slider.addEventListener("input", () => {
-                const value = this.#clamp(key, Number(slider.value));
+                const value =
+                    this.#clamp(key, Number(slider.value));
+
                 input.value = value;
-                this.#store.set(`desktop.${key}`, value);
+
+                this.#store.set(
+                    `desktop.${key}`,
+                    value
+                );
             });
 
             input.addEventListener("change", () => {
-                const value = this.#clamp(key, Number(input.value));
+                const value =
+                    this.#clamp(key, Number(input.value));
+
                 input.value = value;
                 slider.value = value;
-                this.#store.set(`desktop.${key}`, value);
+
+                this.#store.set(
+                    `desktop.${key}`,
+                    value
+                );
             });
         }
     }
@@ -153,8 +211,12 @@ export default class DesktopSettingsPanel {
 
     #syncFromStore() {
         for (const key of Object.keys(this.#limits)) {
-            const value = this.#store.get(`desktop.${key}`);
-            const { slider, input } = this.#els[key];
+            const value =
+                this.#store.get(`desktop.${key}`);
+
+            const { slider, input } =
+                this.#els[key];
+
             slider.value = value;
             input.value = value;
         }

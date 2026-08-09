@@ -88,30 +88,30 @@ export default class SettingsApp extends App {
         this.#settingsStore = settingsStore;
 
         window.content.innerHTML = `
-            <div class="settings">
-                <aside class="settings__sidebar">
-                    <div class="settings__sidebar-header">
-                        <h2 class="settings__sidebar-title">Settings</h2>
-                    </div>
-                    <div class="settings__search-wrapper">
-                        <input
-                            class="settings__search"
-                            type="search"
-                            placeholder="Search settings..."
-                            aria-label="Search settings"
-                        />
-                    </div>
-                    <nav
-                        class="settings__navigation"
-                        aria-label="Settings categories"
-                    ></nav>
-                </aside>
-                <main class="settings__main">
-                    <div class="settings__breadcrumb"></div>
-                    <div class="settings__page"></div>
-                </main>
-            </div>
-        `;
+<div class="settings">
+    <aside class="settings__sidebar">
+        <div class="settings__sidebar-header">
+            <h2 class="settings__sidebar-title">Settings</h2>
+        </div>
+
+        <div class="settings__search-wrapper">
+            <input
+                class="settings__search"
+                type="search"
+                placeholder="Search settings..."
+                aria-label="Search settings"
+            />
+        </div>
+        <nav
+            class="settings__navigation"
+            aria-label="Settings categories"
+        ></nav>
+    </aside>
+    <main class="settings__main">
+        <div class="settings__breadcrumb"></div>
+        <div class="settings__page"></div>
+    </main>
+</div>`;
 
         this.#bindEvents();
         this.#renderNavigation();
@@ -499,83 +499,206 @@ export default class SettingsApp extends App {
     }
 
     #renderVersionPage(container) {
-        const version = "3.2.1";
-        const buildDate = "2026-01-15";
-        const buildNumber = "4521";
-
         container.innerHTML = `
-            <div class="settings__version">
-                <div class="settings__setting-group">
-                    <h2 class="settings__section-title">System information</h2>
+        <div class="settings__version">
 
-                    <div class="settings__info-grid">
-                        <div class="settings__info-item">
-                            <span class="settings__info-label">NovaDesk version</span>
-                            <span class="settings__info-value">${version}</span>
-                        </div>
-                        <div class="settings__info-item">
-                            <span class="settings__info-label">Build number</span>
-                            <span class="settings__info-value">${buildNumber}</span>
-                        </div>
-                        <div class="settings__info-item">
-                            <span class="settings__info-label">Build date</span>
-                            <span class="settings__info-value">${buildDate}</span>
-                        </div>
+            <div class="settings__version-info-grid">
+
+                <div class="settings__version-info-card">
+                    <div class="settings__version-info-label">
+                        Version
+                    </div>
+
+                    <div class="settings__version-info-value settings__version-info-value--accent">
+                        3.2.1
+                    </div>
+
+                    <div class="settings__version-info-sub">
+                        Stable channel
                     </div>
                 </div>
 
-                <div class="settings__setting-group">
-                    <h2 class="settings__section-title">Update</h2>
-                    <p class="settings__section-description">
-                        You're running the latest version of NovaDesk.
-                    </p>
-                    <button class="settings__button" type="button">Check for updates</button>
+                <div class="settings__version-info-card">
+                    <div class="settings__version-info-label">
+                        Build number
+                    </div>
+
+                    <div class="settings__version-info-value">
+                        4521
+                    </div>
+
+                    <div class="settings__version-info-sub">
+                        Release build
+                    </div>
+                </div>
+
+                <div class="settings__version-info-card">
+                    <div class="settings__version-info-label">
+                        Build date
+                    </div>
+
+                    <div class="settings__version-info-value settings__version-info-value--date">
+                        Jan 15
+                    </div>
+
+                    <div class="settings__version-info-sub">
+                        2026
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="settings__version-status">
+                <span class="settings__version-status-dot"></span>
+
+                <div class="settings__version-status-text">
+                    <strong>This is the final release.</strong>
+                    NovaDesk will not receive further updates.
                 </div>
             </div>
-        `;
+
+            <div class="settings__version-section-title">
+                What's new in 3.2.1
+            </div>
+
+            <div class="settings__version-changelog">
+
+                <div class="settings__version-changelog-item">
+                    <span class="settings__version-tag settings__version-tag--new">
+                        New
+                    </span>
+
+                    <div class="settings__version-changelog-description">
+                        Quick settings panel now accessible via keyboard shortcut.
+                    </div>
+                </div>
+
+                <div class="settings__version-changelog-item">
+                    <span class="settings__version-tag settings__version-tag--fix">
+                        Fix
+                    </span>
+
+                    <div class="settings__version-changelog-description">
+                        Resolved a crash when switching themes with multiple monitors.
+                    </div>
+                </div>
+
+                <div class="settings__version-changelog-item">
+                    <span class="settings__version-tag settings__version-tag--improved">
+                        Improved
+                    </span>
+
+                    <div class="settings__version-changelog-description">
+                        Startup time reduced by ~30% on supported hardware.
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="settings__version-final-note">
+                NovaDesk 3.2.1 is the last version of this software.
+                Thank you for using it.
+            </div>
+
+        </div>
+    `;
     }
 
     #renderAboutPage(container) {
+        const version = "3.2.1";
+
         container.innerHTML = `
-            <div class="settings__about">
-                <div class="settings__about-header">
-                    <div class="settings__about-logo">NovaDesk</div>
-                    <h2 class="settings__about-title">About NovaDesk</h2>
-                    <p class="settings__about-subtitle">A modern desktop environment</p>
+        <div class="settings__about">
+
+            <div class="settings__about-hero">
+                <div class="settings__about-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1.25em" height="1.25em" viewBox="0 0 24 24">
+	                    <path d="M0 0h24v24H0z" fill="none" />
+	                    <path fill="currentColor" d="m14.712 7.596l-2.289-2.288l2.289-2.289L17 5.308zm5 3l-1.289-1.288l1.289-1.289L21 9.308zM12.075 21q-1.888 0-3.543-.713T5.64 18.336t-1.951-2.893t-.714-3.543q0-2.92 1.68-5.265t4.436-3.27q-.104 2.34.717 4.501q.82 2.161 2.48 3.82q1.66 1.66 3.82 2.481t4.502.717q-.92 2.754-3.268 4.435T12.075  21" />
+                    </svg>
                 </div>
 
-                <div class="settings__setting-group">
-                    <h3 class="settings__section-title">What is NovaDesk?</h3>
-                    <p class="settings__section-description">
-                        NovaDesk is a modern, feature-rich desktop environment designed to provide users with a clean and intuitive interface. It combines the best of both worlds: the simplicity of minimalist design with powerful customization options.
+                <div class="settings__about-hero-text">
+                    <h2 class="settings__about-title">
+                        NovaDesk
+                    </h2>
+
+                    <p class="settings__about-subtitle">
+                        A modern desktop environment
                     </p>
                 </div>
 
-                <div class="settings__setting-group">
-                    <h3 class="settings__section-title">Key features</h3>
-                    <ul class="settings__features-list">
-                        <li>Highly customizable appearance and behavior</li>
-                        <li>Smooth window animations and snap layouts</li>
-                        <li>Advanced desktop management</li>
-                        <li>Built-in app launcher and file manager</li>
-                        <li>Lightweight and performance-optimized</li>
-                    </ul>
-                </div>
-
-                <div class="settings__setting-group">
-                    <h3 class="settings__section-title">Credits</h3>
-                    <p class="settings__section-description">
-                        NovaDesk is developed by a passionate team of designers and developers who believe in creating beautiful, functional software.
-                    </p>
-                </div>
-
-                <div class="settings__setting-group">
-                    <p class="settings__copyright">
-                        © 2026 NovaDesk. All rights reserved.
-                    </p>
+                <div class="settings__about-version">
+                    v${version}
                 </div>
             </div>
-        `;
+
+            <div class="settings__about-card">
+                <h3 class="settings__about-card-title">
+                    <span>ⓘ</span>
+                    What is NovaDesk?
+                </h3>
+
+                <p class="settings__about-description">
+                    NovaDesk is a modern, feature-rich desktop environment
+                    designed to provide a clean and intuitive interface —
+                    combining minimalist design with powerful customization
+                    options.
+                </p>
+            </div>
+
+            <div class="settings__about-card">
+                <h3 class="settings__about-card-title">
+                    <span>✦</span>
+                    Key features
+                </h3>
+
+                <div class="settings__features-grid">
+
+                    <div class="settings__feature-item">
+                        <span class="settings__feature-icon">🎨</span>
+                        <span>
+                            Highly customizable appearance and behavior
+                        </span>
+                    </div>
+
+                    <div class="settings__feature-item">
+                        <span class="settings__feature-icon">▦</span>
+                        <span>
+                            Smooth animations and snap layouts
+                        </span>
+                    </div>
+
+                    <div class="settings__feature-item">
+                        <span class="settings__feature-icon">▣</span>
+                        <span>
+                            Advanced desktop management
+                        </span>
+                    </div>
+
+                    <div class="settings__feature-item">
+                        <span class="settings__feature-icon">◈</span>
+                        <span>
+                            Built-in launcher and file manager
+                        </span>
+                    </div>
+
+                    <div class="settings__feature-item">
+                        <span class="settings__feature-icon">ϟ</span>
+                        <span>
+                            Lightweight and performance-optimized
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="settings__about-footer">
+                © 2026 NovaDesk. All rights reserved.
+            </div>
+
+        </div>
+    `;
     }
 
     #selectCategory(categoryId) {
