@@ -6,15 +6,22 @@
 
     height: 52px;
     width: 100%;
+    box-sizing: border-box;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
 
     padding: 0 12px;
+
     pointer-events: auto;
 
-    background: rgba(30, 30, 30, 0.9);
+    background: color-mix(in srgb,
+            var(--color-surface) 94%,
+            transparent);
+
+    border-top: 1px solid var(--color-border);
+
     backdrop-filter: blur(12px);
 }
 
@@ -25,13 +32,120 @@
     align-items: center;
 }
 
+.taskbar-left,
+.taskbar-right {
+    min-width: 100px;
+}
+
 .taskbar-center {
     flex: 1;
     justify-content: center;
+    gap: 4px;
+}
+
+.taskbar-start {
+    height: 34px;
+    padding: 0 14px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    background: var(--color-surface-raised);
+    color: var(--color-text-primary);
+
+    font: inherit;
+    cursor: pointer;
+}
+
+.taskbar-start:hover {
+    background: var(--color-surface-raised);
+}
+
+.taskbar-start:focus {
+    outline: none;
+}
+
+.taskbar-start:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.taskbar-start:active {
+    background: var(--color-accent);
+    color: white;
+}
+
+.taskbar-button {
+    height: 34px;
+    padding: 0 12px;
+
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    background: transparent;
+    color: var(--color-text-secondary);
+
+    font: inherit;
+    cursor: pointer;
+
+    white-space: nowrap;
+}
+
+.taskbar-button:hover {
+    background: var(--color-surface-raised);
+    color: var(--color-text-primary);
+}
+
+.taskbar-button:focus {
+    outline: none;
+}
+
+.taskbar-button:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
 }
 
 .taskbar-button.active {
-    background: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb,
+            var(--color-accent) 15%,
+            transparent);
+
+    border-color: color-mix(in srgb,
+            var(--color-accent) 35%,
+            transparent);
+
+    color: var(--color-accent);
+}
+
+.taskbar-clock {
+    padding: 0 8px;
+
+    border: 0;
+    outline: none;
+    background: transparent;
+
+    color: var(--color-text-secondary);
+
+    font: inherit;
+    font-size: 1.1rem;
+    font-variant-numeric: tabular-nums;
+
+    cursor: pointer;
+}
+
+.taskbar-clock:hover {
+    color: var(--color-text-primary);
+    background: var(--color-surface-raised);
+    border-radius: 8px;
+}
+
+.taskbar-clock:focus {
+    outline: none;
+}
+
+.taskbar-clock:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
 }
 
 .desktop-layer-taskbar {
@@ -43,4 +157,176 @@
 
 .desktop-layer-taskbar>* {
     pointer-events: auto;
+}
+
+/* ========================================
+   flatpickr
+======================================== */
+
+.flatpickr-calendar {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+
+    color: var(--color-text-primary);
+}
+
+/* ==============
+  Header
+================ */
+
+.flatpickr-months {
+    padding: 8px 8px 0;
+}
+
+.flatpickr-current-month {
+    color: var(--color-text-primary);
+    font-size: 16px;
+}
+
+.flatpickr-current-month .cur-month {
+    color: var(--color-text-primary);
+}
+
+.flatpickr-current-month input.cur-year {
+    color: var(--color-text-primary);
+    background: transparent;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.flatpickr-current-month input.cur-year::-webkit-inner-spin-button,
+.flatpickr-current-month input.cur-year::-webkit-outer-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+}
+
+.flatpickr-current-month input.cur-year:focus {
+    outline: none;
+}
+
+.flatpickr-prev-month,
+.flatpickr-next-month {
+    color: var(--color-text-primary);
+    fill: var(--color-text-primary);
+}
+
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg {
+    fill: var(--color-text-primary);
+}
+
+.flatpickr-months,
+.flatpickr-month,
+.flatpickr-current-month {
+    background: var(--color-surface);
+}
+
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: var(--color-accent);
+}
+
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+    fill: var(--color-text-primary);
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    top: 4%;
+    transform: translateY(-4%);
+}
+
+.numInputWrapper {
+    display: none;
+}
+
+.numInputWrapper span.arrowUp::after,
+.numInputWrapper span.arrowDown::after {
+    display: none;
+}
+
+.numInputWrapper span.arrowUp,
+.numInputWrapper span.arrowDown {
+    display: none;
+}
+
+/* ==============
+  Weekdays
+================ */
+
+.flatpickr-weekdays {
+    background: transparent;
+}
+
+span.flatpickr-weekday {
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+/* ==============
+  Days
+================ */
+
+.flatpickr-day {
+    color: var(--color-text-primary);
+    border-radius: 8px;
+}
+
+.flatpickr-day:hover {
+    background: var(--color-surface-raised);
+    border-color: var(--color-surface-raised);
+}
+
+.flatpickr-day.today {
+    border-color: var(--color-accent);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+}
+
+/* ==============
+  Days from adjacent months
+================ */
+
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+    color: var(--color-text-muted);
+}
+
+
+.flatpickr-calendar {
+    width: 300px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+.flatpickr-innerContainer {
+    width: 100%;
+}
+
+.flatpickr-rContainer {
+    width: 100%;
+}
+
+.flatpickr-days {
+    width: 100%;
+}
+
+.dayContainer {
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+}
+
+.flatpickr-day {
+    max-width: none;
+    height: 38px;
+    line-height: 38px;
 }

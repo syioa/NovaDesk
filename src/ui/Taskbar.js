@@ -1,10 +1,15 @@
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.css";
+
 export class Taskbar {
+    #center;
     #element;
     #left;
-    #center;
     #right;
     #eventBus;
     #startButton;
+
+    #calendar;
 
     #buttons = new Map();
 
@@ -72,6 +77,7 @@ export class Taskbar {
 
     #createStartButton() {
         this.#startButton = document.createElement("button");
+        this.#startButton.className = "taskbar-start";
         this.#startButton.textContent = "Start";
 
         this.#startButton.addEventListener("click", () => {
@@ -82,10 +88,54 @@ export class Taskbar {
     }
 
     #createClock() {
-        const clock = document.createElement("span");
-        clock.textContent = "12:00";
+        const clock = document.createElement("button");
+
+        clock.className = "taskbar-clock";
+        clock.type = "button";
+        clock.setAttribute("aria-label", "Open calendar");
+
+        const updateClock = () => {
+            clock.textContent = new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        };
+
+        updateClock();
+
+        setInterval(updateClock, 1000);
 
         this.#right.append(clock);
+
+        this.#calendar = flatpickr(clock, {
+            defaultDate: new Date(),
+            allowInput: false,
+            clickOpens: true,
+            closeOnSelect: false,
+            monthSelectorType: "static",
+
+            position: (instance) => {
+                const calendar = instance.calendarContainer;
+                const clockRect = clock.getBoundingClientRect();
+
+                const gap = 16;
+
+                const top =
+                    clockRect.top -
+                    calendar.offsetHeight -
+                    gap +
+                    window.pageYOffset;
+
+                const left =
+                    clockRect.right -
+                    calendar.offsetWidth +
+                    window.pageXOffset;
+
+                calendar.style.top = `${top}px`;
+                calendar.style.left = `${left}px`;
+                calendar.style.right = "auto";
+            }
+        });
     }
 
     bindEvents() {

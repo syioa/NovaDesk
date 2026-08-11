@@ -548,19 +548,6 @@ export default class SettingsApp extends App {
 
             </div>
 
-            <div class="settings__version-status">
-                <span class="settings__version-status-dot"></span>
-
-                <div class="settings__version-status-text">
-                    <strong>This is the final release.</strong>
-                    NovaDesk will not receive further updates.
-                </div>
-            </div>
-
-            <div class="settings__version-section-title">
-                What's new in 3.2.1
-            </div>
-
             <div class="settings__version-changelog">
 
                 <div class="settings__version-changelog-item">
