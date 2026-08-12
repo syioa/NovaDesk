@@ -6,9 +6,9 @@ export class Taskbar {
     #element;
     #left;
     #right;
+
     #eventBus;
     #startButton;
-
     #calendar;
 
     #buttons = new Map();
@@ -79,8 +79,11 @@ export class Taskbar {
         this.#startButton = document.createElement("button");
         this.#startButton.className = "taskbar-start";
         this.#startButton.textContent = "Start";
+        this.#startButton.type = "button";
 
-        this.#startButton.addEventListener("click", () => {
+        this.#startButton.addEventListener("pointerdown", (event) => {
+            event.stopPropagation();
+
             this.#eventBus.emit("start:toggle");
         });
 

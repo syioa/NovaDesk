@@ -168,16 +168,6 @@ export default class WindowManager {
     }
 
     getWorkArea() {
-        const width = this.#desktop.element.clientWidth;
-        const height = this.#desktop.element.clientHeight;
-
-        return {
-            left: 0,
-            top: 0,
-            right: width,
-            bottom: height,
-            width,
-            height,
-        };
+        return this.#desktop.getWorkArea();
     }
 }

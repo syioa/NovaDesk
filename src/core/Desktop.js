@@ -368,11 +368,18 @@ export default class Desktop {
             .getElement()
             .getBoundingClientRect();
 
+        const left = 0;
+        const top = 0;
+        const right = window.innerWidth;
+        const bottom = window.innerHeight - rect.height;
+
         return {
-            left: 0,
-            top: 0,
-            right: window.innerWidth,
-            bottom: window.innerHeight - rect.height
+            left,
+            top,
+            right,
+            bottom,
+            width: right - left,
+            height: bottom - top
         };
     }
 

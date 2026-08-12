@@ -704,11 +704,15 @@ export default class DesktopIcons {
         const desktopWidth =
             desktopRect.width;
 
+        const taskbarHeight =
+            document.querySelector(".taskbar")?.offsetHeight ?? 0;
+
         const desktopHeight =
             Math.min(
                 desktopRect.height,
                 window.innerHeight -
-                desktopRect.top
+                desktopRect.top -
+                taskbarHeight
             );
 
         /*
@@ -1464,12 +1468,37 @@ export default class DesktopIcons {
             column,
             row
         ) => {
-            return (
-                column >= 0 &&
-                column <= maxColumn &&
-                row >= 0 &&
-                row <= maxRow
-            );
+            if (
+                column < 0 ||
+                column > maxColumn ||
+                row < 0 ||
+                row > maxRow
+            ) {
+                return false;
+            }
+
+            const taskbar =
+                document.querySelector(".taskbar");
+
+            const taskbarTop =
+                taskbar?.getBoundingClientRect().top ??
+                window.innerHeight;
+
+            const desktopTop =
+                this.#element.getBoundingClientRect().top;
+
+            const pixel =
+                this.#gridToPixel(
+                    column,
+                    row
+                );
+
+            const iconBottom =
+                desktopTop +
+                pixel.y +
+                this.#iconSize;
+
+            return iconBottom <= taskbarTop;
         };
 
         /*
@@ -1816,11 +1845,18 @@ export default class DesktopIcons {
         const desktopWidth =
             this.#element.clientWidth;
 
+        const taskbarHeight =
+            document.querySelector(".taskbar")?.offsetHeight ?? 0;
+
+        const desktopRect =
+            this.#element.getBoundingClientRect();
+
         const desktopHeight =
             Math.min(
-                this.#element.clientHeight,
+                desktopRect.height,
                 window.innerHeight -
-                this.#element.getBoundingClientRect().top
+                desktopRect.top -
+                taskbarHeight
             );
 
         const maxColumn =
