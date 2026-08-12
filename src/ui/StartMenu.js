@@ -157,31 +157,50 @@ export default class StartMenu {
         const avatarPreview = modal.querySelector(
             ".start-menu__avatar-preview"
         );
-
         const avatarInput = modal.querySelector(
             ".start-menu__avatar-input"
         );
-
         const removeButton = modal.querySelector(
             ".start-menu__profile-button--remove"
         );
-
         const nameInput = modal.querySelector(
             "#start-menu-profile-name"
         );
-
         const roleInput = modal.querySelector(
             "#start-menu-profile-role"
         );
 
+        nameInput.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") {
+                return;
+            }
+
+            event.preventDefault();
+
+            roleInput.focus();
+
+            roleInput.setSelectionRange(
+                roleInput.value.length,
+                roleInput.value.length
+            );
+        });
+
+        roleInput.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") {
+                return;
+            }
+
+            event.preventDefault();
+
+            saveButton.click();
+        });
+
         const cancelButton = modal.querySelector(
             ".start-menu__profile-button--secondary"
         );
-
         const saveButton = modal.querySelector(
             ".start-menu__profile-button--primary"
         );
-
         const updateAvatarPreview = () => {
             if (draftProfile.avatar) {
                 avatarPreview.innerHTML = `
@@ -353,6 +372,9 @@ export default class StartMenu {
         );
         const searchInput = this.#element.querySelector(
             ".start-menu__search-input"
+        );
+        const pinnedGrid = this.#element.querySelector(
+            ".start-menu__pinned-grid"
         );
         const profile = this.#element.querySelector(
             ".start-menu__profile"
