@@ -116,18 +116,9 @@
             transparent);
 }
 
-.video-player-app .plyr__video-embed iframe {
-    pointer-events: none;
-}
-
 .video-player-app .plyr__video-embed {
     overflow: hidden;
 }
-
-.video-player-app .plyr__video-embed iframe {
-    pointer-events: none;
-}
-
 
 /* ========================================
    Control Hover / Focus
