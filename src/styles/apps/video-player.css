@@ -1,0 +1,690 @@
+/* ========================================
+   Video Player App
+======================================== */
+
+.video-player-app {
+    position: relative;
+
+    display: flex;
+
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+
+    overflow: hidden;
+
+    background: var(--color-background);
+
+    --video-player-accent: var(--color-accent);
+    --video-player-accent-hover: var(--color-accent-hover);
+}
+
+
+/* ========================================
+   Plyr
+======================================== */
+
+.video-player-app .plyr {
+    flex: 1 1 auto;
+
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+
+    --plyr-color-main: var(--video-player-accent);
+    --plyr-video-background: var(--color-background);
+    --plyr-menu-background: var(--color-surface);
+    --plyr-menu-color: var(--color-text-primary);
+    --plyr-tooltip-background: var(--color-surface);
+    --plyr-tooltip-color: var(--color-text-primary);
+    --plyr-control-icon-size: 20px;
+}
+
+
+/* ========================================
+   Video
+======================================== */
+
+.video-player-app .plyr__video-wrapper {
+    background: #000;
+}
+
+.video-player-app video {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    background: #000;
+}
+
+/* ========================================
+   Fullscreen
+======================================== */
+
+.video-player-app .plyr:fullscreen video,
+.video-player-app .plyr.plyr--fullscreen-fallback video {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center center;
+
+    background: #000;
+}
+
+.video-player-app .plyr:fullscreen,
+.video-player-app .plyr.plyr--fullscreen-fallback {
+    background: #000;
+}
+
+.video-player-app .plyr:fullscreen .plyr__video-wrapper,
+.video-player-app .plyr.plyr--fullscreen-fallback .plyr__video-wrapper {
+    background: #000;
+}
+
+/* ========================================
+   Fullscreen Controls
+======================================== */
+
+.video-player-app .plyr__controls,
+.video-player-app .plyr__control--overlaid {
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease !important;
+}
+
+.video-player-app .plyr.video-player-app__fullscreen-controls-hidden .plyr__controls,
+.video-player-app .plyr.video-player-app__fullscreen-controls-hidden .plyr__control--overlaid {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none;
+}
+
+/* ========================================
+   Controls
+======================================== */
+
+.video-player-app .plyr__controls {
+    background:
+        linear-gradient(to top,
+            color-mix(in srgb,
+                var(--color-crust) 92%,
+                transparent),
+            transparent);
+}
+
+.video-player-app .plyr__video-embed iframe {
+    pointer-events: none;
+}
+
+.video-player-app .plyr__video-embed {
+    overflow: hidden;
+}
+
+.video-player-app .plyr__video-embed iframe {
+    pointer-events: none;
+}
+
+
+/* ========================================
+   Control Hover / Focus
+======================================== */
+
+.video-player-app .plyr__control:hover,
+.video-player-app .plyr__control:focus-visible {
+    background: var(--video-player-accent-hover);
+}
+
+.video-player-app .plyr__control.plyr__control--pressed {
+    background: var(--video-player-accent);
+}
+
+
+/* ========================================
+   Progress / Volume
+======================================== */
+
+.video-player-app .plyr__progress__buffer {
+    color: var(--color-surface-raised);
+}
+
+.video-player-app .plyr__volume input[type="range"],
+.video-player-app .plyr__progress input[type="range"] {
+    color: var(--video-player-accent);
+}
+
+/* ========================================
+   Drag & Drop
+======================================== */
+
+.video-player-app__drop-zone {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 30;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    box-sizing: border-box;
+
+    background:
+        color-mix(in srgb,
+            var(--color-background) 82%,
+            transparent);
+
+    opacity: 0;
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.18s ease,
+        visibility 0.18s ease;
+}
+
+.video-player-app--dragging .video-player-app__drop-zone {
+    opacity: 1;
+    visibility: visible;
+}
+
+.video-player-app--dragging .video-player-app__drop-zone-content {
+    transform: scale(1);
+    opacity: 1;
+
+    box-shadow:
+        0 12px 32px color-mix(in srgb,
+            var(--color-crust) 30%,
+            transparent),
+        0 0 0 4px color-mix(in srgb,
+            var(--color-accent) 12%,
+            transparent);
+}
+
+.video-player-app__drop-zone-content {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    width: min(420px, 100%);
+    min-height: 220px;
+
+    box-sizing: border-box;
+
+    padding: 32px;
+
+    border: 2px dashed var(--color-accent);
+    border-radius: 16px;
+
+    background:
+        color-mix(in srgb,
+            var(--color-surface) 92%,
+            transparent);
+
+    box-shadow:
+        0 12px 32px color-mix(in srgb,
+            var(--color-crust) 30%,
+            transparent);
+
+    text-align: center;
+
+    transform: scale(0.96);
+    opacity: 0;
+
+    transition:
+        transform 0.18s ease,
+        opacity 0.18s ease;
+}
+
+.video-player-app__drop-zone-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 64px;
+    height: 64px;
+
+    margin-bottom: 4px;
+
+    border-radius: 16px;
+
+    background:
+        color-mix(in srgb,
+            var(--color-accent) 14%,
+            transparent);
+
+    color: var(--color-accent);
+}
+
+.video-player-app__drop-zone-icon svg {
+    width: 36px;
+    height: 36px;
+
+    fill: none;
+
+    stroke: currentColor;
+    stroke-width: 2.5;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.video-player-app__drop-zone-title {
+    color: var(--color-text-primary);
+
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.video-player-app__drop-zone-description {
+    color: var(--color-text-secondary);
+
+    font-size: 13px;
+}
+
+/* ========================================
+   Menus
+======================================== */
+
+.video-player-app .plyr__menu__container {
+    border: 1px solid var(--color-border);
+
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+
+    box-shadow:
+        0 8px 24px color-mix(in srgb,
+            var(--color-crust) 35%,
+            transparent);
+}
+
+.video-player-app .plyr__menu__container .plyr__control--forward::after {
+    border-left-color: var(--color-text-secondary);
+}
+
+.video-player-app .plyr__menu__container .plyr__control--back::after {
+    border-right-color: var(--color-text-secondary);
+}
+
+
+/* ========================================
+   Tooltips
+======================================== */
+
+.video-player-app .plyr__tooltip {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+
+    border: 1px solid var(--color-border);
+}
+
+
+/* ========================================
+   Loading
+======================================== */
+
+.video-player-app .plyr--loading .plyr__control {
+    color: var(--color-text-primary);
+}
+
+/* ========================================
+   Empty State
+======================================== */
+
+.video-player-app__empty {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 2;
+
+    pointer-events: auto;
+
+    background: var(--color-background);
+}
+
+.video-player-app__empty-content {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    text-align: center;
+}
+
+.video-player-app__empty-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 84px;
+    height: 84px;
+
+    margin-bottom: 8px;
+
+    border-radius: 18px;
+
+    background:
+        color-mix(in srgb,
+            var(--color-accent) 12%,
+            transparent);
+
+    color: var(--color-accent);
+}
+
+.video-player-app__empty-icon svg {
+    width: 48px;
+    height: 48px;
+
+    fill: none;
+
+    stroke: currentColor;
+    stroke-width: 2.5;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.video-player-app__empty-icon svg path:last-child {
+    fill: currentColor;
+    stroke: none;
+}
+
+.video-player-app__empty-title {
+    margin-top: 4px;
+
+    color: var(--color-text-primary);
+
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.video-player-app__empty-description {
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+}
+
+.video-player-app__open-button {
+    pointer-events: auto;
+
+    margin-top: 12px;
+
+    padding: 9px 18px;
+
+    border: 1px solid var(--color-accent);
+    border-radius: 7px;
+
+    background: var(--color-accent);
+    color: var(--color-crust);
+
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.1s ease;
+}
+
+.video-player-app__open-button:hover {
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+}
+
+.video-player-app__open-button:active {
+    transform: translateY(1px);
+}
+
+.video-player-app__open-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.video-player-app__url-button {
+    margin-top: 12px;
+
+    padding: 9px 18px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 7px;
+
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.video-player-app__url-button:hover {
+    background: var(--color-surface-raised);
+}
+
+.video-player-app__url-dialog {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 20;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background: color-mix(in srgb,
+            var(--color-background) 72%,
+            transparent);
+}
+
+.video-player-app__url-dialog-content {
+    width: min(420px, 100%);
+
+    padding: 20px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+
+    background: var(--color-surface);
+
+    box-shadow: 0 12px 32px rgb(0 0 0 / 30%);
+}
+
+.video-player-app__url-dialog-title {
+    margin-bottom: 14px;
+
+    color: var(--color-text-primary);
+
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.video-player-app__url-input {
+    box-sizing: border-box;
+
+    width: 100%;
+
+    padding: 10px 12px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 7px;
+
+    outline: none;
+
+    background: var(--color-background);
+    color: var(--color-text-primary);
+
+    font: inherit;
+}
+
+.video-player-app__url-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+.video-player-app__url-input:focus {
+    border-color: var(--color-accent);
+}
+
+.video-player-app__url-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+
+    margin-top: 16px;
+}
+
+.video-player-app__url-cancel,
+.video-player-app__url-open {
+    padding: 8px 14px;
+
+    border-radius: 7px;
+
+    font: inherit;
+    cursor: pointer;
+}
+
+.video-player-app__url-cancel {
+    border: 1px solid var(--color-border);
+
+    background: var(--color-surface-raised);
+    color: var(--color-text-primary);
+}
+
+.video-player-app__url-open {
+    border: 1px solid var(--color-accent);
+
+    background: var(--color-accent);
+    color: var(--color-background);
+}
+
+/* ========================================
+   Loaded State
+======================================== */
+
+.video-player-app--loaded .video-player-app__empty {
+    display: none;
+}
+
+.video-player-app:not(.video-player-app--loaded) .plyr__control--overlaid {
+    display: none;
+}
+
+/* ========================================
+   Video Title
+======================================== */
+
+.video-player-app__title {
+    position: absolute;
+
+    top: 10px;
+    left: 14px;
+    right: 14px;
+
+    z-index: 20;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    color: var(--color-text-primary);
+
+    font-size: 14px;
+    font-weight: 500;
+
+    opacity: 0;
+
+    transition:
+        opacity 0.25s ease;
+}
+
+.video-player-app--loaded .video-player-app__title {
+    opacity: 1;
+}
+
+.video-player-app--loaded.video-player-app__fullscreen-controls-hidden .video-player-app__title {
+    opacity: 0;
+}
+
+/* ========================================
+   Video Title Text
+======================================== */
+
+.video-player-app__title-text {
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* ========================================
+   Close Video Button
+======================================== */
+
+.video-player-app__close-video {
+    position: relative;
+    z-index: 30;
+
+    flex: 0 0 auto;
+
+    width: 30px;
+    height: 30px;
+
+    margin-left: 12px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 7px;
+
+    background: color-mix(in srgb,
+            var(--color-surface) 90%,
+            transparent);
+
+    color: var(--color-text-secondary);
+
+    font: inherit;
+    font-size: 20px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    pointer-events: auto;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.video-player-app__close-video:hover {
+    background: var(--color-surface-raised);
+    color: var(--color-text-primary);
+}

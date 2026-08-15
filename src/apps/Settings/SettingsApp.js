@@ -14,10 +14,12 @@ export default class SettingsApp extends App {
 
     #window;
     #eventBus;
-    #settingsStore;
+    #autoplay;
     #activeCategory = "appearance";
     #activePage = "wallpaper";
     #searchQuery = "";
+
+    #settingsStore = null;
 
     #categories = [
         {
@@ -56,6 +58,20 @@ export default class SettingsApp extends App {
                     description: "Customize your desktop icons, grid, and spacing.",
                     render: (container) =>
                         this.#renderDesktopSettingsPage(container)
+                }
+            ]
+        },
+        {
+            id: "video-player",
+            name: "Video Player",
+            icon: "🎬",
+            pages: [
+                {
+                    id: "video-player-settings",
+                    name: "Video Player",
+                    description: "Customize video playback behavior.",
+                    render: (container) =>
+                        this.#renderVideoPlayerSettingsPage(container)
                 }
             ]
         },
@@ -132,6 +148,46 @@ export default class SettingsApp extends App {
         searchInput.addEventListener("input", () => {
             this.#searchQuery = searchInput.value;
             this.#renderNavigation();
+        });
+    }
+
+    #renderVideoPlayerSettingsPage(container) {
+        container.innerHTML = /*html*/`
+        <div class="settings__section">
+            <div class="settings__row">
+                <div class="settings__row-info">
+                    <div class="settings__row-title">
+                        Autoplay
+                    </div>
+
+                    <div class="settings__row-description">
+                        Automatically play videos when they are opened.
+                    </div>
+                </div>
+
+                <label class="settings__toggle">
+                    <input
+                        type="checkbox"
+                        class="settings__video-autoplay"
+                    >
+                    <span class="settings__toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    `;
+
+        const autoplayInput = container.querySelector(
+            ".settings__video-autoplay"
+        );
+
+        autoplayInput.checked =
+            this.#settingsStore.get("videoPlayer.autoplay");
+
+        autoplayInput.addEventListener("change", () => {
+            this.#settingsStore.set(
+                "videoPlayer.autoplay",
+                autoplayInput.checked
+            );
         });
     }
 

@@ -443,7 +443,6 @@ export default class StartMenu {
 
     open() {
         this.#previousFocusedElement = document.activeElement;
-        console.log("text")
 
         this.#isOpen = true;
         this.#element.style.display = "block";

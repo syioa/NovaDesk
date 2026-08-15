@@ -16,6 +16,9 @@ export default class SettingsStore {
             gridColumns: 8,
             iconSpacing: 16
         },
+        videoPlayer: {
+            autoplay: true
+        },
         system: {
             version: "3.2.1"
         }
@@ -56,6 +59,10 @@ export default class SettingsStore {
             desktop: {
                 ...defaults.desktop,
                 ...saved.desktop
+            },
+            videoPlayer: {
+                ...defaults.videoPlayer,
+                ...saved.videoPlayer
             },
             system: {
                 ...defaults.system,
@@ -125,6 +132,9 @@ export default class SettingsStore {
                 iconSize: 64,
                 gridColumns: 8,
                 iconSpacing: 16
+            },
+            videoPlayer: {
+                autoplay: true
             },
             system: {
                 version: "3.2.1"
