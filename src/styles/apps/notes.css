@@ -10,6 +10,68 @@
 }
 
 /* ========================================
+   Notes Editor Scrollbar
+======================================== */
+
+.notes__content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notes__content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.notes__content::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb,
+            var(--color-text-secondary) 40%,
+            transparent);
+    border-radius: 999px;
+}
+
+.notes__content::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb,
+            var(--color-accent) 65%,
+            transparent);
+}
+
+.notes__content {
+    scrollbar-width: thin;
+    scrollbar-color:
+        color-mix(in srgb, var(--color-text-secondary) 40%, transparent) transparent;
+}
+
+/* ========================================
+   Notes list scrollbar
+======================================== */
+
+.notes__list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notes__list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.notes__list::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb,
+            var(--color-text-secondary) 40%,
+            transparent);
+    border-radius: 999px;
+}
+
+.notes__list::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb,
+            var(--color-accent) 65%,
+            transparent);
+}
+
+.notes__list {
+    scrollbar-width: thin;
+    scrollbar-color:
+        color-mix(in srgb, var(--color-text-secondary) 40%, transparent) transparent;
+}
+
+/* ========================================
    Note Context Menu Actions
 ======================================== */
 
