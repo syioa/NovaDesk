@@ -143,6 +143,41 @@
 }
 
 /* ========================================
+   Weather Scrollbar
+======================================== */
+
+.weather-app {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-surface-raised) transparent;
+}
+
+/* Chromium / WebKit */
+
+.weather-app::-webkit-scrollbar {
+    width: 8px;
+}
+
+.weather-app::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.weather-app::-webkit-scrollbar-thumb {
+    background: var(--color-surface-raised);
+
+    border-radius: 999px;
+
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.weather-app::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border);
+
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+/* ========================================
    Header
 ======================================== */
 
@@ -170,6 +205,80 @@
 .weather-app__icon {
     font-size: 42px;
     line-height: 1;
+}
+
+/* ========================================
+   Controls
+======================================== */
+
+.weather-app__controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-bottom: 16px;
+}
+
+.weather-app__units {
+    display: flex;
+
+    padding: 2px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    background: var(--color-surface);
+}
+
+.weather-app__unit-button {
+    padding: 5px 9px;
+
+    border: 0;
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    color: var(--color-text-secondary);
+    background: transparent;
+
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.weather-app__unit-button:hover {
+    color: var(--color-text-primary);
+}
+
+.weather-app__unit-button.is-active {
+    color: var(--color-background);
+    background: var(--color-accent);
+}
+
+.weather-app__refresh {
+    padding: 7px 11px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    color: var(--color-text-primary);
+    background: var(--color-surface);
+
+    font: inherit;
+    font-size: 12px;
+}
+
+.weather-app__refresh:hover {
+    background: var(--color-surface-raised);
+}
+
+.weather-app__refresh:disabled {
+    cursor: wait;
+    opacity: 0.6;
 }
 
 /* ========================================

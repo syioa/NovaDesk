@@ -13,6 +13,10 @@ export default class WeatherApp extends App {
     #window = null;
     #city = null;
 
+    #unit = "celsius";
+    #currentWeatherData = null;
+    #currentLocation = null;
+
     async mount(window, eventBus, settingsStore) {
         super.mount(window);
 
@@ -27,6 +31,23 @@ export default class WeatherApp extends App {
             <button class="weather-app__search-button" type="button">
                 Search
             </button>
+        </div>
+        <div class="weather-app__controls">
+
+            <div class="weather-app__units">
+                <button class="weather-app__unit-button is-active" type="button" data-unit="celsius">
+                    °C
+                </button>
+
+                <button class="weather-app__unit-button" type="button" data-unit="fahrenheit">
+                    °F
+                </button>
+            </div>
+
+            <button class="weather-app__refresh" type="button" aria-label="Refresh weather">
+                ↻ Refresh
+            </button>
+
         </div>
 
         <div class="weather-app__search-results" data-weather="search-results"></div>
@@ -118,6 +139,26 @@ export default class WeatherApp extends App {
             }
         });
 
+        const refreshButton =
+            window.content.querySelector(
+                ".weather-app__refresh"
+            );
+
+        refreshButton.addEventListener("click", () => {
+            this.#refreshWeather();
+        });
+
+        const unitButtons =
+            window.content.querySelectorAll(
+                ".weather-app__unit-button"
+            );
+
+        unitButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                this.#setUnit(button.dataset.unit);
+            });
+        });
+
         const savedLocation =
             localStorage.getItem("novadesk-weather-location");
 
@@ -139,6 +180,8 @@ export default class WeatherApp extends App {
     }
 
     async #loadWeather(location) {
+        this.#currentLocation = location;
+
         try {
             const weatherResponse = await fetch(
                 `https://api.open-meteo.com/v1/forecast?` +
@@ -170,6 +213,7 @@ export default class WeatherApp extends App {
             }
 
             const weatherData = await weatherResponse.json();
+            this.#currentWeatherData = weatherData;
 
             this.#renderWeather(location, weatherData);
 
@@ -233,10 +277,14 @@ export default class WeatherApp extends App {
             condition.icon;
 
         temperatureElement.textContent =
-            `${Math.round(current.temperature_2m)}°`;
+            this.#formatTemperature(
+                current.temperature_2m
+            );
 
         feelsLikeElement.textContent =
-            `${Math.round(current.apparent_temperature)}°`;
+            this.#formatTemperature(
+                current.apparent_temperature
+            );
 
         humidityElement.textContent =
             `${Math.round(current.relative_humidity_2m)}%`;
@@ -245,6 +293,29 @@ export default class WeatherApp extends App {
             `${Math.round(current.wind_speed_10m)} km/h`;
 
         this.#renderForecast(daily);
+    }
+
+    async #refreshWeather() {
+        if (!this.#currentLocation) {
+            return;
+        }
+
+        const button =
+            this.#window.content.querySelector(
+                ".weather-app__refresh"
+            );
+
+        button.disabled = true;
+        button.textContent = "↻ Refreshing...";
+
+        try {
+            await this.#loadWeather(
+                this.#currentLocation
+            );
+        } finally {
+            button.disabled = false;
+            button.textContent = "↻ Refresh";
+        }
     }
 
     #renderForecast(daily) {
@@ -289,9 +360,13 @@ export default class WeatherApp extends App {
                 </span>
 
                 <span class="weather-app__forecast-temperature">
-                    ${Math.round(daily.temperature_2m_max[i])}°
+                    ${this.#formatTemperature(
+                daily.temperature_2m_max[i]
+            )}
                     /
-                    ${Math.round(daily.temperature_2m_min[i])}°
+                    ${this.#formatTemperature(
+                daily.temperature_2m_min[i]
+            )}
                 </span>
             `;
 
@@ -559,6 +634,53 @@ export default class WeatherApp extends App {
         locationElement.textContent = "Weather unavailable";
         conditionElement.textContent = "Unable to load weather";
         temperatureElement.textContent = "--°";
+    }
+
+    #setUnit(unit) {
+        if (
+            unit !== "celsius" &&
+            unit !== "fahrenheit"
+        ) {
+            return;
+        }
+
+        this.#unit = unit;
+
+        const buttons =
+            this.#window.content.querySelectorAll(
+                ".weather-app__unit-button"
+            );
+
+        buttons.forEach((button) => {
+            button.classList.toggle(
+                "is-active",
+                button.dataset.unit === unit
+            );
+        });
+
+        if (
+            this.#currentWeatherData &&
+            this.#currentLocation
+        ) {
+            this.#renderWeather(
+                this.#currentLocation,
+                this.#currentWeatherData
+            );
+        }
+    }
+
+    #convertTemperature(celsius) {
+        if (this.#unit === "fahrenheit") {
+            return (Math.round(celsius) * 9 / 5) + 32;
+        }
+
+        return celsius;
+    }
+
+    #formatTemperature(value) {
+        return `${Math.round(
+            this.#convertTemperature(value)
+        )}°`;
     }
 
     unmount() {
