@@ -11,6 +11,7 @@ export default class WeatherApp extends App {
     };
 
     #window = null;
+    #city = null;
 
     async mount(window, eventBus, settingsStore) {
         super.mount(window);
@@ -18,112 +19,127 @@ export default class WeatherApp extends App {
         this.#window = window;
 
         window.content.innerHTML = `
-            <div class="weather-app">
+    <div class="weather-app">
 
-                <div class="weather-app__header">
-                    <div>
-                        <div class="weather-app__location">
-                            Loading...
-                        </div>
+        <div class="weather-app__search">
+            <input class="weather-app__search-input" type="text" placeholder="Search city..." autocomplete="off" />
 
-                        <div class="weather-app__condition">
-                            Loading weather...
-                        </div>
-                    </div>
+            <button class="weather-app__search-button" type="button">
+                Search
+            </button>
+        </div>
 
-                    <div class="weather-app__icon" aria-hidden="true">
-                        🌤️
-                    </div>
+        <div class="weather-app__search-results" data-weather="search-results"></div>
+
+        <div class="weather-app__header">
+            <div>
+                <div class="weather-app__location">
+                    Loading...
                 </div>
 
-                <div class="weather-app__temperature">
-                    --°
+                <div class="weather-app__condition">
+                    Loading weather...
                 </div>
-
-                <div class="weather-app__details">
-
-                    <div class="weather-app__detail">
-                        <span class="weather-app__detail-label">
-                            Feels like
-                        </span>
-
-                        <span class="weather-app__detail-value"
-                              data-weather="feels-like">
-                            --°
-                        </span>
-                    </div>
-
-                    <div class="weather-app__detail">
-                        <span class="weather-app__detail-label">
-                            Humidity
-                        </span>
-
-                        <span class="weather-app__detail-value"
-                              data-weather="humidity">
-                            --%
-                        </span>
-                    </div>
-
-                    <div class="weather-app__detail">
-                        <span class="weather-app__detail-label">
-                            Wind
-                        </span>
-
-                        <span class="weather-app__detail-value"
-                              data-weather="wind">
-                            -- km/h
-                        </span>
-                    </div>
-
-                </div>
-
-                <div class="weather-app__forecast">
-
-                    <div class="weather-app__forecast-title">
-                        Forecast
-                    </div>
-
-                    <div
-                        class="weather-app__forecast-list"
-                        data-weather="forecast"
-                    ></div>
-
-                </div>
-
             </div>
-        `;
 
-        await this.#loadWeather();
-    }
+            <div class="weather-app__icon" aria-hidden="true">
+                🌤️
+            </div>
+        </div>
 
-    async #loadWeather() {
-        // Change this city for testing.
-        const city = "New Delhi";
+        <div class="weather-app__temperature">
+            --°
+        </div>
 
-        try {
-            const locationResponse = await fetch(
-                `https://geocoding-api.open-meteo.com/v1/search?` +
-                new URLSearchParams({
-                    name: city,
-                    count: "1",
-                    language: "en",
-                    format: "json",
-                    countryCode: "IN"
-                })
+        <div class="weather-app__details">
+
+            <div class="weather-app__detail">
+                <span class="weather-app__detail-label">
+                    Feels like
+                </span>
+
+                <span class="weather-app__detail-value" data-weather="feels-like">
+                    --°
+                </span>
+            </div>
+
+            <div class="weather-app__detail">
+                <span class="weather-app__detail-label">
+                    Humidity
+                </span>
+
+                <span class="weather-app__detail-value" data-weather="humidity">
+                    --%
+                </span>
+            </div>
+
+            <div class="weather-app__detail">
+                <span class="weather-app__detail-label">
+                    Wind
+                </span>
+
+                <span class="weather-app__detail-value" data-weather="wind">
+                    -- km/h
+                </span>
+            </div>
+
+        </div>
+
+        <div class="weather-app__forecast">
+
+            <div class="weather-app__forecast-title">
+                Forecast
+            </div>
+
+            <div class="weather-app__forecast-list" data-weather="forecast"></div>
+
+        </div>
+
+    </div>
+    `;
+
+        const searchInput =
+            window.content.querySelector(
+                ".weather-app__search-input"
             );
 
-            if (!locationResponse.ok) {
-                throw new Error("Failed to find location.");
+        const searchButton =
+            window.content.querySelector(
+                ".weather-app__search-button"
+            );
+
+        searchButton.addEventListener("click", () => {
+            this.#searchCity(searchInput.value);
+        });
+
+        searchInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                this.#searchCity(searchInput.value);
             }
+        });
 
-            const locationData = await locationResponse.json();
+        const savedLocation =
+            localStorage.getItem("novadesk-weather-location");
 
-            if (!locationData.results?.length) {
-                throw new Error("Location not found.");
+        if (savedLocation) {
+            try {
+                const location = JSON.parse(savedLocation);
+
+                await this.#loadWeather(location);
+            } catch {
+                localStorage.removeItem(
+                    "novadesk-weather-location"
+                );
+
+                await this.#searchCity("New Delhi");
             }
+        } else {
+            await this.#searchCity("New Delhi");
+        }
+    }
 
-            const location = locationData.results[0];
-
+    async #loadWeather(location) {
+        try {
             const weatherResponse = await fetch(
                 `https://api.open-meteo.com/v1/forecast?` +
                 new URLSearchParams({
@@ -395,6 +411,133 @@ export default class WeatherApp extends App {
             description: "Unknown",
             icon: "🌡️"
         };
+    }
+
+    async #searchCity(city) {
+        city = city.trim();
+
+        if (!city) {
+            return;
+        }
+
+        const resultsElement =
+            this.#window.content.querySelector(
+                '[data-weather="search-results"]'
+            );
+
+        resultsElement.innerHTML = `
+        <div class="weather-app__search-loading">
+            Searching...
+        </div>
+    `;
+
+        try {
+            const response = await fetch(
+                `https://geocoding-api.open-meteo.com/v1/search?` +
+                new URLSearchParams({
+                    name: city,
+                    count: "5",
+                    language: "en",
+                    format: "json"
+                })
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to search location.");
+            }
+
+            const data = await response.json();
+
+            if (!data.results?.length) {
+                resultsElement.innerHTML = `
+                <div class="weather-app__search-empty">
+                    No cities found.
+                </div>
+            `;
+
+                return;
+            }
+
+            this.#renderSearchResults(data.results);
+
+        } catch (error) {
+            console.error("Weather search:", error);
+
+            resultsElement.innerHTML = `
+            <div class="weather-app__search-empty">
+                Unable to search for cities.
+            </div>
+        `;
+        }
+    }
+
+    async #selectCity(location) {
+        const resultsElement =
+            this.#window.content.querySelector(
+                '[data-weather="search-results"]'
+            );
+
+        const searchInput =
+            this.#window.content.querySelector(
+                ".weather-app__search-input"
+            );
+
+        searchInput.value = location.name;
+
+        resultsElement.innerHTML = "";
+
+        this.#city = location.name;
+
+        localStorage.setItem(
+            "novadesk-weather-location",
+            JSON.stringify({
+                name: location.name,
+                latitude: location.latitude,
+                longitude: location.longitude,
+                country: location.country,
+                country_code: location.country_code,
+                admin1: location.admin1
+            })
+        );
+
+        await this.#loadWeather(location);
+    }
+
+    #renderSearchResults(results) {
+        const resultsElement =
+            this.#window.content.querySelector(
+                '[data-weather="search-results"]'
+            );
+
+        resultsElement.innerHTML = "";
+
+        for (const location of results) {
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.className =
+                "weather-app__search-result";
+
+            const region = location.admin1
+                ? `${location.admin1}, `
+                : "";
+
+            button.innerHTML = `
+            <span class="weather-app__search-result-name">
+                ${location.name}
+            </span>
+
+            <span class="weather-app__search-result-location">
+                ${region}${location.country}
+            </span>
+        `;
+
+            button.addEventListener("click", async () => {
+                await this.#selectCity(location);
+            });
+
+            resultsElement.appendChild(button);
+        }
     }
 
     #showError() {
