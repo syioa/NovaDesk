@@ -138,7 +138,6 @@
     background: var(--video-player-accent);
 }
 
-
 /* ========================================
    Progress / Volume
 ======================================== */
@@ -315,7 +314,6 @@
     border-right-color: var(--color-text-secondary);
 }
 
-
 /* ========================================
    Tooltips
 ======================================== */
@@ -326,7 +324,6 @@
 
     border: 1px solid var(--color-border);
 }
-
 
 /* ========================================
    Loading
@@ -580,6 +577,18 @@
 
     background: var(--color-accent);
     color: var(--color-background);
+}
+
+.video-player-app--error .video-player-app__empty {
+    display: flex;
+}
+
+.video-player-app--error .video-player-app__title {
+    opacity: 1;
+}
+
+.video-player-app--error .video-player-app__title-text {
+    opacity: 0;
 }
 
 /* ========================================

@@ -162,7 +162,6 @@ export default class VideoPlayerApp extends App {
 
             settings: [
                 "speed",
-                "loop",
             ],
 
             youtube: {
@@ -170,6 +169,10 @@ export default class VideoPlayerApp extends App {
                 modestbranding: 1,
                 rel: 0,
             },
+        });
+
+        this.#player.on("error", () => {
+            this.#showVideoError();
         });
 
 
@@ -425,6 +428,15 @@ export default class VideoPlayerApp extends App {
 
                 dialog.remove();
             });
+            input.addEventListener("keydown", (event) => {
+                if (event.key !== "Enter") {
+                    return;
+                }
+
+                event.preventDefault();
+
+                openButton.click();
+            });
 
             input.focus();
         };
@@ -521,6 +533,10 @@ export default class VideoPlayerApp extends App {
     }
 
     #loadVideo(file) {
+        this.#element.classList.remove(
+            "video-player-app--error"
+        );
+
         this.#autoplay =
             this.#settingsStore.get("videoPlayer.autoplay");
 
@@ -579,11 +595,55 @@ export default class VideoPlayerApp extends App {
     }
 
     #loadVideoUrl(url) {
+        const emptyTitle = this.#element.querySelector(
+            ".video-player-app__empty-title"
+        );
+
+        const emptyDescription = this.#element.querySelector(
+            ".video-player-app__empty-description"
+        );
+
+        const openActions = this.#element.querySelector(
+            ".video-player-app__open-actions"
+        );
+
+        this.#element.classList.remove(
+            "video-player-app--error"
+        );
+
+        if (emptyTitle) {
+            emptyTitle.textContent = "Unable to play video";
+        }
+
+        if (emptyDescription) {
+            emptyDescription.textContent =
+                "The video URL could not be loaded.";
+        }
+
+        if (openActions) {
+            openActions.style.display = "none";
+        }
+
         this.#autoplay =
             this.#settingsStore.get("videoPlayer.autoplay");
 
         if (this.#isYouTubeUrl(url)) {
             const videoId = this.#getYouTubeVideoId(url);
+
+            if (
+                !videoId ||
+                !/^[a-zA-Z0-9_-]{11}$/.test(videoId)
+            ) {
+                this.#element.classList.remove(
+                    "video-player-app--loaded"
+                );
+
+                this.#element.classList.add(
+                    "video-player-app--error"
+                );
+
+                return;
+            }
 
             if (!videoId) {
                 return;
@@ -591,16 +651,22 @@ export default class VideoPlayerApp extends App {
 
             this.#titleTextElement.textContent = "YouTube";
 
-            this.#player.source = {
-                type: "video",
-                title: "YouTube",
-                sources: [
-                    {
-                        src: videoId,
-                        provider: "youtube",
-                    },
-                ],
-            };
+            try {
+                this.#player.source = {
+                    type: "video",
+                    title: "YouTube",
+                    sources: [
+                        {
+                            src: videoId,
+                            provider: "youtube",
+                        },
+                    ],
+                };
+            } catch (error) {
+                this.#showVideoError();
+                return;
+            }
+            console.log("Plyr YouTube player:", this.#player.embed);
 
             this.#element.classList.add(
                 "video-player-app--loaded"
@@ -708,7 +774,47 @@ export default class VideoPlayerApp extends App {
         this.#titleTextElement.textContent = "";
 
         this.#element.classList.remove(
+            "video-player-app--loaded",
+            "video-player-app--error"
+        );
+        const emptyTitle = this.#element.querySelector(
+            ".video-player-app__empty-title"
+        );
+
+        const emptyDescription = this.#element.querySelector(
+            ".video-player-app__empty-description"
+        );
+
+        const openActions = this.#element.querySelector(
+            ".video-player-app__open-actions"
+        );
+
+        if (emptyTitle) {
+            emptyTitle.textContent = "No video playing";
+        }
+
+        if (emptyDescription) {
+            emptyDescription.textContent =
+                "Select or Drop a video here to play";
+        }
+
+        if (openActions) {
+            openActions.style.display = "";
+        }
+
+        this.#element.classList.remove(
+            "video-player-app--loaded",
+            "video-player-app--error"
+        );
+    }
+
+    #showVideoError() {
+        this.#element.classList.remove(
             "video-player-app--loaded"
+        );
+
+        this.#element.classList.add(
+            "video-player-app--error"
         );
     }
 
