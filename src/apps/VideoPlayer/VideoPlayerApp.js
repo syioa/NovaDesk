@@ -60,7 +60,7 @@ export default class VideoPlayerApp extends App {
         <div class="video-player-app__empty-content">
 
             <div class="video-player-app__empty-icon" aria-hidden="true">
-                <svg viewBox="0 0 64 64">
+                <svg viewBox="0 0 64 64" width="1em" height="1em">
                     <rect x="8" y="14" width="38" height="36" rx="7"></rect>
                     <path d="M46 25L57 19V45L46 39Z"></path>
                     <path d="M24 25L35 32L24 39Z"></path>
@@ -163,7 +163,6 @@ export default class VideoPlayerApp extends App {
             settings: [
                 "speed",
                 "loop",
-                "quality",
             ],
 
             youtube: {
@@ -534,11 +533,11 @@ export default class VideoPlayerApp extends App {
 
         this.#player.source = {
             type: "video",
-            title: "YouTube",
+            title: file.name,
             sources: [
                 {
-                    src: videoId,
-                    provider: "youtube",
+                    src: this.#videoUrl,
+                    type: file.type,
                 },
             ],
         };
@@ -550,7 +549,10 @@ export default class VideoPlayerApp extends App {
         if (this.#autoplay) {
             const playResult = this.#player.play();
 
-            if (playResult && typeof playResult.catch === "function") {
+            if (
+                playResult &&
+                typeof playResult.catch === "function"
+            ) {
                 playResult.catch(() => {
                     // Browser may block autoplay.
                 });
@@ -603,6 +605,16 @@ export default class VideoPlayerApp extends App {
             this.#element.classList.add(
                 "video-player-app--loaded"
             );
+
+            if (this.#autoplay) {
+                this.#player.once("ready", () => {
+                    this.#player.play().catch(() => { });
+                });
+            } else {
+                this.#player.once("ready", () => {
+                    this.#player.pause();
+                });
+            }
 
             return;
         }

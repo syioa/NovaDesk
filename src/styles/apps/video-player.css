@@ -96,6 +96,11 @@
         visibility 0.25s ease !important;
 }
 
+.video-player-app .plyr__control--overlaid svg {
+    width: 1.8rem;
+    height: 1.8rem;
+}
+
 .video-player-app .plyr.video-player-app__fullscreen-controls-hidden .plyr__controls,
 .video-player-app .plyr.video-player-app__fullscreen-controls-hidden .plyr__control--overlaid {
     opacity: 0 !important;

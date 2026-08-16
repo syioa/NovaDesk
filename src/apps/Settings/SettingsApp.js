@@ -165,12 +165,10 @@ export default class SettingsApp extends App {
                     </div>
                 </div>
 
-                <label class="settings__toggle">
-                    <input
-                        type="checkbox"
-                        class="settings__video-autoplay"
-                    >
-                    <span class="settings__toggle-slider"></span>
+                <label class="settings__toggle settings__toggle--switch-only">
+                    <input type="checkbox" class="settings__toggle-input settings__video-autoplay">
+                    <span class="settings__toggle-track"></span>
+                    <span class="settings__toggle-thumb"></span>
                 </label>
             </div>
         </div>

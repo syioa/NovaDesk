@@ -480,6 +480,32 @@
     overflow-x: hidden;
 }
 
+/* ========================================
+   Settings Navigation Scrollbar
+======================================== */
+
+.settings__navigation {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+}
+
+.settings__navigation::-webkit-scrollbar {
+    width: 6px;
+}
+
+.settings__navigation::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.settings__navigation::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 999px;
+}
+
+.settings__navigation::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+}
+
 .settings__category {
     margin-bottom: 10px;
 }
@@ -904,6 +930,89 @@
 
 .settings__toggle-input:checked~.settings__toggle-thumb {
     left: calc(100% - 26px);
+}
+
+/* ========================================
+   Standalone Toggle
+======================================== */
+
+.settings__toggle--switch-only {
+    position: relative;
+
+    width: 48px;
+    height: 28px;
+
+    padding: 0;
+
+    flex-shrink: 0;
+}
+
+.settings__toggle--switch-only .settings__toggle-track {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 48px;
+    height: 28px;
+}
+
+.settings__toggle--switch-only .settings__toggle-thumb {
+    position: absolute;
+
+    top: 2px;
+    left: 2px;
+}
+
+/* ========================================
+   Video Player Settings
+======================================== */
+
+.settings__section {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.settings__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    padding: 18px 20px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+
+    background: var(--color-surface);
+
+    box-sizing: border-box;
+}
+
+.settings__row-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.settings__row-title {
+    margin-bottom: 5px;
+
+    color: var(--color-text-primary);
+
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.settings__row-description {
+    color: var(--color-text-muted);
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.settings__row>.settings__toggle {
+    flex-shrink: 0;
 }
 
 /* ========================================
@@ -1557,12 +1666,29 @@
 }
 
 /* ========================================
-   Scrollbars
+   Settings Page Scrollbar
 ======================================== */
 
-.settings__navigation,
 .settings__page {
     scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+}
+
+.settings__page::-webkit-scrollbar {
+    width: 6px;
+}
+
+.settings__page::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.settings__page::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 999px;
+}
+
+.settings__page::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
 }
 
 /* ========================================
