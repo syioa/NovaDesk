@@ -154,6 +154,7 @@ export default class SettingsApp extends App {
     #renderVideoPlayerSettingsPage(container) {
         container.innerHTML = /*html*/`
         <div class="settings__section">
+
             <div class="settings__row">
                 <div class="settings__row-info">
                     <div class="settings__row-title">
@@ -166,11 +167,36 @@ export default class SettingsApp extends App {
                 </div>
 
                 <label class="settings__toggle settings__toggle--switch-only">
-                    <input type="checkbox" class="settings__toggle-input settings__video-autoplay">
+                    <input
+                        type="checkbox"
+                        class="settings__toggle-input settings__video-autoplay"
+                    >
                     <span class="settings__toggle-track"></span>
                     <span class="settings__toggle-thumb"></span>
                 </label>
             </div>
+
+            <div class="settings__row">
+                <div class="settings__row-info">
+                    <div class="settings__row-title">
+                        Loop
+                    </div>
+
+                    <div class="settings__row-description">
+                        Automatically replay videos when they end.
+                    </div>
+                </div>
+
+                <label class="settings__toggle settings__toggle--switch-only">
+                    <input
+                        type="checkbox"
+                        class="settings__toggle-input settings__video-loop"
+                    >
+                    <span class="settings__toggle-track"></span>
+                    <span class="settings__toggle-thumb"></span>
+                </label>
+            </div>
+
         </div>
     `;
 
@@ -185,6 +211,20 @@ export default class SettingsApp extends App {
             this.#settingsStore.set(
                 "videoPlayer.autoplay",
                 autoplayInput.checked
+            );
+        });
+
+        const loopInput = container.querySelector(
+            ".settings__video-loop"
+        );
+
+        loopInput.checked =
+            this.#settingsStore.get("videoPlayer.loop");
+
+        loopInput.addEventListener("change", () => {
+            this.#settingsStore.set(
+                "videoPlayer.loop",
+                loopInput.checked
             );
         });
     }

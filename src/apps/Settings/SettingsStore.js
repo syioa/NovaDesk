@@ -17,7 +17,8 @@ export default class SettingsStore {
             iconSpacing: 16
         },
         videoPlayer: {
-            autoplay: true
+            autoplay: true,
+            loop: false
         },
         system: {
             version: "3.2.1"
@@ -134,7 +135,8 @@ export default class SettingsStore {
                 iconSpacing: 16
             },
             videoPlayer: {
-                autoplay: true
+                autoplay: true,
+                loop: false
             },
             system: {
                 version: "3.2.1"

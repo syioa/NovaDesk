@@ -13,6 +13,7 @@ export default class VideoPlayerApp extends App {
     #openButtonHandler = null;
 
     #autoplay = true;
+    #loop = false;
     #settingsStore = null;
 
     #urlButton = null;
@@ -53,6 +54,8 @@ export default class VideoPlayerApp extends App {
 
         this.#autoplay =
             this.#settingsStore.get("videoPlayer.autoplay");
+        this.#loop =
+            this.#settingsStore.get("videoPlayer.loop");
 
         window.content.innerHTML = /*html*/`    
     <div class="video-player-app">
@@ -155,6 +158,7 @@ export default class VideoPlayerApp extends App {
                 "current-time",
                 "mute",
                 "volume",
+                "loop",
                 "settings",
                 "pip",
                 "fullscreen",
@@ -558,6 +562,8 @@ export default class VideoPlayerApp extends App {
             ],
         };
 
+        this.#player.loop = this.#loop;
+
         this.#element.classList.add(
             "video-player-app--loaded"
         );
@@ -627,6 +633,9 @@ export default class VideoPlayerApp extends App {
         this.#autoplay =
             this.#settingsStore.get("videoPlayer.autoplay");
 
+        this.#loop =
+            this.#settingsStore.get("videoPlayer.loop");
+
         if (this.#isYouTubeUrl(url)) {
             const videoId = this.#getYouTubeVideoId(url);
 
@@ -666,7 +675,8 @@ export default class VideoPlayerApp extends App {
                 this.#showVideoError();
                 return;
             }
-            console.log("Plyr YouTube player:", this.#player.embed);
+
+            this.#player.loop = this.#loop;
 
             this.#element.classList.add(
                 "video-player-app--loaded"
@@ -697,6 +707,8 @@ export default class VideoPlayerApp extends App {
                 },
             ],
         };
+
+        this.#player.loop = this.#loop; 
 
         this.#element.classList.add(
             "video-player-app--loaded"
