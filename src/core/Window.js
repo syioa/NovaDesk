@@ -626,6 +626,8 @@ export default class Window {
                 // Normal side snap
                 this.#isSnapped = true;
 
+                this.#element.classList.add("window--snapped");
+
                 this.#x = rect.x;
                 this.#y = rect.y;
                 this.#width = rect.width;
@@ -753,6 +755,8 @@ export default class Window {
         this.#restoreBounds = null;
         this.#isSnapped = false;
         this.#snapType = null;
+
+        this.#element.classList.remove("window--snapped");
 
         this.#setState(WindowState.NORMAL);
     }
