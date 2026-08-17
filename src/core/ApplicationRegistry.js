@@ -3,6 +3,7 @@ import NotesApp from "../apps/Notes/NotesApp.js";
 import SettingsApp from "../apps/Settings/SettingsApp.js";
 import VideoPlayerApp from "../apps/VideoPlayer/VideoPlayerApp.js";
 import WeatherApp from "../apps/Weather/WeatherApp.js";
+import CalculatorApp from "../apps/calculator/CalculatorApp.js";
 
 export default class ApplicationRegistry {
     #apps = new Map();
@@ -13,6 +14,7 @@ export default class ApplicationRegistry {
         this.register(SettingsApp);
         this.register(VideoPlayerApp);
         this.register(WeatherApp);
+        this.register(CalculatorApp);
     }
 
     register(AppClass) {

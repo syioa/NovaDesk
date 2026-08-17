@@ -1,0 +1,291 @@
+/* ========================================
+   Calculator App
+======================================== */
+
+.calculator-app {
+    width: 100%;
+    height: 100%;
+
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 20px;
+
+    overflow: hidden;
+
+    color: var(--color-text-primary);
+    background: var(--color-background);
+}
+
+/* ========================================
+   Display
+======================================== */
+
+.calculator-app__display {
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-end;
+    justify-content: flex-end;
+
+    min-height: 110px;
+
+    padding: 0 6px 18px;
+
+    box-sizing: border-box;
+}
+
+.calculator-app__expression {
+    width: 100%;
+
+    min-height: 18px;
+
+    margin-bottom: 7px;
+
+    overflow: hidden;
+
+    color: var(--color-text-muted);
+
+    font-size: 12px;
+    font-weight: 400;
+
+    letter-spacing: 0.04em;
+
+    text-align: right;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.calculator-app__value {
+    width: 100%;
+
+    overflow: hidden;
+
+    color: var(--color-text-primary);
+
+    font-size: 60px;
+    font-weight: 300;
+
+    line-height: 1;
+
+    letter-spacing: -0.02em;
+
+    text-align: right;
+
+    word-break: break-all;
+
+    transition:
+        font-size 0.15s ease,
+        color 0.15s ease;
+}
+
+.calculator-app__value.is-medium {
+    font-size: 44px;
+}
+
+.calculator-app__value.is-small {
+    font-size: 32px;
+}
+
+.calculator-app__value.is-error {
+    color: var(--color-accent);
+}
+
+/* ========================================
+   Keypad
+======================================== */
+
+.calculator-app__keypad {
+    flex: 1;
+
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 10px;
+
+    min-height: 0;
+}
+
+/* ========================================
+   Buttons
+======================================== */
+
+.calculator-app__button {
+    min-width: 0;
+    min-height: 0;
+
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+
+    cursor: pointer;
+
+    color: var(--color-text-primary);
+    background: var(--color-surface);
+
+    font: inherit;
+    font-size: 18px;
+    font-weight: 400;
+
+    outline: none;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.16);
+
+    transition:
+        background 0.12s ease,
+        border-color 0.12s ease,
+        transform 0.12s ease,
+        box-shadow 0.12s ease;
+}
+
+.calculator-app__button:hover {
+    background: var(--color-surface-raised);
+
+    transform: scale(1.025);
+
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.calculator-app__button:active {
+    transform: scale(0.96);
+}
+
+/* ========================================
+   Function Buttons
+======================================== */
+
+.calculator-app__button--function {
+    color: var(--color-text-primary);
+
+    background: var(--color-surface-raised);
+
+    font-size: 16px;
+}
+
+.calculator-app__button--function:hover {
+    background: var(--color-border);
+}
+
+/* ========================================
+   Operator Buttons
+======================================== */
+
+.calculator-app__button--operator {
+    color: var(--color-background);
+    background: var(--color-accent);
+
+    border-color: transparent;
+
+    font-size: 22px;
+    font-weight: 500;
+
+    box-shadow:
+        0 4px 14px color-mix(in srgb,
+            var(--color-accent) 30%,
+            transparent);
+}
+
+.calculator-app__button--operator:hover {
+    background: var(--color-accent-hover);
+
+    box-shadow:
+        0 5px 16px color-mix(in srgb,
+            var(--color-accent) 38%,
+            transparent);
+}
+
+.calculator-app__button--operator.is-active {
+    color: var(--color-accent);
+
+    background: var(--color-background);
+
+    border-color: var(--color-accent);
+}
+
+/* ========================================
+   Equals Button
+======================================== */
+
+.calculator-app__button--equals {
+    color: var(--color-background);
+    background: var(--color-accent);
+
+    border-color: transparent;
+
+    font-size: 22px;
+    font-weight: 500;
+
+    box-shadow:
+        0 4px 14px color-mix(in srgb,
+            var(--color-accent) 30%,
+            transparent);
+}
+
+.calculator-app__button--equals:hover {
+    background: var(--color-accent-hover);
+
+    box-shadow:
+        0 5px 16px color-mix(in srgb,
+            var(--color-accent) 38%,
+            transparent);
+}
+
+/* ========================================
+   Zero Button
+======================================== */
+
+.calculator-app__button--zero {
+    grid-column: span 2;
+}
+
+/* ========================================
+   Focus
+======================================== */
+
+.calculator-app__button:focus-visible {
+    border-color: var(--color-accent);
+
+    box-shadow:
+        0 0 0 2px color-mix(in srgb,
+            var(--color-accent) 25%,
+            transparent);
+}
+
+/* ========================================
+   Scrollbar
+======================================== */
+
+.calculator-app {
+    scrollbar-width: thin;
+    scrollbar-color:
+        var(--color-surface-raised) transparent;
+}
+
+.calculator-app::-webkit-scrollbar {
+    width: 8px;
+}
+
+.calculator-app::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.calculator-app::-webkit-scrollbar-thumb {
+    background: var(--color-surface-raised);
+
+    border-radius: 999px;
+
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.calculator-app::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border);
+
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}

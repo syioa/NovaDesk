@@ -62,6 +62,9 @@ export default class Window {
         this.#width = options.width ?? 500;
         this.#height = options.height ?? 350;
 
+        this.#minWidth = options.minWidth ?? 200;
+        this.#minHeight = options.minHeight ?? 120;
+
         this.#x = options.x ?? 100;
         this.#y = options.y ?? 100;
 

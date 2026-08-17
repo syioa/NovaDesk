@@ -36,7 +36,9 @@ export default class AppManager {
         const window = this.#windowManager.create({
             title: manifest.name,
             width: manifest.width,
-            height: manifest.height
+            height: manifest.height,
+            minWidth: manifest.minWidth,
+            minHeight: manifest.minHeight,
         });
 
         const app = new AppClass();
