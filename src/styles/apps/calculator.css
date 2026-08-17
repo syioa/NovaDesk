@@ -91,7 +91,7 @@
 }
 
 .calculator-app__value.is-error {
-    color: var(--color-accent);
+    color: var(--color-danger);
 }
 
 /* ========================================
