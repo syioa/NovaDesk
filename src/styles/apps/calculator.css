@@ -149,6 +149,7 @@
 
     box-shadow:
         0 4px 12px rgba(0, 0, 0, 0.2);
+
 }
 
 .calculator-app__button:active {
@@ -288,4 +289,140 @@
 
     border: 2px solid transparent;
     background-clip: padding-box;
+}
+
+/* ========================================
+   Calculator Modes
+======================================== */
+
+.calculator-app__scientific {
+    display: none;
+
+    flex: 1;
+
+    min-height: 0;
+}
+
+/* ========================================
+   Scientific Mode
+======================================== */
+
+.window--maximized .calculator-app__keypad--basic {
+    display: none;
+}
+
+.window--maximized .calculator-app__scientific {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ========================================
+   Scientific Keypad
+======================================== */
+
+.calculator-app__scientific-keypad {
+    width: 100%;
+    height: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(7, minmax(0, 1fr));
+
+    grid-template-rows:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 8px;
+}
+
+/* ========================================
+   Scientific Buttons
+======================================== */
+
+.calculator-app__button--scientific {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+/* ========================================
+   Scientific Angle Mode
+======================================== */
+
+.calculator-app__button[data-type="angle"] {
+    color: var(--color-text-secondary);
+
+    background: var(--color-surface-raised);
+}
+
+.calculator-app__button[data-type="angle"]:hover {
+    color: var(--color-text-primary);
+
+    background: var(--color-border);
+}
+
+.calculator-app__button[data-type="angle"].is-active {
+    color: var(--color-accent);
+
+    border-color: var(--color-accent);
+}
+
+/* ========================================
+   Scientific Zero
+======================================== */
+
+.calculator-app__scientific-keypad .calculator-app__button--zero {
+    grid-column: span 2;
+}
+
+/* ========================================
+   Maximized Calculator Layout
+======================================== */
+
+.window--maximized .calculator-app {
+    padding: 20px 24px;
+}
+
+.window--maximized .calculator-app__display {
+    min-height: 110px;
+    flex-shrink: 0;
+}
+
+/* ========================================
+   Scientific Bottom Row
+======================================== */
+
+.calculator-app__scientific-keypad .calculator-app__button[data-type="fn"][data-value="sign"] {
+    grid-row: 5;
+    grid-column: 1;
+}
+
+.calculator-app__scientific-keypad .calculator-app__button[data-type="exp"] {
+    grid-row: 5;
+    grid-column: 2;
+}
+
+.calculator-app__scientific-keypad .calculator-app__button[data-type="power"] {
+    grid-row: 5;
+    grid-column: 3;
+}
+
+.calculator-app__scientific-keypad .calculator-app__button[data-type="digit"][data-value="0"] {
+    grid-row: 5;
+    grid-column: 4;
+}
+
+.calculator-app__scientific-keypad .calculator-app__button[data-type="decimal"] {
+    grid-row: 5;
+    grid-column: 5;
+}
+
+.calculator-app__scientific-keypad .calculator-app__button[data-type="equals"] {
+    grid-row: 5;
+    grid-column: 6;
+}
+
+.calculator-app__scientific-keypad .calculator-app__button[data-type="operator"][data-value="+"] {
+    grid-row: 5;
+    grid-column: 7;
 }
