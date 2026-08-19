@@ -26,7 +26,7 @@ export default class PomodoroApp extends App {
     };
 
     #isRunning = false;
-    #session = 1;
+    #completedWorkSessions = 0;
     #mode = "work";
 
     #durations = {
@@ -38,34 +38,45 @@ export default class PomodoroApp extends App {
     #settingsOpen = false;
     #settingsStorageKey = "novadesk-pomodoro-settings";
 
+    // ── Named sessions (e.g. "Football", "Study") ──────
+    #sessions = [];
+    #activeSessionId = null;
+    #sessionsStorageKey = "novadesk-pomodoro-sessions";
+
     async mount(window, eventBus, settingsStore) {
         super.mount(window);
 
-        this.#loadSettings();
+        this.#loadSessions();
+
+        const activeSession = this.#getActiveSession();
+
+        this.#durations = activeSession.durations;
+
+        this.#modeTimes = {
+            work: this.#durations.work,
+            short: this.#durations.short,
+            long: this.#durations.long
+        };
+        this.#timeRemaining = this.#durations.work;
 
         this.#window = window;
 
         this.#window.content.innerHTML = `
             <div class="pomodoro-app">
 
-                <div class="pomodoro-header">
-    <div class="pomodoro-title">
-        Pomodoro
-    </div>
+                <div class="pomodoro-toolbar">
+                    <div class="pomodoro-sessions">
+                        <div class="pomodoro-sessions-list"></div>
 
-    <div class="pomodoro-header-right">
-        <div class="pomodoro-session">
-            Session ${this.#session}
-        </div>
+                        <button class="pomodoro-session-add" type="button" aria-label="Add session" title="Add session">
+                            +
+                        </button>
+                    </div>
 
-        <button
-            class="pomodoro-settings"
-            type="button"
-            aria-label="Settings">
-            ⚙
-        </button>
-    </div>
-</div>
+                    <button class="pomodoro-settings" type="button" aria-label="Settings">
+                        ⚙
+                    </button>
+                </div>
 
                 <div class="pomodoro-modes">
 
@@ -85,56 +96,42 @@ export default class PomodoroApp extends App {
 
                 <div class="pomodoro-settings-panel">
 
-    <div class="pomodoro-settings-title">
-        Timer Settings
-    </div>
+                    <div class="pomodoro-settings-title">
+                        Timer Settings
+                    </div>
 
-    <label>
-        Work
-        <div class="pomodoro-setting-input">
-            <input
-                type="number"
-                min="1"
-                max="180"
-                data-setting="work">
+                    <label>
+                        Work
+                        <div class="pomodoro-setting-input">
+                            <input type="number" min="1" max="180" data-setting="work">
 
-            <span>min</span>
-        </div>
-    </label>
+                            <span>min</span>
+                        </div>
+                    </label>
 
-    <label>
-        Short Break
-        <div class="pomodoro-setting-input">
-            <input
-                type="number"
-                min="1"
-                max="60"
-                data-setting="short">
+                    <label>
+                        Short Break
+                        <div class="pomodoro-setting-input">
+                            <input type="number" min="1" max="60" data-setting="short">
 
-            <span>min</span>
-        </div>
-    </label>
+                            <span>min</span>
+                        </div>
+                    </label>
 
-    <label>
-        Long Break
-        <div class="pomodoro-setting-input">
-            <input
-                type="number"
-                min="1"
-                max="120"
-                data-setting="long">
+                    <label>
+                        Long Break
+                        <div class="pomodoro-setting-input">
+                            <input type="number" min="1" max="120" data-setting="long">
 
-            <span>min</span>
-        </div>
-    </label>
+                            <span>min</span>
+                        </div>
+                    </label>
 
-    <button
-        class="pomodoro-settings-save"
-        type="button">
-        Save
-    </button>
+                    <button class="pomodoro-settings-save" type="button">
+                        Save
+                    </button>
 
-</div>
+                </div>
 
                 <div class="pomodoro-timer">
 
@@ -165,6 +162,16 @@ export default class PomodoroApp extends App {
 
         const content = this.#window.content;
 
+        const sessionsList =
+            content.querySelector(".pomodoro-sessions-list");
+
+        sessionsList.addEventListener("wheel", event => {
+            if (event.deltaY === 0) return;
+
+            event.preventDefault();
+            sessionsList.scrollLeft += event.deltaY;
+        }, { passive: false });
+
         const startButton =
             content.querySelector(".pomodoro-start");
 
@@ -191,9 +198,6 @@ export default class PomodoroApp extends App {
         const settingsButton =
             content.querySelector(".pomodoro-settings");
 
-        const settingsPanel =
-            content.querySelector(".pomodoro-settings-panel");
-
         const saveSettingsButton =
             content.querySelector(".pomodoro-settings-save");
 
@@ -205,51 +209,378 @@ export default class PomodoroApp extends App {
             this.#applySettings();
         });
 
+        const addSessionButton =
+            content.querySelector(".pomodoro-session-add");
+
+        addSessionButton.addEventListener("click", () => {
+            this.#addSession();
+        });
+
         this.#updateSettingsInputs();
+        this.#renderSessions();
     }
 
-    #loadSettings() {
+    // ── Named sessions ──────────────────────────────────
+
+    #loadSessions() {
         const saved =
+            localStorage.getItem(this.#sessionsStorageKey);
+
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+
+                if (
+                    Array.isArray(parsed.sessions) &&
+                    parsed.sessions.length > 0
+                ) {
+                    this.#sessions = parsed.sessions;
+
+                    this.#activeSessionId =
+                        this.#sessions.some(
+                            s => s.id === parsed.activeSessionId
+                        )
+                            ? parsed.activeSessionId
+                            : this.#sessions[0].id;
+
+                    return;
+                }
+            } catch {
+                // Ignore invalid saved sessions.
+            }
+        }
+
+        // No saved sessions yet — migrate legacy single-session
+        // settings (if any) into a first default session.
+        const defaultDurations = {
+            work: 25 * 60,
+            short: 5 * 60,
+            long: 15 * 60
+        };
+
+        const legacy =
             localStorage.getItem(this.#settingsStorageKey);
 
-        if (!saved) {
+        if (legacy) {
+            try {
+                const settings = JSON.parse(legacy);
+
+                if (
+                    Number.isFinite(settings.work) &&
+                    settings.work > 0
+                ) {
+                    defaultDurations.work = settings.work;
+                }
+
+                if (
+                    Number.isFinite(settings.short) &&
+                    settings.short > 0
+                ) {
+                    defaultDurations.short = settings.short;
+                }
+
+                if (
+                    Number.isFinite(settings.long) &&
+                    settings.long > 0
+                ) {
+                    defaultDurations.long = settings.long;
+                }
+            } catch {
+                // Ignore invalid legacy settings.
+            }
+        }
+
+        this.#sessions = [
+            {
+                id: 1,
+                name: "Focus Session",
+                durations: defaultDurations
+            }
+        ];
+
+        this.#activeSessionId = 1;
+
+        this.#saveSessions();
+    }
+
+    #saveSessions() {
+        localStorage.setItem(
+            this.#sessionsStorageKey,
+            JSON.stringify({
+                sessions: this.#sessions,
+                activeSessionId: this.#activeSessionId
+            })
+        );
+    }
+
+    #getActiveSession() {
+        return this.#sessions.find(
+            s => s.id === this.#activeSessionId
+        );
+    }
+
+    #selectSession(id) {
+        if (id === this.#activeSessionId) {
             return;
         }
 
-        try {
-            const settings = JSON.parse(saved);
+        const session = this.#sessions.find(s => s.id === id);
 
-            if (
-                Number.isFinite(settings.work) &&
-                settings.work > 0
-            ) {
-                this.#durations.work = settings.work;
-            }
+        if (!session) {
+            return;
+        }
 
-            if (
-                Number.isFinite(settings.short) &&
-                settings.short > 0
-            ) {
-                this.#durations.short = settings.short;
-            }
+        clearInterval(this.#timer);
+        this.#timer = null;
+        this.#isRunning = false;
+        this.#runningMode = null;
 
-            if (
-                Number.isFinite(settings.long) &&
-                settings.long > 0
-            ) {
-                this.#durations.long = settings.long;
-            }
-        } catch {
-            // Ignore invalid saved settings.
+        this.#activeSessionId = id;
+        this.#durations = session.durations;
+
+        this.#mode = "work";
+
+        this.#modeTimes = {
+            work: this.#durations.work,
+            short: this.#durations.short,
+            long: this.#durations.long
+        };
+
+        this.#timeRemaining = this.#durations.work;
+
+        this.#completedWorkSessions = 0;
+
+        this.#saveSessions();
+        this.#renderSessions();
+        this.#updateSettingsInputs();
+        this.#updateUI();
+    }
+
+    #addSession() {
+        const base = this.#getActiveSession();
+
+        const newSession = {
+            id: Date.now(),
+            name: `Session ${this.#sessions.length + 1}`,
+            durations: base
+                ? { ...base.durations }
+                : { work: 25 * 60, short: 5 * 60, long: 15 * 60 }
+        };
+
+        this.#sessions.push(newSession);
+        this.#saveSessions();
+
+        this.#selectSession(newSession.id);
+
+        // Jump straight into renaming a freshly created session.
+        this.#startRename(newSession.id);
+    }
+
+    #deleteSession(id) {
+        if (this.#sessions.length <= 1) {
+            return;
+        }
+
+        const index =
+            this.#sessions.findIndex(s => s.id === id);
+
+        if (index === -1) {
+            return;
+        }
+
+        const wasActive = this.#activeSessionId === id;
+
+        this.#sessions.splice(index, 1);
+
+        if (wasActive) {
+            const next =
+                this.#sessions[Math.max(0, index - 1)];
+
+            this.#activeSessionId = null;
+            this.#selectSession(next.id);
+        } else {
+            this.#saveSessions();
+            this.#renderSessions();
         }
     }
 
-    #saveSettings() {
-        localStorage.setItem(
-            this.#settingsStorageKey,
-            JSON.stringify(this.#durations)
-        );
+    #renameSession(id, name) {
+        const trimmed = name.trim().slice(0, 30);
+
+        const session = this.#sessions.find(s => s.id === id);
+
+        if (!session) {
+            return;
+        }
+
+        session.name = trimmed || session.name;
+
+        this.#saveSessions();
+        this.#renderSessions();
     }
+
+    #startRename(id) {
+        const chip =
+            this.#window.content.querySelector(
+                `.pomodoro-session-chip[data-id="${id}"]`
+            );
+
+        const session = this.#sessions.find(s => s.id === id);
+
+        if (!chip || !session) {
+            return;
+        }
+
+        const nameElement =
+            chip.querySelector(".pomodoro-session-chip-name");
+
+        if (!nameElement) {
+            return;
+        }
+
+        const input = document.createElement("input");
+
+        input.type = "text";
+        input.className = "pomodoro-session-chip-input";
+        input.maxLength = 30;
+        input.value = session.name;
+
+        nameElement.replaceWith(input);
+
+        input.focus();
+        input.select();
+
+        let committed = false;
+
+        const commit = () => {
+            if (committed) {
+                return;
+            }
+
+            committed = true;
+
+            this.#renameSession(id, input.value);
+        };
+
+        input.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                input.blur();
+            } else if (event.key === "Escape") {
+                committed = true;
+                this.#renderSessions();
+            }
+        });
+
+        input.addEventListener("blur", commit);
+    }
+
+    #renderSessions() {
+        const list =
+            this.#window.content.querySelector(
+                ".pomodoro-sessions-list"
+            );
+
+        if (!list) {
+            return;
+        }
+
+        list.innerHTML = this.#sessions
+            .map(session => `
+                <div
+                    class="pomodoro-session-chip${session.id === this.#activeSessionId
+                    ? " active"
+                    : ""
+                }"
+                    data-id="${session.id}">
+
+                    <span
+                        class="pomodoro-session-chip-name"
+                        data-id="${session.id}">
+                        ${this.#escapeHtml(session.name)}
+                    </span>
+
+                    <button
+                        class="pomodoro-session-chip-edit"
+                        type="button"
+                        data-id="${session.id}"
+                        aria-label="Rename session"
+                        title="Rename">
+                        ✎
+                    </button>
+
+                    ${this.#sessions.length > 1
+                    ? `
+                    <button
+                        class="pomodoro-session-chip-delete"
+                        type="button"
+                        data-id="${session.id}"
+                        aria-label="Delete session"
+                        title="Delete">
+                        ×
+                    </button>`
+                    : ""
+                }
+                </div>
+            `)
+            .join("");
+
+        list.querySelectorAll(".pomodoro-session-chip")
+            .forEach(chip => {
+                const id = Number(chip.dataset.id);
+
+                chip.addEventListener("click", event => {
+                    if (
+                        event.target.closest(
+                            ".pomodoro-session-chip-edit"
+                        ) ||
+                        event.target.closest(
+                            ".pomodoro-session-chip-delete"
+                        )
+                    ) {
+                        return;
+                    }
+
+                    this.#selectSession(id);
+                });
+
+                const nameElement = chip.querySelector(
+                    ".pomodoro-session-chip-name"
+                );
+
+                nameElement.addEventListener("dblclick", event => {
+                    event.stopPropagation();
+                    this.#startRename(id);
+                });
+            });
+
+        list.querySelectorAll(".pomodoro-session-chip-edit")
+            .forEach(button => {
+                button.addEventListener("click", event => {
+                    event.stopPropagation();
+                    this.#startRename(Number(button.dataset.id));
+                });
+            });
+
+        list.querySelectorAll(".pomodoro-session-chip-delete")
+            .forEach(button => {
+                button.addEventListener("click", event => {
+                    event.stopPropagation();
+                    this.#deleteSession(Number(button.dataset.id));
+                });
+            });
+    }
+
+    #escapeHtml(value) {
+        return value.replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "\"": "&quot;",
+            "'": "&#039;"
+        }[char]));
+    }
+
+    // ── Timer settings (per active session) ─────────────
 
     #applySettings() {
         const content = this.#window.content;
@@ -286,13 +617,21 @@ export default class PomodoroApp extends App {
             return;
         }
 
-        this.#durations = {
+        const session = this.#getActiveSession();
+
+        if (!session) {
+            return;
+        }
+
+        session.durations = {
             work: work * 60,
             short: short * 60,
             long: long * 60
         };
 
-        this.#saveSettings();
+        this.#durations = session.durations;
+
+        this.#saveSessions();
 
         this.#settingsOpen = false;
 
@@ -301,6 +640,12 @@ export default class PomodoroApp extends App {
             .classList.remove("open");
 
         if (!this.#isRunning) {
+            this.#modeTimes = {
+                work: this.#durations.work,
+                short: this.#durations.short,
+                long: this.#durations.long
+            };
+
             this.#timeRemaining =
                 this.#durations[this.#mode];
 
@@ -337,6 +682,8 @@ export default class PomodoroApp extends App {
             '[data-setting="long"]'
         ).value = this.#durations.long / 60;
     }
+
+    // ── Core timer logic (unchanged behaviour) ──────────
 
     #toggleTimer() {
         if (this.#isRunning) {
@@ -421,13 +768,22 @@ export default class PomodoroApp extends App {
 
         this.#timer = null;
         this.#isRunning = false;
-        this.#timeRemaining = 0;
 
-        this.#modeTimes[this.#mode] = 0;
+        const finishedMode = this.#runningMode;
 
-        if (this.#mode === "work") {
-            this.#session++;
-            this.#mode = "short";
+        this.#runningMode = null;
+
+        this.#modeTimes[finishedMode] = 0;
+
+        if (finishedMode === "work") {
+            this.#completedWorkSessions++;
+
+            if (this.#completedWorkSessions >= 4) {
+                this.#completedWorkSessions = 0;
+                this.#mode = "long";
+            } else {
+                this.#mode = "short";
+            }
         } else {
             this.#mode = "work";
         }
