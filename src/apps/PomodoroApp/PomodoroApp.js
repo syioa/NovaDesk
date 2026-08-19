@@ -421,6 +421,9 @@ export default class PomodoroApp extends App {
     }
 
     #updateUI() {
+        const app = this.#window.content.querySelector(".pomodoro-app");
+        app.dataset.mode = this.#mode;   // "work" | "short" | "long"
+
         const content = this.#window.content;
         const timeElement =
 
@@ -455,10 +458,24 @@ export default class PomodoroApp extends App {
             statusElement.textContent = "Time's up";
         } else {
             startButton.textContent = "Start";
-            statusElement.textContent =
-                this.#timeRemaining === this.#durations[this.#mode]
-                    ? "Ready to focus"
-                    : "Paused";
+
+            if (
+                this.#timeRemaining ===
+                this.#durations[this.#mode]
+            ) {
+                if (this.#mode === "work") {
+                    statusElement.textContent =
+                        "Ready to focus";
+                } else if (this.#mode === "short") {
+                    statusElement.textContent =
+                        "Ready for a break";
+                } else {
+                    statusElement.textContent =
+                        "Ready for a long break";
+                }
+            } else {
+                statusElement.textContent = "Paused";
+            }
         }
 
         modeButtons.forEach(button => {

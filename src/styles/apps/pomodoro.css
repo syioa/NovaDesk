@@ -1,42 +1,61 @@
 /* ========================================
-   Pomodoro App
+   Pomodoro App — Pomofocus style
 ======================================== */
+
+/* Mode-aware background colours live on the root element.
+   The JS sets data-mode="work|short|long" on .pomodoro-app. */
 
 .pomodoro-app {
     width: 100%;
     height: 100%;
-
     box-sizing: border-box;
-
     display: flex;
     flex-direction: column;
-
-    padding: 20px;
-
-    color: var(--color-text-primary);
-    background: var(--color-background);
-
+    padding: 20px 20px 16px;
     overflow: hidden;
+
+    /* Pomofocus tomato-red for Work (default) */
+    background: #ba4949;
+    color: #fff;
+
+    /* smooth colour transition when mode changes */
+    transition: background 0.6s ease;
 }
 
-/* Header */
+.pomodoro-app[data-mode="work"] {
+    background: #ba4949;
+}
+
+.pomodoro-app[data-mode="short"] {
+    background: #38858a;
+}
+
+.pomodoro-app[data-mode="long"] {
+    background: #397097;
+}
+
+/* ── Header ───────────────────────────────────────────── */
 
 .pomodoro-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255 255 255 / 0.25);
 }
 
 .pomodoro-title {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
 }
 
 .pomodoro-session {
-    font-size: 13px;
-    color: var(--color-text-secondary);
+    font-size: 12px;
+    color: rgba(255 255 255 / 0.85);
+    font-weight: 500;
 }
 
 .pomodoro-header-right {
@@ -47,43 +66,33 @@
 
 .pomodoro-settings {
     display: flex;
-    width: 30px;
-    height: 30px;
-
+    width: 28px;
+    height: 28px;
     align-items: center;
     justify-content: center;
-
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-
-    color: var(--color-text-secondary);
-    background: var(--color-surface);
-
-    font-size: 15px;
-
-
+    border: 1px solid rgba(255 255 255 / 0.4);
+    border-radius: 6px;
+    color: rgba(255 255 255 / 0.85);
+    background: rgba(255 255 255 / 0.1);
+    font-size: 14px;
     cursor: pointer;
-    transition:
-        background 0.15s ease,
-        color 0.15s ease;
+    transition: background 0.15s ease;
 }
 
 .pomodoro-settings:hover {
-    color: var(--color-text-primary);
-    background: var(--color-surface-raised);
+    background: rgba(255 255 255 / 0.2);
+    color: #fff;
 }
+
+/* ── Settings panel ───────────────────────────────────── */
 
 .pomodoro-settings-panel {
     display: none;
-
-    margin-top: 12px;
-
+    margin-bottom: 14px;
     padding: 14px;
-
-    border: 1px solid var(--color-border);
     border-radius: 10px;
-
-    background: var(--color-surface);
+    background: rgba(0 0 0 / 0.18);
+    border: 1px solid rgba(255 255 255 / 0.15);
 }
 
 .pomodoro-settings-panel.open {
@@ -92,20 +101,20 @@
 
 .pomodoro-settings-title {
     margin-bottom: 12px;
-
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255 255 255 / 0.75);
 }
 
 .pomodoro-settings-panel label {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     margin-bottom: 10px;
-
     font-size: 13px;
-    color: var(--color-text-secondary);
+    color: rgba(255 255 255 / 0.85);
 }
 
 .pomodoro-setting-input {
@@ -115,172 +124,168 @@
 }
 
 .pomodoro-setting-input input {
-    width: 55px;
-
+    width: 52px;
     box-sizing: border-box;
-
-    padding: 6px 7px;
-
-    border: 1px solid var(--color-border);
-    border-radius: 7px;
-
+    padding: 5px 6px;
+    border: 1px solid rgba(255 255 255 / 0.3);
+    border-radius: 6px;
     outline: none;
-
-    color: var(--color-text-primary);
-    background: var(--color-background);
-
+    color: #fff;
+    background: rgba(255 255 255 / 0.15);
     font-size: 13px;
     text-align: center;
 }
 
 .pomodoro-setting-input input:focus {
-    border-color: var(--color-accent);
+    border-color: rgba(255 255 255 / 0.7);
+    background: rgba(255 255 255 / 0.22);
 }
 
 .pomodoro-setting-input span {
     font-size: 12px;
-    color: var(--color-text-muted);
+    color: rgba(255 255 255 / 0.6);
 }
 
 .pomodoro-settings-save {
     width: 100%;
-
-    margin-top: 4px;
-
+    margin-top: 6px;
     padding: 8px;
-
     border: none;
-    border-radius: 7px;
-
-    color: var(--color-background);
-    background: var(--color-accent);
-
+    border-radius: 6px;
+    color: #333;
+    background: #fff;
     font-size: 13px;
-    font-weight: 500;
-
+    font-weight: 600;
     cursor: pointer;
+    transition: opacity 0.15s ease;
 }
 
 .pomodoro-settings-save:hover {
-    background: var(--color-accent-hover);
+    opacity: 0.9;
 }
 
-/* Modes */
+/* ── Mode tabs ────────────────────────────────────────── */
 
 .pomodoro-modes {
     display: flex;
-    gap: 6px;
-
-    padding: 4px;
-
-    border: 1px solid var(--color-border);
-    border-radius: 10px;
-
-    background: var(--color-surface);
+    gap: 2px;
+    padding: 3px;
+    border-radius: 8px;
+    background: rgba(0 0 0 / 0.15);
+    margin-bottom: 4px;
 }
 
 .pomodoro-mode {
     flex: 1;
-
     border: none;
-    border-radius: 7px;
-
-    padding: 8px 6px;
-
+    border-radius: 6px;
+    padding: 7px 4px;
     font-size: 12px;
-    font-weight: 500;
-
-    color: var(--color-text-secondary);
+    font-weight: 600;
+    color: rgba(255 255 255 / 0.75);
     background: transparent;
-
     cursor: pointer;
-
-    transition:
-        background 0.15s ease,
-        color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
 .pomodoro-mode:hover {
-    color: var(--color-text-primary);
-    background: var(--color-surface-raised);
+    color: #fff;
+    background: rgba(255 255 255 / 0.12);
 }
 
 .pomodoro-mode.active {
-    color: var(--color-text-primary);
-    background: var(--color-surface-raised);
+    color: #333;
+    background: #fff;
 }
 
-/* Timer */
+/* ── Timer ────────────────────────────────────────────── */
 
 .pomodoro-timer {
     flex: 1;
-
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0;
 }
 
 .pomodoro-time {
-    font-size: 72px;
-    font-weight: 600;
+    font-size: 80px;
+    font-weight: 700;
     line-height: 1;
-
     font-variant-numeric: tabular-nums;
-    letter-spacing: -2px;
+    letter-spacing: -3px;
+    color: #fff;
+    /* Pomofocus uses a subtle text-shadow for depth */
+    text-shadow: 0 4px 12px rgba(0 0 0 / 0.2);
 }
 
 .pomodoro-status {
-    margin-top: 14px;
-
+    margin-top: 10px;
     font-size: 14px;
-    color: var(--color-text-secondary);
+    font-weight: 500;
+    color: rgba(255 255 255 / 0.8);
+    letter-spacing: 0.3px;
 }
 
-/* Controls */
+/* ── Controls ─────────────────────────────────────────── */
 
 .pomodoro-controls {
     display: flex;
     gap: 10px;
+    margin-top: 4px;
 }
 
 .pomodoro-controls button {
     border: none;
-    border-radius: 9px;
-
-    padding: 11px 18px;
-
-    font-size: 14px;
-    font-weight: 500;
-
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 15px;
+    font-weight: 700;
     cursor: pointer;
-
-    transition:
-        background 0.15s ease,
-        transform 0.1s ease;
+    transition: background 0.15s ease, transform 0.1s ease;
+    letter-spacing: 0.5px;
 }
 
+/* White Start button with coloured text — like Pomofocus */
 .pomodoro-start {
     flex: 1;
+    color: #ba4949;
+    /* changes via JS — see note below */
+    background: #fff;
+    box-shadow: 0 6px 0 rgba(0 0 0 / 0.20);
+}
 
-    color: var(--color-background);
-    background: var(--color-accent);
+/* Colour the Start button label to match the current mode */
+.pomodoro-app[data-mode="work"] .pomodoro-start {
+    color: #ba4949;
+}
+
+.pomodoro-app[data-mode="short"] .pomodoro-start {
+    color: #38858a;
+}
+
+.pomodoro-app[data-mode="long"] .pomodoro-start {
+    color: #397097;
 }
 
 .pomodoro-start:hover {
-    background: var(--color-accent-hover);
+    opacity: 0.93;
+}
+
+.pomodoro-start:active,
+.pomodoro-reset:active {
+    transform: translateY(3px);
+    box-shadow: none !important;
 }
 
 .pomodoro-reset {
-    color: var(--color-text-primary);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border) !important;
+    color: #fff;
+    background: rgba(255 255 255 / 0.15);
+    border: 1px solid rgba(255 255 255 / 0.3) !important;
+    box-shadow: none;
 }
 
 .pomodoro-reset:hover {
-    background: var(--color-surface-raised);
-}
-
-.pomodoro-controls button:active {
-    transform: scale(0.97);
+    background: rgba(255 255 255 / 0.25);
 }
