@@ -605,7 +605,6 @@ export default class CalculatorApp extends App {
             return;
         }
 
-        // If "=" was already pressed, keep showing the result.
         if (this.#expression.endsWith(" =")) {
             return;
         }
