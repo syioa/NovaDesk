@@ -15,13 +15,18 @@ export default class PomodoroApp extends App {
     };
 
     #window = null;
-
     #timer = null;
     #timeRemaining = 25 * 60;
+    #runningMode = null;
+
+    #modeTimes = {
+        work: 25 * 60,
+        short: 5 * 60,
+        long: 15 * 60
+    };
+
     #isRunning = false;
-
     #session = 1;
-
     #mode = "work";
 
     #durations = {
@@ -31,7 +36,6 @@ export default class PomodoroApp extends App {
     };
 
     #settingsOpen = false;
-
     #settingsStorageKey = "novadesk-pomodoro-settings";
 
     async mount(window, eventBus, settingsStore) {
@@ -343,20 +347,30 @@ export default class PomodoroApp extends App {
     }
 
     #startTimer() {
-        if (this.#timeRemaining <= 0) {
-            this.#resetTimer();
+        if (this.#isRunning) {
+            return;
         }
 
         this.#isRunning = true;
+        this.#runningMode = this.#mode;
 
         this.#updateUI();
 
         this.#timer = setInterval(() => {
-            this.#timeRemaining--;
+            this.#modeTimes[this.#runningMode]--;
+
+            if (
+                this.#mode === this.#runningMode
+            ) {
+                this.#timeRemaining =
+                    this.#modeTimes[this.#runningMode];
+            }
 
             this.#updateUI();
 
-            if (this.#timeRemaining <= 0) {
+            if (
+                this.#modeTimes[this.#runningMode] <= 0
+            ) {
                 this.#finishTimer();
             }
         }, 1000);
@@ -368,6 +382,8 @@ export default class PomodoroApp extends App {
         clearInterval(this.#timer);
         this.#timer = null;
 
+        this.#runningMode = null;
+
         this.#updateUI();
     }
 
@@ -376,9 +392,13 @@ export default class PomodoroApp extends App {
 
         this.#timer = null;
         this.#isRunning = false;
+        this.#runningMode = null;
 
         this.#timeRemaining =
             this.#durations[this.#mode];
+
+        this.#modeTimes[this.#mode] =
+            this.#timeRemaining;
 
         this.#updateUI();
     }
@@ -388,14 +408,10 @@ export default class PomodoroApp extends App {
             return;
         }
 
-        clearInterval(this.#timer);
-
-        this.#timer = null;
-        this.#isRunning = false;
         this.#mode = mode;
 
         this.#timeRemaining =
-            this.#durations[mode];
+            this.#modeTimes[mode];
 
         this.#updateUI();
     }
@@ -407,6 +423,8 @@ export default class PomodoroApp extends App {
         this.#isRunning = false;
         this.#timeRemaining = 0;
 
+        this.#modeTimes[this.#mode] = 0;
+
         if (this.#mode === "work") {
             this.#session++;
             this.#mode = "short";
@@ -416,6 +434,9 @@ export default class PomodoroApp extends App {
 
         this.#timeRemaining =
             this.#durations[this.#mode];
+
+        this.#modeTimes[this.#mode] =
+            this.#timeRemaining;
 
         this.#updateUI();
     }
