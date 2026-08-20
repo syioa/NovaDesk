@@ -7,6 +7,8 @@ export default class DesktopIcons {
 
     #selectedIcons = new Set();
     #iconPositions = new Map();
+    #manualIconPositions = new Map();
+
     #dragStartPositions = new Map();
     #previousZIndexes = new Map();
     #dragVisualPositions = new Map();
@@ -300,6 +302,56 @@ export default class DesktopIcons {
     }
 
     #sortIcons() {
+        if (this.#sortBy === "unsorted") {
+            if (this.#manualIconPositions.size === 0) {
+                return;
+            }
+
+            for (
+                const [id, position]
+                of this.#manualIconPositions
+            ) {
+                this.#iconPositions.set(id, {
+                    column: position.column,
+                    row: position.row
+                });
+            }
+
+            for (const icon of this.#element.children) {
+                const position =
+                    this.#iconPositions.get(
+                        icon.dataset.appId
+                    );
+
+                if (!position) {
+                    continue;
+                }
+
+                const pixel =
+                    this.#gridToPixel(
+                        position.column,
+                        position.row
+                    );
+
+                icon.style.transition =
+                    "left 0.15s ease, top 0.15s ease";
+
+                icon.style.left =
+                    `${pixel.x}px`;
+
+                icon.style.top =
+                    `${pixel.y}px`;
+            }
+
+            this.#saveIconPositions();
+
+            return;
+        }
+
+        if (this.#manualIconPositions.size === 0) {
+            this.#saveManualIconPositions();
+        }
+
         this.#reflowIcons(true);
     }
 
@@ -479,6 +531,17 @@ export default class DesktopIcons {
 
             icon.style.top =
                 `${pixel.y}px`;
+        }
+    }
+
+    #saveManualIconPositions() {
+        this.#manualIconPositions.clear();
+
+        for (const [id, position] of this.#iconPositions) {
+            this.#manualIconPositions.set(id, {
+                column: position.column,
+                row: position.row
+            });
         }
     }
 
