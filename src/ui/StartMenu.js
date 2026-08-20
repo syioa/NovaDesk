@@ -445,7 +445,7 @@ export default class StartMenu {
         this.#previousFocusedElement = document.activeElement;
 
         this.#isOpen = true;
-        this.#element.style.display = "block";
+        this.#element.style.display = "flex";
         this.#uiManager.register(this);
 
         const firstApp = this.#element.querySelector(

@@ -17,7 +17,7 @@
     color: var(--color-text-primary);
 
     display: none;
-
+    flex-direction: column;
     overflow: hidden;
 }
 
@@ -269,11 +269,29 @@
 
 .start-menu__apps {
     display: flex;
+    flex: 1;
+    min-height: 0;
     flex-direction: column;
     gap: 2px;
     padding: 8px;
-
     overflow-y: auto;
+}
+
+.start-menu__apps::-webkit-scrollbar {
+    width: 8px;
+}
+
+.start-menu__apps::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.start-menu__apps::-webkit-scrollbar-thumb {
+    background: var(--color-surface-raised);
+    border-radius: 4px;
+}
+
+.start-menu__apps::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border);
 }
 
 .start-menu__app {

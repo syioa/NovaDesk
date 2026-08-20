@@ -683,7 +683,7 @@ export default class PomodoroApp extends App {
         ).value = this.#durations.long / 60;
     }
 
-    // ── Core timer logic (unchanged behaviour) ──────────
+    // ── Core timer logic (unchanged behavior) ──────────
 
     #toggleTimer() {
         if (this.#isRunning) {
