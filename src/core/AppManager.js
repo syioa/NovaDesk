@@ -5,13 +5,19 @@ export default class AppManager {
     #settingsStore;
 
     constructor(eventBus, windowManager, registry, settingsStore) {
+
         this.#eventBus = eventBus;
         this.#windowManager = windowManager;
         this.#registry = registry;
         this.#settingsStore = settingsStore;
 
-        this.#eventBus.on("app:launch", (id) => {
-            this.launch(id);
+        this.#eventBus.on("app:launch", (payload) => {
+            if (typeof payload === "string") {
+                this.launch(payload);
+                return;
+            }
+
+            this.launch(payload.id, payload.options);
         });
     }
 
@@ -24,7 +30,7 @@ export default class AppManager {
      * Launch an application by id.
      *@param {string} id
      */
-    launch(id) {
+    launch(id, options = {}) {
         const AppClass = this.#registry.get(id);
 
         if (!AppClass) {
@@ -46,8 +52,13 @@ export default class AppManager {
         app.mount(
             window,
             this.#eventBus,
-            this.#settingsStore
+            this.#settingsStore,
+            options
         );
+
+        if (options.page) {
+            app.openPage?.(options.page);
+        }
 
         return app;
     }

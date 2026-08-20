@@ -383,11 +383,12 @@ export default class SettingsApp extends App {
             }, 500);
         });
 
-        applyButton.addEventListener("click", () => {
+        const applyWallpaper = () => {
             const url = urlInput.value.trim();
 
             if (!url) {
-                statusDiv.innerHTML = '<span class="settings__status-error">✗ Please enter an image URL</span>';
+                statusDiv.innerHTML =
+                    '<span class="settings__status-error">✗ Please enter an image URL</span>';
                 return;
             }
 
@@ -395,22 +396,39 @@ export default class SettingsApp extends App {
             try {
                 new URL(url);
             } catch {
-                statusDiv.innerHTML = '<span class="settings__status-error">✗ Invalid URL format</span>';
+                statusDiv.innerHTML =
+                    '<span class="settings__status-error">✗ Invalid URL format</span>';
                 return;
             }
 
             // Test if image loads
             const img = new Image();
+
             img.onload = () => {
                 this.#updateSetting("appearance.wallpaper", {
                     type: "image",
                     value: url
                 });
-                statusDiv.innerHTML = '<span class="settings__status-success">✓ Wallpaper applied successfully</span>';
+
+                statusDiv.innerHTML =
+                    '<span class="settings__status-success">✓ Wallpaper applied successfully</span>';
             };
+
             img.onerror = () => {
+                statusDiv.innerHTML =
+                    '<span class="settings__status-error">✗ Failed to load image. The URL may be invalid or the image may not be accessible.</span>';
             };
+
             img.src = url;
+        };
+
+        applyButton.addEventListener("click", applyWallpaper);
+
+        urlInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                applyWallpaper();
+            }
         });
         statusDiv.innerHTML = '<span class="settings__status-error">✗ Failed to load image. The URL may be invalid or the image may not be accessible.</span>';
 
@@ -801,6 +819,13 @@ export default class SettingsApp extends App {
 
         this.#renderNavigation();
         this.#renderPage();
+    }
+
+    openPage(page) {
+        this.#selectPage(
+            page.category,
+            page.id
+        );
     }
 
     #updateNavigationState() {

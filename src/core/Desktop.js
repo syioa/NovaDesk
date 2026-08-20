@@ -213,6 +213,25 @@ export default class Desktop {
                         }
                     }
                 ]
+            },
+
+            {
+                type: "separator"
+            },
+
+            {
+                label: "Wallpaper",
+                action: () => {
+                    this.#eventBus.emit("app:launch", {
+                        id: "settings",
+                        options: {
+                            page: {
+                                category: "appearance",
+                                id: "wallpaper"
+                            }
+                        }
+                    });
+                }
             }
         ];
     }
