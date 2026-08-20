@@ -381,6 +381,13 @@ export default class DesktopIcons {
                     row = 0;
                 }
 
+                if (this.#sortAlignment === "rtl") {
+                    const bounds = this.#getGridBounds();
+                    const maxColumn = bounds.maxColumn;
+
+                    column = maxColumn - column;
+                }
+
                 // Right-to-left reverses the column
                 // direction without changing the sort order.
 
