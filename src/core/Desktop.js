@@ -178,10 +178,15 @@ export default class Desktop {
     }
 
     #createDesktopContextMenuItems() {
-        const setIconSize = (size) => {
+        const setView = (iconSize, iconSpacing) => {
             this.#settingsStore.set(
                 "desktop.iconSize",
-                size
+                iconSize
+            );
+
+            this.#settingsStore.set(
+                "desktop.iconSpacing",
+                iconSpacing
             );
         };
 
@@ -192,19 +197,19 @@ export default class Desktop {
                     {
                         label: "Large Icons",
                         action: () => {
-                            setIconSize(80);
+                            setView(80, 20);
                         }
                     },
                     {
                         label: "Medium Icons",
                         action: () => {
-                            setIconSize(64);
+                            setView(64, 16);
                         }
                     },
                     {
                         label: "Small Icons",
                         action: () => {
-                            setIconSize(48);
+                            setView(48, 12);
                         }
                     }
                 ]
