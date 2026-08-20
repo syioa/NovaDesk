@@ -36,6 +36,10 @@ export default class DesktopIcons {
     #gridColumns = 8;
     #iconSpacing = 16;
 
+    #sortBy = "unsorted";
+    #arrangement = "columns";
+    #sortAlignment = "ltr";
+
     constructor(eventBus, registry, settingsStore) {
         this.#eventBus = eventBus;
         this.#registry = registry;
@@ -77,6 +81,28 @@ export default class DesktopIcons {
                     this.#gridColumns = value;
 
                     this.#reflowIcons();
+                }
+
+                if (
+                    path === "desktop.sortBy" ||
+                    path === "desktop.arrangement" ||
+                    path === "desktop.sortAlignment"
+                ) {
+                    if (path === "desktop.sortBy") {
+                        this.#sortBy = value;
+                    }
+
+                    if (path === "desktop.arrangement") {
+                        this.#arrangement = value;
+                    }
+
+                    if (path === "desktop.sortAlignment") {
+                        this.#sortAlignment = value;
+                    }
+
+                    requestAnimationFrame(() => {
+                        this.#sortIcons();
+                    });
                 }
             }
         );
@@ -273,22 +299,138 @@ export default class DesktopIcons {
         }
     }
 
-    #reflowIcons() {
-        const occupied =
-            new Set();
+    #sortIcons() {
+        this.#reflowIcons(true);
+    }
 
-        /*
-         * Process icons in their current DOM order.
-         *
-         * Existing positions are preserved whenever
-         * possible.
-         */
+    #reflowIcons(forceArrange = false) {
+        const icons = [
+            ...this.#element.children
+        ];
+
+        if (forceArrange) {
+            if (this.#sortBy === "name") {
+                icons.sort((a, b) => {
+                    const nameA =
+                        a.querySelector(".desktop-icon-label")
+                            ?.textContent.trim() ?? "";
+
+                    const nameB =
+                        b.querySelector(".desktop-icon-label")
+                            ?.textContent.trim() ?? "";
+
+                    return nameA.localeCompare(
+                        nameB,
+                        undefined,
+                        {
+                            numeric: true,
+                            sensitivity: "base"
+                        }
+                    );
+                });
+            }
+
+            const orderedIcons =
+                this.#arrangeIcons(icons);
+
+            const occupied = new Set();
+
+            for (
+                let index = 0;
+                index < orderedIcons.length;
+                index++
+            ) {
+                const icon = orderedIcons[index];
+
+                let column;
+                let row;
+
+                if (this.#arrangement === "rows") {
+                    column =
+                        index % this.#gridColumns;
+
+                    row =
+                        Math.floor(
+                            index /
+                            this.#gridColumns
+                        );
+                } else {
+                    const maxRows =
+                        this.#getGridBounds().maxRow + 1;
+
+                    column =
+                        Math.floor(
+                            index / maxRows
+                        );
+
+                    row =
+                        index % maxRows;
+                }
+
+                if (this.#sortAlignment === "rtl") {
+                    column =
+                        this.#gridColumns -
+                        1 -
+                        column;
+                } if (
+                    this.#sortAlignment === "rtl"
+                ) {
+                    column =
+                        this.#gridColumns -
+                        1 -
+                        column;
+                }
+
+                const key =
+                    `${column},${row}`;
+
+                if (occupied.has(key)) {
+                    continue;
+                }
+
+                occupied.add(key);
+
+                this.#iconPositions.set(
+                    icon.dataset.appId,
+                    {
+                        column,
+                        row
+                    }
+                );
+
+                const pixel =
+                    this.#gridToPixel(
+                        column,
+                        row
+                    );
+
+                icon.style.transition =
+                    "left 0.15s ease, top 0.15s ease";
+
+                icon.style.left =
+                    `${pixel.x}px`;
+
+                icon.style.top =
+                    `${pixel.y}px`;
+            }
+
+            this.#saveIconPositions();
+
+            return;
+        }
+
+        // Normal reflow:
+        // preserve existing positions.
+        const occupied = new Set();
+
         for (
             const icon
             of this.#element.children
         ) {
             const current =
-                this.#iconPositions.get(icon.dataset.appId)
+                this.#iconPositions.get(
+                    icon.dataset.appId
+                );
 
             if (!current) {
                 continue;
@@ -297,13 +439,8 @@ export default class DesktopIcons {
             const key =
                 `${current.column},${current.row}`;
 
-            let grid =
-                current;
+            let grid = current;
 
-            /*
-             * If the current cell is already occupied,
-             * find the nearest free cell.
-             */
             if (
                 occupied.has(key) ||
                 current.column >=
@@ -319,16 +456,10 @@ export default class DesktopIcons {
                     );
             }
 
-            /*
-             * Mark this cell as occupied.
-             */
             occupied.add(
                 `${grid.column},${grid.row}`
             );
 
-            /*
-             * Save the potentially updated position.
-             */
             this.#iconPositions.set(
                 icon.dataset.appId,
                 grid
@@ -366,6 +497,21 @@ export default class DesktopIcons {
             this.#settingsStore.get(
                 "desktop.gridColumns"
             ) ?? 8;
+
+        this.#sortBy =
+            this.#settingsStore.get(
+                "desktop.sortBy"
+            ) ?? "unsorted";
+
+        this.#arrangement =
+            this.#settingsStore.get(
+                "desktop.arrangement"
+            ) ?? "columns";
+
+        this.#sortAlignment =
+            this.#settingsStore.get(
+                "desktop.sortAlignment"
+            ) ?? "ltr";
     }
 
     #loadIconPositions() {
@@ -1960,5 +2106,9 @@ export default class DesktopIcons {
             88 +
             this.#iconSpacing
         );
+    }
+
+    #arrangeIcons(icons) {
+        return icons;
     }
 }

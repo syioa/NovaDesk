@@ -190,6 +190,31 @@ export default class Desktop {
             );
         };
 
+        const setSortBy = (sortBy) => {
+            this.#settingsStore.set(
+                "desktop.sortBy",
+                sortBy
+            );
+        };
+
+        const setArrange = (arrangement) => {
+            this.#settingsStore.set(
+                "desktop.arrangement",
+                arrangement
+            );
+        };
+
+        const setSortAlignment = (sortAlignment) => {
+            this.#settingsStore.set(
+                "desktop.sortAlignment",
+                sortAlignment
+            );
+        };
+
+        const currentSortBy = this.#settingsStore.get("desktop.sortBy");
+        const currentArrangement = this.#settingsStore.get("desktop.arrangement");
+        const currentSortAlignment = this.#settingsStore.get("desktop.sortAlignment");
+
         return [
             {
                 label: "View",
@@ -210,6 +235,70 @@ export default class Desktop {
                         label: "Small Icons",
                         action: () => {
                             setView(48, 12);
+                        }
+                    }
+                ]
+            },
+
+            {
+                type: "separator"
+            },
+
+            {
+                label: "Sort by",
+                items: [
+                    {
+                        label: "Unsorted",
+                        checked: currentSortBy === "unsorted",
+                        action: () => {
+                            setSortBy("unsorted");
+                        }
+                    },
+                    {
+                        label: "Name",
+                        checked: currentSortBy === "name",
+                        action: () => {
+                            setSortBy("name");
+                        }
+                    },
+                ]
+            },
+
+            {
+                label: "Arrange",
+                items: [
+                    {
+                        label: "In Columns",
+                        checked: currentArrangement === "columns",
+                        action: () => {
+                            setArrange("columns");
+                        }
+                    },
+                    {
+                        label: "In Rows",
+                        checked: currentArrangement === "rows",
+                        action: () => {
+                            setArrange("rows");
+                        }
+                    }
+                ]
+            },
+
+            {
+                label: "Sort alignment",
+                items: [
+                    {
+                        label: "Left to Right",
+                        checked: currentSortAlignment === "ltr",
+                        action: () => {
+                            setSortAlignment("ltr");
+                        }
+                    },
+                    {
+                        label: "Right to Left",
+                        checked: currentSortAlignment === "rtl",
+                        action: () => {
+                            setSortAlignment("rtl");
                         }
                     }
                 ]
