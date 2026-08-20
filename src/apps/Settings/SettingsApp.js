@@ -106,10 +106,6 @@ export default class SettingsApp extends App {
         window.content.innerHTML = `
 <div class="settings">
     <aside class="settings__sidebar">
-        <div class="settings__sidebar-header">
-            <h2 class="settings__sidebar-title">Settings</h2>
-        </div>
-
         <div class="settings__search-wrapper">
             <input
                 class="settings__search"

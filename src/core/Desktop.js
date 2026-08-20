@@ -178,17 +178,34 @@ export default class Desktop {
     }
 
     #createDesktopContextMenuItems() {
+        const setIconSize = (size) => {
+            this.#settingsStore.set(
+                "desktop.iconSize",
+                size
+            );
+        };
+
         return [
             {
                 label: "View",
                 items: [
                     {
                         label: "Large Icons",
-                        action: () => console.log("Large Icons")
+                        action: () => {
+                            setIconSize(80);
+                        }
+                    },
+                    {
+                        label: "Medium Icons",
+                        action: () => {
+                            setIconSize(64);
+                        }
                     },
                     {
                         label: "Small Icons",
-                        action: () => console.log("Small Icons")
+                        action: () => {
+                            setIconSize(48);
+                        }
                     }
                 ]
             }
