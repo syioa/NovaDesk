@@ -302,54 +302,25 @@ export default class DesktopIcons {
     }
 
     #sortIcons() {
+        // Restore the manual arrangement first when
+        // switching back to Unsorted.
         if (this.#sortBy === "unsorted") {
-            if (this.#manualIconPositions.size === 0) {
-                return;
-            }
-
-            for (
-                const [id, position]
-                of this.#manualIconPositions
-            ) {
-                this.#iconPositions.set(id, {
-                    column: position.column,
-                    row: position.row
-                });
-            }
-
-            for (const icon of this.#element.children) {
-                const position =
-                    this.#iconPositions.get(
-                        icon.dataset.appId
-                    );
-
-                if (!position) {
-                    continue;
+            if (this.#manualIconPositions.size > 0) {
+                for (
+                    const [id, position]
+                    of this.#manualIconPositions
+                ) {
+                    this.#iconPositions.set(id, {
+                        column: position.column,
+                        row: position.row
+                    });
                 }
-
-                const pixel =
-                    this.#gridToPixel(
-                        position.column,
-                        position.row
-                    );
-
-                icon.style.transition =
-                    "left 0.15s ease, top 0.15s ease";
-
-                icon.style.left =
-                    `${pixel.x}px`;
-
-                icon.style.top =
-                    `${pixel.y}px`;
             }
-
-            this.#saveIconPositions();
-
-            return;
-        }
-
-        if (this.#manualIconPositions.size === 0) {
-            this.#saveManualIconPositions();
+        } else {
+            // Save the manual arrangement only once.
+            if (this.#manualIconPositions.size === 0) {
+                this.#saveManualIconPositions();
+            }
         }
 
         this.#reflowIcons(true);
@@ -361,6 +332,11 @@ export default class DesktopIcons {
         ];
 
         if (forceArrange) {
+            const icons = [
+                ...this.#element.children
+            ];
+
+            // Sort alphabetically when requested.
             if (this.#sortBy === "name") {
                 icons.sort((a, b) => {
                     const nameA =
@@ -382,65 +358,37 @@ export default class DesktopIcons {
                 });
             }
 
-            const orderedIcons =
-                this.#arrangeIcons(icons);
-
-            const occupied = new Set();
-
             for (
                 let index = 0;
-                index < orderedIcons.length;
+                index < icons.length;
                 index++
             ) {
-                const icon = orderedIcons[index];
+                const icon = icons[index];
 
                 let column;
                 let row;
 
+
                 if (this.#arrangement === "rows") {
-                    column =
-                        index % this.#gridColumns;
+                    // One icon per row
 
-                    row =
-                        Math.floor(
-                            index /
-                            this.#gridColumns
-                        );
+                    column = 0;
+                    row = index;
+
                 } else {
-                    const maxRows =
-                        this.#getGridBounds().maxRow + 1;
-
-                    column =
-                        Math.floor(
-                            index / maxRows
-                        );
-
-                    row =
-                        index % maxRows;
+                    // One icon per column
+                    column = index;
+                    row = 0;
                 }
 
-                if (this.#sortAlignment === "rtl") {
-                    column =
-                        this.#gridColumns -
-                        1 -
-                        column;
-                } if (
-                    this.#sortAlignment === "rtl"
-                ) {
-                    column =
-                        this.#gridColumns -
-                        1 -
-                        column;
-                }
+                // Right-to-left reverses the column
+                // direction without changing the sort order.
 
-                const key =
-                    `${column},${row}`;
-
-                if (occupied.has(key)) {
-                    continue;
-                }
-
-                occupied.add(key);
+                const pixel =
+                    this.#gridToPixel(
+                        column,
+                        row
+                    );
 
                 this.#iconPositions.set(
                     icon.dataset.appId,
@@ -449,12 +397,6 @@ export default class DesktopIcons {
                         row
                     }
                 );
-
-                const pixel =
-                    this.#gridToPixel(
-                        column,
-                        row
-                    );
 
                 icon.style.transition =
                     "left 0.15s ease, top 0.15s ease";
