@@ -20,9 +20,6 @@ export default class SettingsStore {
             autoplay: true,
             loop: false
         },
-        system: {
-            version: "3.2.1"
-        }
     };
 
     constructor(eventBus) {
@@ -138,9 +135,6 @@ export default class SettingsStore {
                 autoplay: true,
                 loop: false
             },
-            system: {
-                version: "3.2.1"
-            }
         };
 
         this.#save();

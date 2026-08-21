@@ -15,10 +15,10 @@ export default class Desktop {
     #selectionRect;
     #settingsStore;
 
+
     #desktopIcons;
     #uiManager;
     #overlayLayer;
-
     #layers = {};
 
     #selectionBox;
