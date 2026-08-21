@@ -1119,3 +1119,9 @@
 
     text-align: center;
 }
+
+
+/* Table Cell */
+.milkdown .milkdown-table-block th, .milkdown .milkdown-table-block td {
+    border-color: var(--crepe-color-outline);
+}
