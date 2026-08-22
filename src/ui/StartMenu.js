@@ -331,6 +331,33 @@ export default class StartMenu {
         }
     }
 
+    #isAppOnDesktop(appId) {
+        try {
+            const raw = localStorage.getItem(
+                "novadesk-desktop-hidden"
+            );
+
+            if (!raw) {
+                return true;
+            }
+
+            const hiddenApps = JSON.parse(raw);
+
+            return !(
+                Array.isArray(hiddenApps) &&
+                hiddenApps.includes(appId)
+            );
+
+        } catch (error) {
+            console.warn(
+                "Failed to check desktop apps.",
+                error
+            );
+
+            return true;
+        }
+    }
+
     #render() {
         this.#element.innerHTML = `
         <div class="start-menu__profile" data-action="edit-profile">
@@ -432,6 +459,10 @@ export default class StartMenu {
 
                 button.addEventListener("contextmenu", (event) => {
                     event.preventDefault();
+
+                    if (this.#isAppOnDesktop(manifest.id)) {
+                        return;
+                    }
 
                     const menu =
                         document.createElement("div");
