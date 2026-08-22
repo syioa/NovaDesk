@@ -430,7 +430,79 @@ export default class StartMenu {
                     this.close();
                 });
 
-                appsContainer.append(button);
+                button.addEventListener("contextmenu", (event) => {
+                    event.preventDefault();
+
+                    const menu =
+                        document.createElement("div");
+
+                    menu.className =
+                        "taskbar-context-menu";
+
+                    menu.innerHTML = `
+        <button type="button">
+            Add to Desktop
+        </button>
+    `;
+
+                    menu.style.position = "fixed";
+                    menu.style.left = `${event.clientX}px`;
+                    menu.style.top = `${event.clientY}px`;
+                    menu.style.zIndex = "9999";
+
+                    document.body.appendChild(menu);
+
+                    const menuRect =
+                        menu.getBoundingClientRect();
+
+                    if (
+                        menuRect.right >
+                        window.innerWidth
+                    ) {
+                        menu.style.left =
+                            `${window.innerWidth - menuRect.width - 8}px`;
+                    }
+
+                    if (
+                        menuRect.bottom >
+                        window.innerHeight
+                    ) {
+                        menu.style.top =
+                            `${window.innerHeight - menuRect.height - 8}px`;
+                    }
+
+                    const addButton =
+                        menu.querySelector("button");
+
+                    addButton.addEventListener("click", () => {
+                        this.#eventBus.emit(
+                            "desktop:restore",
+                            manifest.id
+                        );
+
+                        menu.remove();
+                    });
+
+                    const closeMenu = (event) => {
+                        if (!menu.contains(event.target)) {
+                            menu.remove();
+
+                            document.removeEventListener(
+                                "pointerdown",
+                                closeMenu
+                            );
+                        }
+                    };
+
+                    requestAnimationFrame(() => {
+                        document.addEventListener(
+                            "pointerdown",
+                            closeMenu
+                        );
+                    });
+                });
+
+                appsContainer.appendChild(button);
             }
         };
 
