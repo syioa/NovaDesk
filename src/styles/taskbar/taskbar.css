@@ -117,11 +117,13 @@
     color: var(--color-accent);
 }
 
-.taskbar-pinned-button img {
+.taskbar-button img {
     width: 24px;
     height: 24px;
     object-fit: contain;
     display: block;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 .taskbar-clock {

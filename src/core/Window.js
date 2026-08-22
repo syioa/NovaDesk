@@ -21,6 +21,7 @@ export default class Window {
     #minHeight = 120;
 
     #title;
+    #icon;
     #width;
     #height;
     #x;
@@ -58,6 +59,7 @@ export default class Window {
         this.manager = manager;
 
         this.#title = options.title ?? "Untitled";
+        this.#icon = options.icon ?? null;
 
         this.#width = options.width ?? 500;
         this.#height = options.height ?? 350;
@@ -787,6 +789,10 @@ export default class Window {
 
     get isFocused() {
         return this.#focused;
+    }
+
+    getIcon() {
+        return this.#icon;
     }
 
     getTitle() {

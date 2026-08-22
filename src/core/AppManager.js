@@ -41,6 +41,8 @@ export default class AppManager {
 
         const window = this.#windowManager.create({
             title: manifest.name,
+            icon: manifest.icon,
+            appId: manifest.id,
             width: manifest.width,
             height: manifest.height,
             minWidth: manifest.minWidth,

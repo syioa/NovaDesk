@@ -52,23 +52,55 @@ export class Taskbar {
     }
 
     addWindow(window) {
+
         const button = document.createElement("button");
 
-        button.textContent = window.getTitle();
         button.className = "taskbar-button";
+        button.type = "button";
+
+        const icon = window.getIcon();
+
+        if (icon?.endsWith(".svg")) {
+
+            const img = document.createElement("img");
+
+            img.src = icon;
+            img.alt = "";
+            img.draggable = false;
+
+            button.appendChild(img);
+
+        } else if (icon) {
+
+            button.textContent = icon;
+
+        } else {
+
+            button.textContent = window.getTitle();
+
+        }
+
+        button.title = window.getTitle();
 
         button.addEventListener("click", () => {
+
             if (window.isVisible()) {
+
                 window.focus();
+
             } else {
+
                 window.restore();
                 window.focus();
+
             }
+
         });
 
         this.#center.append(button);
 
         this.#buttons.set(window, button);
+
     }
     removeWindow(window) {
         const button = this.#buttons.get(window);
