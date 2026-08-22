@@ -22,6 +22,8 @@ export default class Window {
 
     #title;
     #icon;
+    #appId;
+
     #width;
     #height;
     #x;
@@ -60,6 +62,7 @@ export default class Window {
 
         this.#title = options.title ?? "Untitled";
         this.#icon = options.icon ?? null;
+        this.#appId = options.appId ?? null;
 
         this.#width = options.width ?? 500;
         this.#height = options.height ?? 350;
@@ -789,6 +792,10 @@ export default class Window {
 
     get isFocused() {
         return this.#focused;
+    }
+
+    getAppId() {
+        return this.#appId;
     }
 
     getIcon() {

@@ -17,6 +17,7 @@ export class Taskbar {
     #calendar;
 
     #buttons = new Map();
+    #openWindows = new Map();
 
     constructor(eventBus, registry) {
         this.#eventBus = eventBus;
@@ -52,6 +53,27 @@ export class Taskbar {
     }
 
     addWindow(window) {
+
+        const appId = window.getAppId();
+
+        this.#openWindows.set(appId, window);
+
+        // If the app is already pinned, use its existing button.
+        if (this.#pinnedApps.has(appId)) {
+
+            const button = this.#pinned.querySelector(
+                `[data-app-id="${appId}"]`
+            );
+
+            if (button) {
+
+                this.#buttons.set(window, button);
+
+                return;
+
+            }
+
+        }
 
         const button = document.createElement("button");
 
@@ -103,21 +125,70 @@ export class Taskbar {
 
     }
     removeWindow(window) {
+
         const button = this.#buttons.get(window);
+        const appId = window.getAppId();
+
+        this.#openWindows.delete(appId);
 
         if (!button) return;
 
+        // Don't remove pinned buttons.
+        if (this.#pinnedApps.has(appId)) {
+
+            this.#buttons.delete(window);
+
+            return;
+
+        }
+
         button.remove();
         this.#buttons.delete(window);
+
     }
 
     setActiveWindow(window) {
-        for (const [win, button] of this.#buttons) {
-            button.classList.toggle(
-                "active",
-                win === window
-            );
+
+        // Clear active state from every taskbar button.
+        for (const button of this.#buttons.values()) {
+
+            button.classList.remove("active");
+
         }
+
+        // Clear active state from pinned buttons.
+        for (const button of this.#pinned.querySelectorAll(
+            ".taskbar-pinned-button"
+        )) {
+
+            button.classList.remove("active");
+
+        }
+
+        if (!window) {
+            return;
+        }
+
+        const button = this.#buttons.get(window);
+
+        if (button) {
+
+            button.classList.add("active");
+
+        }
+
+        const appId = window.getAppId();
+
+        const pinnedButton = this.#pinned.querySelector(
+            `[data-app-id="${appId}"]`
+        );
+
+        if (pinnedButton) {
+
+            pinnedButton.classList.add("active");
+
+        }
+
     }
 
     #createStartButton() {
@@ -253,6 +324,25 @@ export class Taskbar {
             button.title = manifest.name;
 
             button.addEventListener("click", () => {
+
+                const existingWindow = this.#openWindows.get(manifest.id);
+
+                if (existingWindow) {
+
+                    if (existingWindow.isVisible()) {
+
+                        existingWindow.focus();
+
+                    } else {
+
+                        existingWindow.restore();
+                        existingWindow.focus();
+
+                    }
+
+                    return;
+
+                }
 
                 this.#eventBus.emit(
                     "app:launch",
