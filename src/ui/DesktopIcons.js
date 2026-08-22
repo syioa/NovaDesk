@@ -221,8 +221,18 @@ export default class DesktopIcons {
         image.className =
             "desktop-icon-image";
 
-        image.textContent =
-            manifest.icon;
+        if (manifest.icon.endsWith(".svg")) {
+            const img =
+                document.createElement("img");
+
+            img.src = manifest.icon;
+            img.alt = "";
+
+            image.append(img);
+        } else {
+            image.textContent =
+                manifest.icon;
+        }
 
         const label =
             document.createElement("div");

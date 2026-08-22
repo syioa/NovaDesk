@@ -6,7 +6,7 @@ export default class SettingsApp extends App {
         return {
             id: "settings",
             name: "Settings",
-            icon: "⚙",
+            icon: "⚙️",
             width: 900,
             height: 600
         };

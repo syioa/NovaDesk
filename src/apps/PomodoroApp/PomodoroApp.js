@@ -5,7 +5,7 @@ export default class PomodoroApp extends App {
     static manifest = {
         id: "pomodoro",
         name: "Pomodoro",
-        icon: "P",
+        icon: "⏱️",
 
         width: 420,
         height: 520,

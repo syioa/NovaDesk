@@ -10,7 +10,7 @@ export default class NotesApp extends App {
         return {
             id: "notes",
             name: "Notes",
-            icon: "N",
+            icon: "/icons/notes.svg",
         };
     }
 

@@ -40,7 +40,7 @@ export default class VideoPlayerApp extends App {
         return {
             id: "video-player",
             name: "Video Player",
-            icon: "V",
+            icon: "🎬",
             width: 800,
             height: 500,
         };
@@ -708,7 +708,7 @@ export default class VideoPlayerApp extends App {
             ],
         };
 
-        this.#player.loop = this.#loop; 
+        this.#player.loop = this.#loop;
 
         this.#element.classList.add(
             "video-player-app--loaded"

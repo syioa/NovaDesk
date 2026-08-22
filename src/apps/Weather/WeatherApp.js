@@ -5,7 +5,7 @@ export default class WeatherApp extends App {
     static manifest = {
         id: "weather",
         name: "Weather",
-        icon: "W",
+        icon: "🌤️",
         width: 420,
         height: 520
     };
