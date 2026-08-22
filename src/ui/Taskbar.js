@@ -358,6 +358,20 @@ export class Taskbar {
 
             }
         );
+
+        this.#eventBus.on(
+            "taskbar:toggle-pin",
+            ({ appId }) => {
+                if (this.#pinnedApps.has(appId)) {
+                    this.#pinnedApps.delete(appId);
+                } else {
+                    this.#pinnedApps.add(appId);
+                }
+
+                this.#savePinnedApps();
+                this.#renderPinnedApps();
+            }
+        );
     }
 
     getElement() {

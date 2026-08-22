@@ -16,6 +16,9 @@ export default class DesktopIcons {
 
     #positionStorageKey = "novadesk-icon-positions";
 
+    #hiddenApps = new Set();
+    #hiddenStorageKey = "novadesk-desktop-hidden";
+
     #dragging = false;
     #wasDragging = false;
 
@@ -51,11 +54,9 @@ export default class DesktopIcons {
         this.#element.className = "desktop-icons";
 
         this.#loadDesktopSettings();
-
         this.#loadIconPositions();
-
+        this.#loadHiddenApps();
         this.#render();
-
         this.#applyIconSize();
 
         this.#eventBus.on(
@@ -109,6 +110,26 @@ export default class DesktopIcons {
             }
         );
 
+        this.#eventBus.on(
+            "desktop:restore",
+            (appId) => {
+                this.#restoreAppToDesktop(appId);
+            }
+        );
+
+        this.#eventBus.on(
+            "desktop:contextmenu",
+            ({ appId, x, y }) => {
+
+                this.#showDesktopContextMenu(
+                    appId,
+                    x,
+                    y
+                );
+
+            }
+        );
+
         this.#element.addEventListener("click", (event) => {
             if (event.target === this.#element) {
                 this.clearSelection();
@@ -140,10 +161,17 @@ export default class DesktopIcons {
         const apps = this.#registry.getApps();
 
         for (const AppClass of apps) {
+            const appId = AppClass.manifest.id;
+
+            if (this.#hiddenApps.has(appId)) {
+                continue;
+            }
+
             this.#element.append(
                 this.#createIcon(AppClass)
             );
         }
+        this.#applyIconSize();
     }
 
     #createIcon(AppClass) {
@@ -219,7 +247,7 @@ export default class DesktopIcons {
                 icon.dataset.appId;
 
             this.#eventBus.emit(
-                "taskbar:contextmenu",
+                "desktop:contextmenu",
                 {
                     appId,
                     x: event.clientX,
@@ -508,6 +536,192 @@ export default class DesktopIcons {
                 row: position.row
             });
         }
+    }
+
+    #showDesktopContextMenu(appId, x, y) {
+        const AppClass =
+            this.#registry.get(appId);
+
+        if (!AppClass) {
+            return;
+        }
+
+        const pinned =
+            this.#isPinnedToTaskbar(appId);
+
+        const menu =
+            document.createElement("div");
+
+        menu.className =
+            "taskbar-context-menu";
+
+        menu.innerHTML = `
+        <button type="button">
+            ${pinned
+                ? "Unpin from Taskbar"
+                : "Pin to Taskbar"}
+        </button>
+
+        <button type="button">
+            Remove from Desktop
+        </button>
+    `;
+
+        menu.style.position = "fixed";
+        menu.style.left = `${x}px`;
+        menu.style.zIndex = "9999";
+
+        document.body.appendChild(menu);
+
+        const menuRect =
+            menu.getBoundingClientRect();
+
+        let top =
+            y - menuRect.height - 8;
+
+        if (top < 8) {
+            top = 8;
+        }
+
+        menu.style.top =
+            `${top}px`;
+
+        const buttons =
+            menu.querySelectorAll("button");
+
+        // Pin / Unpin
+        buttons[0].addEventListener("click", () => {
+            this.#eventBus.emit(
+                "taskbar:toggle-pin",
+                {
+                    appId
+                }
+            );
+
+            menu.remove();
+        });
+
+        // Remove from Desktop
+        buttons[1].addEventListener("click", () => {
+            this.#hiddenApps.add(appId);
+
+            this.#saveHiddenApps();
+
+            this.clearSelection();
+
+            this.#render();
+
+            menu.remove();
+        });
+
+        const closeMenu = (event) => {
+            if (!menu.contains(event.target)) {
+                menu.remove();
+
+                document.removeEventListener(
+                    "pointerdown",
+                    closeMenu
+                );
+            }
+        };
+
+        requestAnimationFrame(() => {
+            document.addEventListener(
+                "pointerdown",
+                closeMenu
+            );
+        });
+    }
+
+    #loadHiddenApps() {
+
+        try {
+
+            const raw =
+                localStorage.getItem(
+                    this.#hiddenStorageKey
+                );
+
+            if (!raw) {
+                return;
+            }
+
+            const data =
+                JSON.parse(raw);
+
+            if (Array.isArray(data)) {
+
+                this.#hiddenApps =
+                    new Set(data);
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "Failed to load hidden desktop apps.",
+                error
+            );
+        }
+    }
+
+    #saveHiddenApps() {
+
+        try {
+
+            localStorage.setItem(
+                this.#hiddenStorageKey,
+                JSON.stringify([
+                    ...this.#hiddenApps
+                ])
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "Failed to save hidden desktop apps.",
+                error
+            );
+        }
+    }
+
+    #isPinnedToTaskbar(appId) {
+        try {
+            const raw = localStorage.getItem(
+                "novadesk-taskbar-pinned"
+            );
+
+            if (!raw) {
+                return false;
+            }
+
+            const pinnedApps = JSON.parse(raw);
+
+            return Array.isArray(pinnedApps) &&
+                pinnedApps.includes(appId);
+
+        } catch (error) {
+            console.warn(
+                "Failed to read pinned taskbar apps.",
+                error
+            );
+
+            return false;
+        }
+    }
+
+    #restoreAppToDesktop(appId) {
+
+        this.#hiddenApps.delete(appId);
+
+        this.#saveHiddenApps();
+
+        this.#render();
+
+        requestAnimationFrame(() => {
+            this.#applyIconSize();
+        });
+
     }
 
     #loadDesktopSettings() {
@@ -996,8 +1210,6 @@ export default class DesktopIcons {
     }
 
     #endDrag() {
-        const center = this.#getGroupCenter();
-
         if (!this.#dragging) {
             return;
         }
