@@ -5,7 +5,7 @@ export default class WelcomeApp extends App {
         return {
             id: "welcome",
             name: "Welcome",
-            icon: "👋",
+            icon: "/icons/welcome.svg",
         };
     }
 
