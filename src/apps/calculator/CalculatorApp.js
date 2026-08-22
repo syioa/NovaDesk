@@ -5,7 +5,7 @@ export default class CalculatorApp extends App {
     static manifest = {
         id: "calculator",
         name: "Calculator",
-        icon: "C",
+        icon: "/icons/calculator.svg",
 
         width: 340,
         height: 500,
