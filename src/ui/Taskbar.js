@@ -125,7 +125,7 @@ export class Taskbar {
 
         });
 
-        this.#center.append(button);
+        this.#pinned.append(button);
 
         this.#buttons.set(window, button);
 
