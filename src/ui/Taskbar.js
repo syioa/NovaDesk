@@ -212,10 +212,27 @@ export class Taskbar {
             button.title = manifest.name;
 
             button.addEventListener("click", () => {
+
                 this.#eventBus.emit(
                     "app:launch",
                     manifest.id
                 );
+
+            });
+
+            button.addEventListener("contextmenu", (event) => {
+
+                event.preventDefault();
+
+                this.#eventBus.emit(
+                    "taskbar:contextmenu",
+                    {
+                        appId: manifest.id,
+                        x: event.clientX,
+                        y: event.clientY
+                    }
+                );
+
             });
 
             this.#pinned.append(button);
@@ -253,10 +270,20 @@ export class Taskbar {
 
         menu.style.position = "fixed";
         menu.style.left = `${x}px`;
-        menu.style.top = `${y}px`;
         menu.style.zIndex = "9999";
 
         document.body.appendChild(menu);
+
+        const menuRect = menu.getBoundingClientRect();
+
+        let top = y - menuRect.height - 8;
+
+        // Don't let the menu go above the screen
+        if (top < 8) {
+            top = 8;
+        }
+
+        menu.style.top = `${top}px`;
 
         const button =
             menu.querySelector("button");
