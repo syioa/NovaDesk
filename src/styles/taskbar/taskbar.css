@@ -117,6 +117,13 @@
     color: var(--color-accent);
 }
 
+.taskbar-pinned-button img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    display: block;
+}
+
 .taskbar-clock {
     padding: 0 8px;
 

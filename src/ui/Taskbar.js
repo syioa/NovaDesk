@@ -208,7 +208,16 @@ export class Taskbar {
             button.className = "taskbar-pinned-button";
             button.type = "button";
             button.dataset.appId = manifest.id;
-            button.textContent = manifest.icon;
+            if (manifest.icon.endsWith(".svg")) {
+                const img = document.createElement("img");
+
+                img.src = manifest.icon;
+                img.alt = "";
+
+                button.appendChild(img);
+            } else {
+                button.textContent = manifest.icon;
+            }
             button.title = manifest.name;
 
             button.addEventListener("click", () => {
