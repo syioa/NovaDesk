@@ -40,7 +40,7 @@ export default class VideoPlayerApp extends App {
         return {
             id: "video-player",
             name: "Video Player",
-            icon: "🎬",
+            icon: "/icons/video-player.svg",
             width: 800,
             height: 500,
         };
