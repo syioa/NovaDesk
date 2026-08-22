@@ -67,18 +67,21 @@ export class Taskbar {
 
             if (button) {
 
+                button.classList.add("open");
+
                 this.#buttons.set(window, button);
 
                 return;
-
             }
-
         }
 
         const button = document.createElement("button");
 
         button.className = "taskbar-button";
+
         button.type = "button";
+
+        button.classList.add("open");
 
         const icon = window.getIcon();
 
@@ -87,7 +90,9 @@ export class Taskbar {
             const img = document.createElement("img");
 
             img.src = icon;
+
             img.alt = "";
+
             img.draggable = false;
 
             button.appendChild(img);
@@ -113,6 +118,7 @@ export class Taskbar {
             } else {
 
                 window.restore();
+
                 window.focus();
 
             }
@@ -131,18 +137,23 @@ export class Taskbar {
 
         this.#openWindows.delete(appId);
 
-        if (!button) return;
+        if (!button) {
+            return;
+        }
 
-        // Don't remove pinned buttons.
+        // Keep the button because the app is pinned.
         if (this.#pinnedApps.has(appId)) {
+
+            button.classList.remove("open");
+            button.classList.remove("active");
 
             this.#buttons.delete(window);
 
             return;
-
         }
 
         button.remove();
+
         this.#buttons.delete(window);
 
     }

@@ -121,6 +121,11 @@
     background: var(--color-surface-raised);
 }
 
+.taskbar-button.open,
+.taskbar-pinned-button.open {
+    background: var(--color-surface-raised);
+}
+
 .taskbar-button img {
     width: 24px;
     height: 24px;
