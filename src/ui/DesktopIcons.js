@@ -118,17 +118,48 @@ export default class DesktopIcons {
         );
 
         this.#eventBus.on(
-            "desktop:contextmenu",
-            ({ appId, x, y }) => {
+            "desktop:remove",
+            (appId) => {
+                this.#hiddenApps.add(appId);
 
-                this.#showDesktopContextMenu(
-                    appId,
-                    x,
-                    y
-                );
+                this.#saveHiddenApps();
 
+                this.clearSelection();
+
+                this.#render();
             }
         );
+
+        this.#eventBus.on(
+            "desktop:remove-all",
+            () => {
+                const apps = this.#registry.getApps();
+
+                for (const AppClass of apps) {
+                    this.#hiddenApps.add(
+                        AppClass.manifest.id
+                    );
+                }
+
+                this.#saveHiddenApps();
+                this.clearSelection();
+                this.#render();
+            }
+        );
+
+        this.#eventBus.on(
+            "desktop:restore-all",
+            () => {
+                this.#hiddenApps.clear();
+
+                this.#saveHiddenApps();
+
+                this.clearSelection();
+
+                this.#render();
+            }
+        );
+
 
         this.#element.addEventListener("click", (event) => {
             if (event.target === this.#element) {
@@ -538,101 +569,6 @@ export default class DesktopIcons {
         }
     }
 
-    #showDesktopContextMenu(appId, x, y) {
-        const AppClass =
-            this.#registry.get(appId);
-
-        if (!AppClass) {
-            return;
-        }
-
-        const pinned =
-            this.#isPinnedToTaskbar(appId);
-
-        const menu =
-            document.createElement("div");
-
-        menu.className =
-            "taskbar-context-menu";
-
-        menu.innerHTML = `
-        <button type="button">
-            ${pinned
-                ? "Unpin from Taskbar"
-                : "Pin to Taskbar"}
-        </button>
-
-        <button type="button">
-            Remove from Desktop
-        </button>
-    `;
-
-        menu.style.position = "fixed";
-        menu.style.left = `${x}px`;
-        menu.style.zIndex = "9999";
-
-        document.body.appendChild(menu);
-
-        const menuRect =
-            menu.getBoundingClientRect();
-
-        let top =
-            y - menuRect.height - 8;
-
-        if (top < 8) {
-            top = 8;
-        }
-
-        menu.style.top =
-            `${top}px`;
-
-        const buttons =
-            menu.querySelectorAll("button");
-
-        // Pin / Unpin
-        buttons[0].addEventListener("click", () => {
-            this.#eventBus.emit(
-                "taskbar:toggle-pin",
-                {
-                    appId
-                }
-            );
-
-            menu.remove();
-        });
-
-        // Remove from Desktop
-        buttons[1].addEventListener("click", () => {
-            this.#hiddenApps.add(appId);
-
-            this.#saveHiddenApps();
-
-            this.clearSelection();
-
-            this.#render();
-
-            menu.remove();
-        });
-
-        const closeMenu = (event) => {
-            if (!menu.contains(event.target)) {
-                menu.remove();
-
-                document.removeEventListener(
-                    "pointerdown",
-                    closeMenu
-                );
-            }
-        };
-
-        requestAnimationFrame(() => {
-            document.addEventListener(
-                "pointerdown",
-                closeMenu
-            );
-        });
-    }
-
     #loadHiddenApps() {
 
         try {
@@ -919,6 +855,10 @@ export default class DesktopIcons {
 
         this.#selectedIcons.clear();
     }
+    isHidden(appId) {
+        return this.#hiddenApps.has(appId);
+    }
+
     selectInRect(rect) {
         this.clearSelection();
 

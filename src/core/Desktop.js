@@ -72,6 +72,17 @@ export default class Desktop {
         );
 
         this.#eventBus.on(
+            "desktop:contextmenu",
+            ({ appId, x, y }) => {
+                this.#onDesktopIconContextMenu(
+                    appId,
+                    x,
+                    y
+                );
+            }
+        );
+
+        this.#eventBus.on(
             "notes:contextmenu",
             ({ event, noteId, view, pinned }) => {
                 this.#onNotesContextMenu(
@@ -79,6 +90,17 @@ export default class Desktop {
                     noteId,
                     view,
                     pinned
+                );
+            }
+        );
+
+        this.#eventBus.on(
+            "desktop:contextmenu",
+            ({ appId, x, y }) => {
+                this.#onDesktopIconContextMenu(
+                    appId,
+                    x,
+                    y
                 );
             }
         );
@@ -178,6 +200,17 @@ export default class Desktop {
             this.#createDesktopContextMenuItems(),
             this.getWorkArea()
         );
+    }
+
+    #removeAllIconsFromDesktop() {
+        const apps = this.#registry.getApps();
+
+        for (const AppClass of apps) {
+            this.#eventBus.emit(
+                "desktop:remove",
+                AppClass.manifest.id
+            );
+        }
     }
 
     #createDesktopContextMenuItems() {
@@ -324,6 +357,27 @@ export default class Desktop {
                         }
                     });
                 }
+            },
+            {
+                type: "separator"
+            },
+
+            {
+                label: this.#areAllIconsRemoved()
+                    ? "Add All Icons to Desktop"
+                    : "Remove All Icons from Desktop",
+
+                action: () => {
+                    if (this.#areAllIconsRemoved()) {
+                        this.#eventBus.emit(
+                            "desktop:restore-all"
+                        );
+                    } else {
+                        this.#eventBus.emit(
+                            "desktop:remove-all"
+                        );
+                    }
+                }
             }
         ];
     }
@@ -412,6 +466,90 @@ export default class Desktop {
         );
     }
 
+    #onDesktopIconContextMenu(appId, x, y) {
+        const AppClass = this.#registry.get(appId);
+
+        if (!AppClass) {
+            return;
+        }
+
+        const manifest = AppClass.manifest;
+
+        const pinned = localStorage.getItem(
+            "novadesk-taskbar-pinned"
+        );
+
+        let isPinned = false;
+
+        try {
+            const pinnedApps = pinned
+                ? JSON.parse(pinned)
+                : [];
+
+            isPinned =
+                Array.isArray(pinnedApps) &&
+                pinnedApps.includes(appId);
+        } catch {
+            isPinned = false;
+        }
+
+        const bounds = this.#element.getBoundingClientRect();
+
+        const items = [
+            {
+                label: "Open",
+                action: () => {
+                    this.#eventBus.emit(
+                        "app:launch",
+                        appId
+                    );
+                }
+            },
+
+            {
+                type: "separator"
+            },
+
+            {
+                label: isPinned
+                    ? "Unpin from Taskbar"
+                    : "Pin to Taskbar",
+
+                action: () => {
+                    this.#eventBus.emit(
+                        "taskbar:toggle-pin",
+                        {
+                            appId
+                        }
+                    );
+                }
+            },
+
+            {
+                label: "Remove from Desktop",
+
+                action: () => {
+                    this.#eventBus.emit(
+                        "desktop:remove",
+                        appId
+                    );
+                }
+            }
+        ];
+
+        this.#contextMenu.show(
+            x,
+            y,
+            items,
+            {
+                left: bounds.left,
+                top: bounds.top,
+                right: bounds.right,
+                bottom: bounds.bottom
+            }
+        );
+    }
+
     #onNotesContextMenu(event, noteId, view, pinned) {
         const bounds =
             this.#element.getBoundingClientRect();
@@ -493,6 +631,21 @@ export default class Desktop {
                 right: bounds.right,
                 bottom: bounds.bottom
             }
+        );
+    }
+
+    #areAllIconsRemoved() {
+        const apps = this.#registry.getApps();
+
+        return (
+            apps.length > 0 &&
+            apps.every(
+                AppClass =>
+                    this.#desktopIcons
+                        .isHidden(
+                            AppClass.manifest.id
+                        )
+            )
         );
     }
 
