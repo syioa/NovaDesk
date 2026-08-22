@@ -52,7 +52,10 @@ export default class Desktop {
             this.#uiManager
         );
 
-        this.#taskbar = new Taskbar(this.#eventBus);
+        this.#taskbar = new Taskbar(
+            this.#eventBus,
+            this.#registry
+        );
         this.#taskbar.bindEvents();
 
         this.getLayer("taskbar").append(

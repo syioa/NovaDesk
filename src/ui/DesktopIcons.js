@@ -211,19 +211,33 @@ export default class DesktopIcons {
             }
         );
 
-        /*
-         * Restore the saved position if this icon
-         * already has one.
-         */
+        icon.addEventListener("contextmenu", (event) => {
+
+            event.preventDefault();
+
+            const appId =
+                icon.dataset.appId;
+
+            this.#eventBus.emit(
+                "taskbar:contextmenu",
+                {
+                    appId,
+                    x: event.clientX,
+                    y: event.clientY
+                }
+            );
+        });
+
+        //Restore the saved position if this icon already has one.
         let grid =
             this.#iconPositions.get(
                 icon.dataset.appId
             );
 
-        /*
-         * If this is a new icon with no saved position,
-         * assign it the next available grid cell.
-         */
+
+        // If this is a new icon with no saved position,
+        // assign it the next available grid cell.
+
         if (!grid) {
 
             const index =
@@ -266,7 +280,7 @@ export default class DesktopIcons {
             `${pixel.x}px`;
 
         icon.style.top =
-            `${pixel.y}px`;
+            `${Math.abs(pixel.y)}px`;
 
         return icon;
     }
@@ -327,18 +341,22 @@ export default class DesktopIcons {
     }
 
     #reflowIcons(forceArrange = false) {
+
         const icons = [
             ...this.#element.children
         ];
 
         if (forceArrange) {
+
             const icons = [
                 ...this.#element.children
             ];
 
             // Sort alphabetically when requested.
             if (this.#sortBy === "name") {
+
                 icons.sort((a, b) => {
+
                     const nameA =
                         a.querySelector(".desktop-icon-label")
                             ?.textContent.trim() ?? "";
@@ -358,38 +376,33 @@ export default class DesktopIcons {
                 });
             }
 
-            for (
-                let index = 0;
-                index < icons.length;
-                index++
-            ) {
-                const icon = icons[index];
+            // Arrange all desktop icons.
+            for (let index = 0; index < icons.length; index++) {
 
                 let column;
                 let row;
 
-
                 if (this.#arrangement === "rows") {
-                    // One icon per row
 
                     column = 0;
                     row = index;
 
                 } else {
-                    // One icon per column
+
                     column = index;
                     row = 0;
                 }
 
                 if (this.#sortAlignment === "rtl") {
-                    const bounds = this.#getGridBounds();
-                    const maxColumn = bounds.maxColumn;
 
-                    column = maxColumn - column;
+                    const bounds =
+                        this.#getGridBounds();
+
+                    column =
+                        bounds.maxColumn - column;
                 }
 
-                // Right-to-left reverses the column
-                // direction without changing the sort order.
+                const icon = icons[index];
 
                 const pixel =
                     this.#gridToPixel(
@@ -422,12 +435,14 @@ export default class DesktopIcons {
 
         // Normal reflow:
         // preserve existing positions.
+
         const occupied = new Set();
 
         for (
             const icon
             of this.#element.children
         ) {
+
             const current =
                 this.#iconPositions.get(
                     icon.dataset.appId
@@ -447,6 +462,7 @@ export default class DesktopIcons {
                 current.column >=
                 this.#gridColumns
             ) {
+
                 grid =
                     this.#findNearestFreeCell(
                         Math.min(
@@ -554,6 +570,8 @@ export default class DesktopIcons {
             console.warn("Failed to load desktop icon positions.", error);
         }
     }
+
+
 
     #saveIconPositions() {
         try {

@@ -4,8 +4,13 @@ import "flatpickr/dist/flatpickr.css";
 export class Taskbar {
     #center;
     #element;
+    #registry;
     #left;
     #right;
+
+    #pinned;
+    #pinnedApps = new Set();
+    #pinnedStorageKey = "novadesk-taskbar-pinned";
 
     #eventBus;
     #startButton;
@@ -13,8 +18,9 @@ export class Taskbar {
 
     #buttons = new Map();
 
-    constructor(eventBus) {
+    constructor(eventBus, registry) {
         this.#eventBus = eventBus;
+        this.#registry = registry;
 
         this.#element = document.createElement("div");
         this.#element.className = "taskbar";
@@ -28,14 +34,21 @@ export class Taskbar {
         this.#right = document.createElement("div");
         this.#right.className = "taskbar-right";
 
+        this.#pinned = document.createElement("div");
+        this.#pinned.className = "taskbar-pinned";
+
         this.#element.append(
             this.#left,
+            this.#pinned,
             this.#center,
             this.#right
         );
 
         this.#createStartButton();
         this.#createClock();
+
+        this.#loadPinnedApps();
+        this.#renderPinnedApps();
     }
 
     addWindow(window) {
@@ -141,6 +154,158 @@ export class Taskbar {
         });
     }
 
+    #loadPinnedApps() {
+        try {
+            const raw = localStorage.getItem(
+                this.#pinnedStorageKey
+            );
+
+            if (!raw) {
+                return;
+            }
+
+            const data = JSON.parse(raw);
+
+            if (Array.isArray(data)) {
+                this.#pinnedApps = new Set(data);
+            }
+        } catch (error) {
+            console.warn(
+                "Failed to load pinned taskbar apps.",
+                error
+            );
+        }
+    }
+
+    #savePinnedApps() {
+        try {
+            localStorage.setItem(
+                this.#pinnedStorageKey,
+                JSON.stringify([...this.#pinnedApps])
+            );
+        } catch (error) {
+            console.warn(
+                "Failed to save pinned taskbar apps.",
+                error
+            );
+        }
+    }
+
+    #renderPinnedApps() {
+        this.#pinned.replaceChildren();
+
+        for (const appId of this.#pinnedApps) {
+            const AppClass = this.#registry.get(appId);
+
+            if (!AppClass) {
+                continue;
+            }
+
+            const manifest = AppClass.manifest;
+
+            const button = document.createElement("button");
+
+            button.className = "taskbar-pinned-button";
+            button.type = "button";
+            button.dataset.appId = manifest.id;
+            button.textContent = manifest.icon;
+            button.title = manifest.name;
+
+            button.addEventListener("click", () => {
+                this.#eventBus.emit(
+                    "app:launch",
+                    manifest.id
+                );
+            });
+
+            this.#pinned.append(button);
+        }
+    }
+
+    #showTaskbarContextMenu(appId, x, y) {
+
+        const AppClass =
+            this.#registry.get(appId);
+
+        if (!AppClass) {
+            return;
+        }
+
+        const manifest =
+            AppClass.manifest;
+
+        const pinned =
+            this.#pinnedApps.has(appId);
+
+        const menu =
+            document.createElement("div");
+
+        menu.className =
+            "taskbar-context-menu";
+
+        menu.innerHTML = `
+        <button type="button">
+            ${pinned
+                ? "Unpin from Taskbar"
+                : "Pin to Taskbar"}
+        </button>
+    `;
+
+        menu.style.position = "fixed";
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+        menu.style.zIndex = "9999";
+
+        document.body.appendChild(menu);
+
+        const button =
+            menu.querySelector("button");
+
+        button.addEventListener("click", () => {
+
+            if (pinned) {
+
+                this.#pinnedApps.delete(
+                    appId
+                );
+
+            } else {
+
+                this.#pinnedApps.add(
+                    appId
+                );
+            }
+
+            this.#savePinnedApps();
+
+            this.#renderPinnedApps();
+
+            menu.remove();
+        });
+
+        const closeMenu = (event) => {
+
+            if (!menu.contains(event.target)) {
+
+                menu.remove();
+
+                document.removeEventListener(
+                    "pointerdown",
+                    closeMenu
+                );
+            }
+        };
+
+        requestAnimationFrame(() => {
+
+            document.addEventListener(
+                "pointerdown",
+                closeMenu
+            );
+
+        });
+    }
+
     bindEvents() {
         this.#eventBus.on("window:created", (window) => {
             this.addWindow(window);
@@ -153,6 +318,19 @@ export class Taskbar {
         this.#eventBus.on("window:focused", (window) => {
             this.setActiveWindow(window);
         });
+
+        this.#eventBus.on(
+            "taskbar:contextmenu",
+            ({ appId, x, y }) => {
+
+                this.#showTaskbarContextMenu(
+                    appId,
+                    x,
+                    y
+                );
+
+            }
+        );
     }
 
     getElement() {
